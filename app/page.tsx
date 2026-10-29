@@ -30,6 +30,7 @@ export default function Home() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [query, setQuery] = useState("");
   const [showSubmit, setShowSubmit] = useState(false);
+  const [consent, setConsent] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -51,6 +52,7 @@ export default function Home() {
   async function runScan() {
     setError("");
     setResult(null);
+    if (!consent) { setError("Vui lòng xác nhận quyền chia sẻ nội dung trước khi gửi."); return; }
     if (activeTab === "html" && !file) { setError("Chọn file .html trước khi quét."); return; }
     if (activeTab === "url" && !url.trim()) { setError("Nhập đường dẫn game cần kiểm tra."); return; }
     if (file && file.size > 1_000_000) { setError("File quá lớn. Bản thử nghiệm giới hạn 1 MB."); return; }
@@ -91,7 +93,7 @@ export default function Home() {
   }
 
   function resetForm() {
-    setFile(null); setUrl(""); setTitle(""); setResult(null); setError("");
+    setFile(null); setUrl(""); setTitle(""); setResult(null); setError(""); setConsent(false);
     if (fileRef.current) fileRef.current.value = "";
   }
 
@@ -171,7 +173,7 @@ export default function Home() {
           <div className="tab-switch"><button className={activeTab === "html" ? "tab-selected" : ""} onClick={() => { setActiveTab("html"); setResult(null); setError(""); }}><FileCode2 size={16} /> File HTML</button><button className={activeTab === "url" ? "tab-selected" : ""} onClick={() => { setActiveTab("url"); setResult(null); setError(""); }}><Globe2 size={16} /> Link game</button></div>
           <label className="field-label" htmlFor="game-title">Tên game <span>(không bắt buộc)</span></label><input id="game-title" className="text-field" placeholder="Ví dụ: Pixel Adventure" value={title} onChange={(e) => setTitle(e.target.value)} />
           {activeTab === "html" ? <><label className="field-label">Tệp game <span>.html / .htm · tối đa 1 MB</span></label><button className={"dropzone " + (file ? "dropzone-has-file" : "")} onClick={() => fileRef.current?.click()} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const dropped = e.dataTransfer.files[0]; if (dropped) setFile(dropped); }}><input ref={fileRef} type="file" accept=".html,.htm,text/html" hidden onChange={(e) => setFile(e.target.files?.[0] ?? null)} />{file ? <><span className="drop-icon"><FileCode2 size={21} /></span><b>{file.name}</b><small>{(file.size / 1024).toFixed(1)} KB · Nhấn để đổi tệp</small></> : <><span className="drop-icon"><FileUp size={21} /></span><b>Kéo thả file vào đây</b><small>hoặc nhấn để chọn từ thiết bị</small><span className="browse-button">Chọn file <ArrowRight size={13} /></span></>}</button></> : <><label className="field-label" htmlFor="game-url">Đường dẫn game</label><div className="url-field"><Globe2 size={17} /><input id="game-url" type="url" placeholder="https://example.com/game" value={url} onChange={(e) => setUrl(e.target.value)} /></div><p className="field-hint">Bản hiện tại chỉ kiểm tra định dạng URL, không tải hoặc chạy trang ngoài.</p></>}
-          <label className="consent-row"><input type="checkbox" id="rights-consent" /><span>Tôi có quyền chia sẻ nội dung này hoặc đã kiểm tra giấy phép phù hợp.</span></label>
+          <label className="consent-row"><input type="checkbox" id="rights-consent" checked={consent} onChange={(e) => setConsent(e.target.checked)} /><span>Tôi có quyền chia sẻ nội dung này hoặc đã kiểm tra giấy phép phù hợp.</span></label>
           {error && <div className="inline-error" role="alert"><ShieldAlert size={16} />{error}</div>}
           {result && <div className="scan-result" aria-live="polite"><div className="scan-result-head"><span className="result-icon"><ShieldAlert size={17} /></span><div><b>Kết quả quét sơ bộ</b><small>{result.verdict === "NEEDS_REVIEW" ? "Cần xem xét thủ công" : result.verdict}</small></div><strong>{result.score}/100</strong></div>{result.findings.length ? result.findings.map((f, i) => <div className="finding" key={f.label + i}><span className={"severity severity-" + f.severity}>{severityLabel(f.severity)}</span><div><b>{f.label}</b><small>{f.detail}</small></div></div>) : <p className="no-findings">Không khớp mẫu kiểm tra đã định nghĩa. Điều này không có nghĩa là file an toàn.</p>}<p className="scan-disclaimer">{result.message}</p><button className="reset-button" onClick={resetForm}>Quét nội dung khác</button></div>}
           <button className="scan-button" onClick={runScan} disabled={scanning}>{scanning ? <><span className="spinner" /> Đang quét...</> : <><ShieldCheck size={17} /> Quét & gửi chờ duyệt <ArrowRight size={16} /></>}</button>

@@ -378,7 +378,7 @@ export async function scanRemoteUrl(value: string): Promise<ScanResult> {
     }
 
     const html = page.body.toString("utf8");
-    const scriptPattern = /<script\b[^>]*\bsrc\s*=\s*(["'])(.*?)\1[^>]*>/gis;
+    const scriptPattern = /<script\b[^>]*\bsrc\s*=\s*(["'])([\s\S]*?)\1[^>]*>/gi;
     const scriptUrls = new Set<string>();
     let match: RegExpExecArray | null;
     let partial = false;

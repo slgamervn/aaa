@@ -1,7 +1,7 @@
 import { createHash, createHmac, randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { MAX_HTML_BYTES, SCAN_VERSION, scanHtml, scanUrl } from "@/lib/scanner";
+import { MAX_HTML_BYTES, SCAN_VERSION, scanHtml, scanRemoteUrl, scanUrl } from "@/lib/scanner";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -145,7 +145,9 @@ export async function POST(request: NextRequest) {
       return json({ error: error instanceof Error ? error.message : "The URL is invalid." }, 400);
     }
     sourceUrl = checked.url;
-    scan = checked.result;
+    // Fetch and analyse the public page server-side. The scanner validates and
+    // pins each public IP, revalidates every redirect, and never executes HTML/JS.
+    scan = await scanRemoteUrl(checked.url);
     resolvedTitle = resolvedTitle || checked.host.slice(0, 80);
     row = {
       id, title: resolvedTitle, description, genre, kind,
@@ -191,6 +193,8 @@ export async function POST(request: NextRequest) {
     findings: scan.findings,
     message: scan.message,
     bytes: scan.bytes ?? 0,
+    contentScanned: scan.contentScanned ?? (scan.mode === "html"),
+    scannedResources: scan.scannedResources ?? (scan.mode === "html" ? 1 : 0),
     submission: { id, status: "pending_review", submittedAt, title: resolvedTitle }
   }, 201);
 }

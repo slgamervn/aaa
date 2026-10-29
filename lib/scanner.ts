@@ -229,6 +229,20 @@ async function resolvePublicAddress(hostnameInput: string): Promise<ResolvedAddr
   return { address: preferred.address, family: preferred.family as 4 | 6 };
 }
 
+async function resolvePublicAddressWithin(hostname: string, timeoutMs: number): Promise<ResolvedAddress> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      resolvePublicAddress(hostname),
+      new Promise<ResolvedAddress>((_resolve, reject) => {
+        timer = setTimeout(() => reject(new Error("The destination hostname lookup timed out.")), timeoutMs);
+      })
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 function requestPinnedAddress(url: URL, address: ResolvedAddress, maxBytes: number, timeoutMs: number): Promise<RemoteResponse> {
   return new Promise((resolve, reject) => {
     const useHttps = url.protocol === "https:";
@@ -320,7 +334,9 @@ async function fetchPublicResource(startUrl: string, maxBytes: number, totalTime
   for (let redirects = 0; redirects <= MAX_REDIRECTS; redirects += 1) {
     if (Date.now() >= deadline) throw new Error("The remote scan timed out.");
     const parsed = validatePublicFetchUrl(currentUrl);
-    const pinnedAddress = await resolvePublicAddress(parsed.hostname);
+    const beforeLookup = deadline - Date.now();
+    if (beforeLookup <= 0) throw new Error("The remote scan timed out.");
+    const pinnedAddress = await resolvePublicAddressWithin(parsed.hostname, Math.min(1_500, beforeLookup));
     const remaining = deadline - Date.now();
     if (remaining <= 0) throw new Error("The remote scan timed out.");
     const response = await requestPinnedAddress(parsed, pinnedAddress, maxBytes, Math.min(2_500, remaining));

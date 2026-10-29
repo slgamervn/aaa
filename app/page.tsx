@@ -12,7 +12,7 @@ type Language = "vi" | "en";
 type Theme = "paper" | "night";
 type Genre = "all" | "arcade" | "strategy" | "puzzle" | "action" | "simulation" | "educational" | "other";
 type Finding = { label: string; severity: "high" | "medium" | "low"; detail: string };
-type ScanResult = { mode: string; verdict: string; score: number; findings: Finding[]; message: string; bytes?: number; contentScanned?: boolean; scannedResources?: number };
+type ScanResult = { mode: string; verdict: string; score: number; findings: Finding[]; message: string; bytes?: number; contentScanned?: boolean; scannedResources?: number; submitted?: boolean; submissionId?: string };
 type Submission = { id: string; title: string; source: string; kind: "HTML" | "URL"; status: "pending"; createdAt: string; result: ScanResult };
 type PublishedGame = { id: string; title: string; description: string; genre: string; kind: "html" | "url"; sourceUrl: string | null; originalFilename: string | null; publishedAt: string | null };
 
@@ -63,7 +63,7 @@ const copy = {
     invalidFile: "Chỉ nhận file .html hoặc .htm.",
     tooLarge: "File quá lớn. Bản thử nghiệm giới hạn 1 MB.",
     urlError: "Nhập đường dẫn game cần kiểm tra.", scanFailed: "Không thể quét nội dung.",
-    scanButton: "Quét và gửi chờ duyệt", scanning: "Đang quét…",
+    scanButton: "Quét và gửi chờ duyệt", submittedButton: "Đã gửi chờ duyệt", submittedNotice: "Đã nhận bài gửi và đưa vào hàng chờ quản lý xem xét. Nội dung chưa được tự động công khai.", submittedNeedsReview: "Đã nhận link và đưa vào hàng chờ duyệt, nhưng chưa tải được nội dung để quét. Người quản lý cần kiểm tra thủ công trước khi xuất bản.", scanIncompleteStatus: "Chưa thể kiểm tra nội dung", scanning: "Đang quét…",
     scanResult: "Kết quả quét sơ bộ", manualReview: "Cần xem xét thủ công",
     noFindings: "Không khớp mẫu kiểm tra đã định nghĩa trong phần nội dung đã quét. Điều này không chứng minh game an toàn.",
     scanDisclaimer: "Quét tĩnh không chứng minh file vô hại hoặc tuân thủ chính sách.",
@@ -145,7 +145,7 @@ const copy = {
     invalidFile: "Only .html and .htm files are accepted.",
     tooLarge: "The file is too large. The prototype limit is 1 MB.",
     urlError: "Enter the game URL to check.", scanFailed: "The content could not be scanned.",
-    scanButton: "Scan and submit for review", scanning: "Scanning…",
+    scanButton: "Scan and submit for review", submittedButton: "Submitted for review", submittedNotice: "Your submission has been received and queued for human review. It has not been published automatically.", submittedNeedsReview: "The URL was received and queued for review, but its content could not be fetched for scanning. A person must review it before publication.", scanIncompleteStatus: "Content scan incomplete", scanning: "Scanning…",
     scanResult: "Preliminary scan result", manualReview: "Manual review needed",
     noFindings: "No defined patterns matched in the scanned content. That does not prove the game is safe.",
     scanDisclaimer: "A static scan cannot prove a file is harmless or policy-compliant.",
@@ -371,7 +371,9 @@ export default function Home() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || t.scanFailed);
       const scan = data as ScanResult;
-      setResult(scan);
+      const submissionId = typeof data.submission?.id === "string" ? data.submission.id : undefined;
+      const acceptedResult: ScanResult = { ...scan, submitted: Boolean(submissionId), ...(submissionId ? { submissionId } : {}) };
+      setResult(acceptedResult);
       const newItem: Submission = {
         id: typeof data.submission?.id === "string" ? data.submission.id : crypto.randomUUID(),
         title: typeof data.submission?.title === "string" ? data.submission.title : (title.trim() || (activeTab === "html" ? file?.name ?? "HTML" : new URL(url).hostname)),
@@ -379,7 +381,7 @@ export default function Home() {
         kind: activeTab === "html" ? "HTML" : "URL",
         status: "pending",
         createdAt: typeof data.submission?.submittedAt === "string" ? data.submission.submittedAt : new Date().toISOString(),
-        result: scan
+        result: acceptedResult
       };
       setSubmissions((previous) => {
         const updated = [newItem, ...previous].slice(0, 20);
@@ -599,15 +601,16 @@ export default function Home() {
             {error && <div className="inline-error" role="alert"><ShieldAlert size={16} />{error}</div>}
             {displayResult && (
               <div className="scan-result" aria-live="polite">
-                <div className="scan-result-head"><span className="result-icon"><ShieldAlert size={17} /></span><div><b>{t.scanResult}</b><small>{displayResult.verdict === "WARNING" ? (language === "vi" ? "Có dấu hiệu cần xem lại" : "Some signals need a closer look") : t.manualReview}</small></div><strong><small>{displayResult.mode === "url" ? (displayResult.contentScanned ? (language === "vi" ? "ĐÃ QUÉT TĨNH NỘI DUNG" : "STATIC CONTENT SCAN") : (language === "vi" ? "QUÉT CHƯA HOÀN TẤT" : "SCAN INCOMPLETE")) : t.riskScore}</small>{displayResult.mode === "url" ? (displayResult.contentScanned ? `${displayResult.score}/100` : "—") : `${displayResult.score}/100`}</strong></div>
+                <div className="scan-result-head"><span className="result-icon"><ShieldAlert size={17} /></span><div><b>{t.scanResult}</b><small>{displayResult.mode === "url" && !displayResult.contentScanned ? t.scanIncompleteStatus : displayResult.verdict === "WARNING" ? (language === "vi" ? "Có dấu hiệu cần xem lại" : "Some signals need a closer look") : t.manualReview}</small></div><strong><small>{displayResult.mode === "url" ? (displayResult.contentScanned ? (language === "vi" ? "ĐÃ QUÉT TĨNH NỘI DUNG" : "STATIC CONTENT SCAN") : (language === "vi" ? "QUÉT CHƯA HOÀN TẤT" : "SCAN INCOMPLETE")) : t.riskScore}</small>{displayResult.mode === "url" ? (displayResult.contentScanned ? `${displayResult.score}/100` : "—") : `${displayResult.score}/100`}</strong></div>
                 {displayResult.findings.length ? displayResult.findings.map((finding, index) => (
                   <div className="finding" key={finding.label + index}><span className={"severity severity-" + finding.severity}>{severityText(finding.severity, language)}</span><div><b>{finding.label}</b><small>{finding.detail}</small></div></div>
                 )) : <p className="no-findings">{t.noFindings}</p>}
                 <p className="scan-disclaimer">{displayResult.message}</p>
+                {displayResult.submitted && <p className="scan-disclaimer" role="status">{displayResult.mode === "url" && !displayResult.contentScanned ? t.submittedNeedsReview : t.submittedNotice}</p>}
                 <button className="reset-button" onClick={resetForm}>{t.reset}</button>
               </div>
             )}
-            <button className="scan-button" onClick={runScan} disabled={scanning}>{scanning ? <><span className="spinner" />{t.scanning}</> : <><ShieldCheck size={17} />{t.scanButton}<ArrowRight size={16} /></>}</button>
+            <button className="scan-button" onClick={runScan} disabled={scanning || Boolean(result?.submitted)}>{scanning ? <><span className="spinner" />{t.scanning}</> : result?.submitted ? <><Check size={17} />{t.submittedButton}</> : <><ShieldCheck size={17} />{t.scanButton}<ArrowRight size={16} /></>}</button>
             <p className="form-footnote"><LockKeyhole size={13} />{t.footnote}</p>
           </div>
         </section>

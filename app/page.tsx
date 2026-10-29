@@ -227,6 +227,7 @@ export default function Home() {
   const [showSubmit, setShowSubmit] = useState(false);
   const [consent, setConsent] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
   const t = copy[language];
 
   useEffect(() => {
@@ -257,6 +258,27 @@ export default function Home() {
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "paper" ? "#f3f0e7" : "#171c18");
   }, [language, theme, largeText, motionReduced, preferencesLoaded]);
 
+  useEffect(() => {
+    function handleKeyboardShortcut(event: KeyboardEvent) {
+      if (showSubmit || event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target;
+      if (target instanceof HTMLElement && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))) return;
+      event.preventDefault();
+      searchRef.current?.focus();
+    }
+    window.addEventListener("keydown", handleKeyboardShortcut);
+    return () => window.removeEventListener("keydown", handleKeyboardShortcut);
+  }, [showSubmit]);
+
+  useEffect(() => {
+    if (!showSubmit) return;
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setShowSubmit(false);
+    }
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [showSubmit]);
+
   const filteredSamples = useMemo(() => {
     const term = query.trim().toLocaleLowerCase(language === "vi" ? "vi-VN" : "en");
     return samples.filter((game) => {
@@ -267,8 +289,8 @@ export default function Home() {
 
   function acceptFile(candidate: File | undefined) {
     if (!candidate) return;
-    if (!/\.html?$/i.test(candidate.name)) { setError(t.invalidFile); return; }
-    if (candidate.size > 1_000_000) { setError(t.tooLarge); return; }
+    if (!/\.html?$/i.test(candidate.name)) { setFile(null); if (fileRef.current) fileRef.current.value = ""; setError(t.invalidFile); return; }
+    if (candidate.size > 1_000_000) { setFile(null); if (fileRef.current) fileRef.current.value = ""; setError(t.tooLarge); return; }
     setFile(candidate);
     setError("");
     setResult(null);
@@ -341,7 +363,7 @@ export default function Home() {
   const displayResult = result ? localizeScan(result, language) : null;
 
   return (
-    <main className="app-shell" data-theme={theme} data-scale={largeText ? "large" : "normal"} data-motion={motionReduced ? "reduced" : "normal"}>
+    <div className="app-shell" data-theme={theme} data-scale={largeText ? "large" : "normal"} data-motion={motionReduced ? "reduced" : "normal"}>
       <a className="skip-link" href="#main-content">{language === "vi" ? "Bỏ qua điều hướng" : "Skip to content"}</a>
       <header className="topbar">
         <a className="brand" href="#" aria-label="GameVault home">
@@ -368,10 +390,10 @@ export default function Home() {
           </button>
         </div>
         <button className="top-cta" onClick={() => openSubmit("html")}>{t.submit}<ArrowDownRight size={15} /></button>
-        <button className="mobile-menu" aria-label={menuOpen ? t.closeMenu : t.openMenu} aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}><Menu size={20} /></button>
+        <button className="mobile-menu" aria-label={menuOpen ? t.closeMenu : t.openMenu} aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X size={20} /> : <Menu size={20} />}</button>
       </header>
 
-      <div id="main-content">
+      <main id="main-content">
         <section className="hero" aria-labelledby="hero-title">
           <div className="hero-grid" aria-hidden="true" />
           <div className="hero-copy">
@@ -420,7 +442,7 @@ export default function Home() {
         <section className="section library-section" id="library">
           <div className="section-heading">
             <div><div className="section-kicker">{t.libraryKicker}</div><h2>{t.libraryTitle}</h2><p>{t.librarySubtitle}</p></div>
-            <label className="library-search"><Search size={17} aria-hidden="true" /><input aria-label={t.searchLabel} placeholder={t.searchPlaceholder} value={query} onChange={(event) => setQuery(event.target.value)} /><kbd>/</kbd></label>
+            <label className="library-search"><Search size={17} aria-hidden="true" /><input ref={searchRef} aria-label={t.searchLabel} placeholder={t.searchPlaceholder} value={query} onChange={(event) => setQuery(event.target.value)} /><kbd>/</kbd></label>
           </div>
           <div className="filter-row" role="group" aria-label={language === "vi" ? "Lọc thể loại" : "Filter by genre"}>
             <button className={activeGenre === "all" ? "filter-active" : ""} aria-pressed={activeGenre === "all"} onClick={() => setActiveGenre("all")}>{t.all}<b>03</b></button>
@@ -466,9 +488,9 @@ export default function Home() {
 
           <div className="submit-card">
             <div className="submit-card-header"><div><span className="card-kicker">{t.formKicker}</span><h3>{t.formTitle}</h3></div><span className="secure-badge"><ShieldCheck size={15} />{t.safeFlow}</span></div>
-            <div className="tab-switch" role="tablist" aria-label={language === "vi" ? "Cách gửi game" : "Submission method"}>
-              <button role="tab" aria-selected={activeTab === "html"} className={activeTab === "html" ? "tab-selected" : ""} onClick={() => { setActiveTab("html"); setResult(null); setError(""); }}><FileCode2 size={16} />{t.htmlTab}</button>
-              <button role="tab" aria-selected={activeTab === "url"} className={activeTab === "url" ? "tab-selected" : ""} onClick={() => { setActiveTab("url"); setResult(null); setError(""); }}><Globe2 size={16} />{t.urlTab}</button>
+            <div className="tab-switch" role="group" aria-label={language === "vi" ? "Cách gửi game" : "Submission method"}>
+              <button type="button" aria-pressed={activeTab === "html"} className={activeTab === "html" ? "tab-selected" : ""} onClick={() => { setActiveTab("html"); setResult(null); setError(""); }}><FileCode2 size={16} />{t.htmlTab}</button>
+              <button type="button" aria-pressed={activeTab === "url"} className={activeTab === "url" ? "tab-selected" : ""} onClick={() => { setActiveTab("url"); setResult(null); setError(""); }}><Globe2 size={16} />{t.urlTab}</button>
             </div>
 
             <label className="field-label" htmlFor="game-title">{t.titleLabel} <span>{t.optional}</span></label>
@@ -538,13 +560,14 @@ export default function Home() {
           </section>
         )}
 
+        </main>
+
         <footer className="footer">
           <a className="brand footer-brand" href="#"><span className="brand-mark"><Layers3 size={17} /></span><span>gamevault<span className="brand-dot">.</span></span></a>
           <span>{t.footerLine}</span>
           <div><a href="#safety">{t.footerPolicy}</a><a href="#how-it-works">{t.footerProcess}</a><a href="https://github.com/slgamervn/aaa" target="_blank" rel="noreferrer"><Github size={15} />{t.source}</a></div>
           <small>© 2026 GameVault · {t.footerStatus}</small>
         </footer>
-      </div>
 
       {showSubmit && (
         <div className="modal-backdrop" role="presentation" onClick={(event) => { if (event.target === event.currentTarget) setShowSubmit(false); }}>
@@ -560,6 +583,6 @@ export default function Home() {
           </div>
         </div>
       )}
-    </main>
+    </div>
   );
 }

@@ -1,4 +1,7 @@
 import { isIP } from "node:net";
+import { lookup as dnsLookup } from "node:dns/promises";
+import { request as httpRequest } from "node:http";
+import { request as httpsRequest } from "node:https";
 
 export const MAX_HTML_BYTES = 1_000_000;
 export const SCAN_VERSION = "gv-static-3-url-content";
@@ -85,8 +88,7 @@ function isPublicIPv4(host: string): boolean {
     (a === 100 && b >= 64 && b <= 127) ||
     (a === 169 && b === 254) ||
     (a === 172 && b >= 16 && b <= 31) ||
-    (a === 192 && b === 0) ||
-    (a === 192 && b === 0 && c === 2) ||
+    (a === 192 && b === 0 && (c === 0 || c === 2)) ||
     (a === 192 && b === 88 && c === 99) ||
     (a === 192 && b === 168) ||
     (a === 198 && (b === 18 || b === 19)) ||
@@ -180,10 +182,6 @@ export function scanHtml(html: string): ScanResult {
 }
 
 
-import { lookup as dnsLookup } from "node:dns/promises";
-import { request as httpRequest } from "node:http";
-import { request as httpsRequest } from "node:https";
-
 type ResolvedAddress = { address: string; family: 4 | 6 };
 type RemoteResponse = {
   status: number;
@@ -201,7 +199,7 @@ const REMOTE_TIMEOUT_MS = 6_000;
 function validatePublicFetchUrl(value: string): URL {
   const checked = scanUrl(value);
   const parsed = new URL(checked.url);
-  if (parsed.port && parsed.port !== "80" && parsed.port !== "443") {
+  if (parsed.port && !((parsed.protocol === "http:" && parsed.port === "80") || (parsed.protocol === "https:" && parsed.port === "443"))) {
     throw new Error("Only standard HTTP and HTTPS ports are accepted.");
   }
   return parsed;

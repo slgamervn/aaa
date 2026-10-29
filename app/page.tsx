@@ -207,6 +207,21 @@ const severityText = (severity: Finding["severity"], language: Language) => {
   return severity === "high" ? labels.severityHigh : severity === "medium" ? labels.severityMedium : labels.severityLow;
 };
 
+function localizeErrorMessage(message: string, language: Language): string {
+  if (language === "vi") return message;
+  const translations: Record<string, string> = {
+    "Nội dung vượt giới hạn 1 MB.": "The request exceeds the 1 MB limit.",
+    "Dữ liệu JSON không hợp lệ.": "The request body is not valid JSON.",
+    "Thiếu nội dung cần quét.": "No content was provided to scan.",
+    "File HTML vượt giới hạn 1 MB.": "The HTML file exceeds the 1 MB limit.",
+    "URL không hợp lệ.": "The URL is invalid.",
+    "Chỉ chấp nhận URL HTTP/HTTPS.": "Only HTTP and HTTPS URLs are accepted.",
+    "URL không được chứa thông tin đăng nhập.": "The URL must not contain embedded credentials.",
+    "Hãy chọn file HTML hoặc nhập URL.": "Choose an HTML file or enter a URL."
+  };
+  return translations[message] ?? copy.en.scanFailed;
+}
+
 export default function Home() {
   const [language, setLanguage] = useState<Language>("vi");
   const [theme, setTheme] = useState<Theme>("paper");
@@ -333,7 +348,7 @@ export default function Home() {
         return updated;
       });
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : t.scanFailed);
+      setError(caught instanceof Error ? localizeErrorMessage(caught.message, language) : t.scanFailed);
     } finally {
       setScanning(false);
     }

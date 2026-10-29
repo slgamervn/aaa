@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, ArrowLeft, BadgeCheck, Clock3, ExternalLink, FileCode2, Globe2, LogOut, RefreshCw, ShieldCheck, XCircle } from "lucide-react";
+import { AlertCircle, BadgeCheck, Clock3, ExternalLink, EyeOff, FileCode2, Globe2, LogOut, RefreshCw, ShieldCheck, XCircle } from "lucide-react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 type AdminFinding = { label: string; severity: "high" | "medium" | "low"; detail: string };
@@ -35,6 +35,7 @@ const STATUS_LABEL: Record<string, string> = {
   approved: "Đã duyệt — chờ xuất bản",
   rejected: "Đã từ chối",
   publishing: "Đang xuất bản",
+  unpublishing: "Đang gỡ khỏi thư viện",
   publish_failed: "Xuất bản lỗi — có thể thử lại",
   published: "Đã xuất bản",
   scan_failed: "Lỗi lưu/quét"
@@ -87,13 +88,14 @@ export default function AdminPage() {
     }
   }
 
-  async function act(item: AdminSubmission, action: "approve" | "reject" | "publish") {
+  async function act(item: AdminSubmission, action: "approve" | "reject" | "publish" | "unpublish") {
     const note = (notes[item.id] ?? "").trim();
     if (action === "reject" && !note) {
       setError("Hãy ghi lý do từ chối để lưu lại lịch sử kiểm duyệt.");
       return;
     }
     if (action === "publish" && !window.confirm("Xác nhận xuất bản nội dung này lên GitHub? Hành động này tạo commit công khai trong repository đã cấu hình.")) return;
+    if (action === "unpublish" && !window.confirm("Gỡ game này khỏi thư viện công khai? Tệp đã xuất bản sẽ bị xóa khỏi GitHub, còn bản gửi và lịch sử kiểm duyệt sẽ được giữ lại để có thể xuất bản lại.")) return;
 
     setBusy(item.id + ":" + action);
     setError("");
@@ -109,7 +111,7 @@ export default function AdminPage() {
         setError(body.error || "Thao tác không thành công.");
         return;
       }
-      setNotice(action === "approve" ? "Đã duyệt. Nội dung vẫn chưa công khai." : action === "reject" ? "Đã từ chối và lưu lý do." : "Đã xuất bản lên GitHub sau khi bạn xác nhận.");
+      setNotice(action === "approve" ? "Đã duyệt. Nội dung vẫn chưa công khai." : action === "reject" ? "Đã từ chối và lưu lý do." : action === "unpublish" ? "Đã gỡ game khỏi thư viện công khai. Bản gửi vẫn được giữ lại." : "Đã xuất bản lên GitHub sau khi bạn xác nhận.");
       await load();
     } catch {
       setError("Máy chủ không phản hồi. Hãy tải lại hàng đợi trước khi thử lần nữa.");
@@ -211,8 +213,14 @@ export default function AdminPage() {
                 )}
                 {item.status === "publishing" && <p className="admin-publish-warning">Đang xử lý commit GitHub. Nếu trạng thái này kéo dài hơn 10 phút, tải lại rồi thử xuất bản lại.</p>}
                 {item.status === "published" && item.published_path && (
-                  <div className="admin-published"><BadgeCheck size={16} /><span>Đã xuất bản · <code>{item.published_path}</code></span>{item.published_commit_sha && <a href={"https://github.com/slgamervn/aaa/commit/" + item.published_commit_sha} target="_blank" rel="noopener noreferrer">Xem commit <ExternalLink size={13} /></a>}</div>
+                  <>
+                    <div className="admin-published"><BadgeCheck size={16} /><span>Đã xuất bản · <code>{item.published_path}</code></span>{item.published_commit_sha && <a href={"https://github.com/slgamervn/aaa/commit/" + item.published_commit_sha} target="_blank" rel="noopener noreferrer">Xem commit <ExternalLink size={13} /></a>}</div>
+                    <div className="admin-action-buttons">
+                      <button className="admin-button admin-button-danger" disabled={busy === item.id + ":unpublish"} onClick={() => void act(item, "unpublish")}><EyeOff size={15} /> {busy === item.id + ":unpublish" ? "Đang gỡ xuống…" : "Gỡ khỏi thư viện"}</button>
+                    </div>
+                  </>
                 )}
+                {item.status === "unpublishing" && <p className="admin-publish-warning">Đang gỡ game khỏi GitHub. Nếu trạng thái này kéo dài hơn 10 phút, tải lại rồi thử gỡ lại.</p>}
                 {item.status === "rejected" && item.review_note && <p className="admin-review-note">Lý do từ chối: {item.review_note}</p>}
               </article>
             ))}

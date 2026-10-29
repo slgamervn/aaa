@@ -144,6 +144,131 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     return json({ submission: data });
   }
 
+  if (action === "unpublish") {
+    const token = process.env.GITHUB_TOKEN;
+    const repo = process.env.GITHUB_PUBLISH_REPO || "slgamervn/aaa";
+    const branch = process.env.GITHUB_PUBLISH_BRANCH || "main";
+    if (!token) return json({ error: "GitHub removal is not configured. Add GITHUB_TOKEN in Vercel before removing a published game." }, 503);
+    if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo)) {
+      return json({ error: "GITHUB_PUBLISH_REPO must use owner/repository format." }, 503);
+    }
+
+    const { data: item, error: readError } = await access.client
+      .from("gamevault_submissions")
+      .select("id,title,kind,status,published_path,updated_at")
+      .eq("id", id)
+      .maybeSingle();
+    if (readError || !item) return json({ error: "Submission not found." }, 404);
+
+    if (item.status === "unpublishing") {
+      const updatedAt = Date.parse(item.updated_at);
+      const stale = Number.isFinite(updatedAt) && Date.now() - updatedAt > 10 * 60 * 1000;
+      if (!stale) return json({ error: "This game is already being removed. Refresh the queue and try again shortly." }, 409);
+    } else if (item.status !== "published") {
+      return json({ error: "Only a published game can be removed from the public library." }, 409);
+    }
+
+    const expectedPath = "gamevault-submissions/" + id + (item.kind === "html" ? "/index.html" : "/submission.json");
+    if (item.published_path !== expectedPath) {
+      return json({ error: "The published path does not match this submission. No GitHub file was changed." }, 409);
+    }
+
+    if (item.status === "published") {
+      const { data: locked, error: lockError } = await access.client
+        .from("gamevault_submissions")
+        .update({ status: "unpublishing", updated_at: new Date().toISOString() })
+        .eq("id", id)
+        .eq("status", "published")
+        .select("id")
+        .maybeSingle();
+      if (lockError || !locked) return json({ error: "The game changed before removal could start. Refresh and try again." }, 409);
+    } else {
+      const { error: relockError } = await access.client
+        .from("gamevault_submissions")
+        .update({ updated_at: new Date().toISOString() })
+        .eq("id", id)
+        .eq("status", "unpublishing");
+      if (relockError) return json({ error: "The removal could not be resumed. Please try again." }, 503);
+    }
+
+    const segments = expectedPath.split("/").map(encodeURIComponent).join("/");
+    const endpoint = "https://api.github.com/repos/" + repo + "/contents/" + segments;
+    const headers = githubHeaders(token);
+    let removalConfirmed = false;
+
+    try {
+      const existingResponse = await fetch(endpoint + "?ref=" + encodeURIComponent(branch), {
+        headers,
+        cache: "no-store"
+      });
+
+      if (existingResponse.status === 404) {
+        // GitHub may have accepted a previous delete even if the database update failed.
+        removalConfirmed = true;
+      } else if (!existingResponse.ok) {
+        throw new Error("GitHub could not verify the published file.");
+      } else {
+        const existing = await existingResponse.json() as { sha?: string };
+        if (!existing.sha) throw new Error("GitHub did not return the published file identifier.");
+
+        const deleteResponse = await fetch(endpoint, {
+          method: "DELETE",
+          headers,
+          body: JSON.stringify({
+            message: "Unpublish GameVault submission: " + item.title.slice(0, 80),
+            sha: existing.sha,
+            branch
+          }),
+          cache: "no-store"
+        });
+        if (!deleteResponse.ok && deleteResponse.status !== 404) {
+          const detail = await deleteResponse.text();
+          console.error("GameVault GitHub removal failed:", deleteResponse.status, detail.slice(0, 400));
+          throw new Error("GitHub rejected the removal request. Check the token's repository permissions and branch.");
+        }
+        removalConfirmed = true;
+      }
+
+      const now = new Date().toISOString();
+      const { error: updateError } = await access.client
+        .from("gamevault_submissions")
+        .update({
+          status: "approved",
+          published_at: null,
+          published_path: null,
+          published_commit_sha: null,
+          updated_at: now
+        })
+        .eq("id", id)
+        .eq("status", "unpublishing");
+
+      if (updateError) {
+        console.error("GameVault unpublish status update failed:", updateError.code);
+        return json({ error: "The GitHub file was removed, but the database status could not be updated. Retry removal to reconcile it." }, 503);
+      }
+
+      const { error: eventError } = await access.client.from("gamevault_submission_events").insert({
+        submission_id: id,
+        action: "unpublished",
+        actor_email: access.email,
+        note: note || null,
+        details: { repository: repo, branch, path: expectedPath }
+      });
+      if (eventError) console.error("GameVault unpublish audit event failed:", eventError.code);
+
+      return json({ unpublished: true, status: "approved" });
+    } catch (error) {
+      if (!removalConfirmed) {
+        await access.client.from("gamevault_submissions")
+          .update({ status: "published", updated_at: new Date().toISOString() })
+          .eq("id", id)
+          .eq("status", "unpublishing");
+      }
+      const message = error instanceof Error ? error.message : "Removal failed.";
+      return json({ error: message }, 502);
+    }
+  }
+
   if (action !== "publish") return json({ error: "Unknown submission action." }, 400);
 
   const token = process.env.GITHUB_TOKEN;

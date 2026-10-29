@@ -28,6 +28,7 @@ type AdminSubmission = {
   published_at: string | null;
   published_path: string | null;
   published_commit_sha: string | null;
+  updated_at: string;
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -220,7 +221,16 @@ export default function AdminPage() {
                     </div>
                   </>
                 )}
-                {item.status === "unpublishing" && <p className="admin-publish-warning">Đang gỡ game khỏi GitHub. Nếu trạng thái này kéo dài hơn 10 phút, tải lại rồi thử gỡ lại.</p>}
+                {item.status === "unpublishing" && (
+                  <div className="admin-actions">
+                    <p className="admin-publish-warning">Đang gỡ game khỏi GitHub. Nếu trạng thái này kéo dài hơn 10 phút, hãy làm mới rồi thử tiếp tục.</p>
+                    {Date.now() - Date.parse(item.updated_at) > 10 * 60 * 1000 && (
+                      <div className="admin-action-buttons">
+                        <button className="admin-button admin-button-danger" disabled={busy === item.id + ":unpublish"} onClick={() => void act(item, "unpublish")}><EyeOff size={15} /> Thử gỡ lại</button>
+                      </div>
+                    )}
+                  </div>
+                )}
                 {item.status === "rejected" && item.review_note && <p className="admin-review-note">Lý do từ chối: {item.review_note}</p>}
               </article>
             ))}

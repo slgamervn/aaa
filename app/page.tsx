@@ -590,7 +590,7 @@ export default function Home() {
             {error && <div className="inline-error" role="alert"><ShieldAlert size={16} />{error}</div>}
             {displayResult && (
               <div className="scan-result" aria-live="polite">
-                <div className="scan-result-head"><span className="result-icon"><ShieldAlert size={17} /></span><div><b>{t.scanResult}</b><small>{displayResult.verdict === "WARNING" ? (language === "vi" ? "Có dấu hiệu cần xem lại" : "Some signals need a closer look") : t.manualReview}</small></div><strong><small>{t.riskScore}</small>{displayResult.score}/100</strong></div>
+                <div className="scan-result-head"><span className="result-icon"><ShieldAlert size={17} /></span><div><b>{t.scanResult}</b><small>{displayResult.verdict === "WARNING" ? (language === "vi" ? "Có dấu hiệu cần xem lại" : "Some signals need a closer look") : t.manualReview}</small></div><strong><small>{displayResult.mode === "url" ? (language === "vi" ? "CHƯA QUÉT NỘI DUNG" : "CONTENT NOT SCANNED") : t.riskScore}</small>{displayResult.mode === "url" ? "—" : `${displayResult.score}/100`}</strong></div>
                 {displayResult.findings.length ? displayResult.findings.map((finding, index) => (
                   <div className="finding" key={finding.label + index}><span className={"severity severity-" + finding.severity}>{severityText(finding.severity, language)}</span><div><b>{finding.label}</b><small>{finding.detail}</small></div></div>
                 )) : <p className="no-findings">{t.noFindings}</p>}

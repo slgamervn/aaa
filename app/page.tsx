@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ArrowDownRight, ArrowRight, BadgeCheck, BookOpen, Check, CircleHelp,
+  ArrowDownRight, ArrowRight, BadgeCheck, BookOpen, Check,
   Clock3, FileCode2, FileUp, Github, Globe2, Languages, Layers3,
   LockKeyhole, Menu, Moon, Search, ShieldAlert, ShieldCheck, Sun,
   Type, UploadCloud, X
@@ -10,10 +10,11 @@ import {
 
 type Language = "vi" | "en";
 type Theme = "paper" | "night";
-type Genre = "all" | "arcade" | "strategy" | "puzzle";
+type Genre = "all" | "arcade" | "strategy" | "puzzle" | "action" | "simulation" | "educational" | "other";
 type Finding = { label: string; severity: "high" | "medium" | "low"; detail: string };
 type ScanResult = { mode: string; verdict: string; score: number; findings: Finding[]; message: string; bytes?: number };
 type Submission = { id: string; title: string; source: string; kind: "HTML" | "URL"; status: "pending"; createdAt: string; result: ScanResult };
+type PublishedGame = { id: string; title: string; description: string; genre: string; kind: "html" | "url"; sourceUrl: string | null; originalFilename: string | null; publishedAt: string | null };
 
 const copy = {
   vi: {
@@ -32,10 +33,11 @@ const copy = {
     statOne: "HTML / URL", statOneDesc: "Hai cách gửi nội dung",
     statTwo: "QUÉT TĨNH", statTwoDesc: "Không thực thi file tải lên",
     statThree: "DUYỆT TAY", statThreeDesc: "Không tự động xuất bản",
-    statFour: "BẢN THỬ NGHIỆM", statFourDesc: "Thẻ game mẫu được ghi rõ",
-    libraryKicker: "GÓC KHÁM PHÁ · 01", libraryTitle: "Tìm trò tiếp theo.", librarySubtitle: "Những thẻ bên dưới là minh hoạ giao diện, chưa phải game được lưu trữ.",
+    statFour: "CHỈ GAME ĐÃ DUYỆT", statFourDesc: "Game chỉ hiện sau khi được xuất bản",
+    libraryKicker: "GÓC KHÁM PHÁ · 01", libraryTitle: "Tìm trò tiếp theo.", librarySubtitle: "Chỉ game đã được chủ dự án duyệt và xuất bản mới xuất hiện trong thư viện.",
     searchPlaceholder: "Tìm tên hoặc thể loại…", searchLabel: "Tìm game",
-    all: "Tất cả", arcade: "Arcade", strategy: "Chiến thuật", puzzle: "Giải đố",
+    all: "Tất cả", arcade: "Arcade", strategy: "Chiến thuật", puzzle: "Giải đố", action: "Hành động", simulation: "Mô phỏng", educational: "Giáo dục", other: "Khác",
+    genreLabel: "Thể loại", descriptionLabel: "Mô tả", descriptionPlaceholder: "Game này chơi như thế nào? (tối đa 240 ký tự)", publishedOnly: "Đã được duyệt và xuất bản", loadingGames: "Đang tải thư viện…", catalogLoadFailed: "Chưa thể tải thư viện. Thử tải lại trang.", emptyLibraryTitle: "Kệ game đang chờ trò đầu tiên.", emptyLibraryText: "Chưa có trò chơi nào được duyệt xuất bản. Bạn có thể gửi game; nội dung sẽ nằm ở trạng thái chờ đến khi chủ dự án xem xét.", playGame: "Chơi game", visitSource: "Mở trang gốc", riskScore: "TÍN HIỆU RỦI RO", htmlGameFallback: "Game HTML đã được chủ dự án duyệt.", urlGameFallback: "Game được lưu dưới dạng liên kết gốc; nội dung bên ngoài không được sao chép.",
     sample: "MẪU", unlisted: "Chưa xuất bản", sampleArtwork: "ARTWORK MẪU",
     neonCategory: "Arcade · Nhịp độ", neonDescription: "Một đường đua nhỏ, vài khúc cua và cảm giác vừa đủ nhanh.",
     kingdomCategory: "Chiến thuật · Xây dựng", kingdomDescription: "Xếp từng mảnh đất và chăm chút cho một vương quốc tí hon.",
@@ -73,12 +75,12 @@ const copy = {
     policyCheck: "Kiểm tra chính sách", policyCheckDesc: "Xem giấy phép, bản quyền, quyền riêng tư và quy tắc sử dụng GitHub.",
     manualApproval: "Duyệt thủ công", manualApprovalDesc: "Chủ dự án quyết định. Kết quả quét không tự phê duyệt nội dung.",
     safetyKicker: "GIỚI HẠN ĐƯỢC NÓI RÕ · 04", safetyTitle: "Quét không đồng nghĩa với an toàn.",
-    safetyText: "GameVault đang trong giai đoạn khởi tạo. Hàng đợi hiện chỉ nằm trong trình duyệt; kết nối lưu trữ dùng chung, xác thực quản trị và luồng xuất bản cần được hoàn thiện trước khi mở công khai.",
+    safetyText: "Bài gửi được lưu phía máy chủ trong cơ sở dữ liệu và kho riêng tư. Quyền quản trị và xuất bản GitHub phải được cấu hình; không nội dung nào được tự động công khai.",
     readPolicy: "Đọc chính sách sử dụng GitHub", recentTitle: "Lần gửi trên thiết bị này",
     clearHistory: "Xoá lịch sử cục bộ", pendingReview: "Chờ chủ dự án duyệt",
-    localWarning: "Lịch sử này chỉ nằm trên trình duyệt đang dùng. Nó không phải bằng chứng duyệt thật hoặc dữ liệu dùng chung.",
+    localWarning: "Đây chỉ là nhật ký hoạt động cục bộ để tiện theo dõi. Bản ghi có thẩm quyền nằm trong cơ sở dữ liệu máy chủ; trạng thái duyệt thật chỉ có trong trang quản trị.",
     footerLine: "Một kho nhỏ, được chăm chút từng trò.", footerPolicy: "Chính sách",
-    footerProcess: "Quy trình", source: "Mã nguồn", footerStatus: "Bản thử nghiệm · chưa phải thư viện công khai",
+    footerProcess: "Quy trình", source: "Mã nguồn", footerStatus: "Thư viện chỉ nhận game sau khi duyệt",
     modalKicker: "BẮT ĐẦU ĐÓNG GÓP", modalTitle: "Bạn muốn gửi theo cách nào?",
     modalText: "Chọn file HTML hoặc giữ lại URL gốc. Kết quả sẽ chờ người quản lý xem xét.",
     modalHtml: "Tải file HTML", modalHtmlDesc: "Chọn file từ thiết bị của bạn",
@@ -112,10 +114,11 @@ const copy = {
     statOne: "HTML / URL", statOneDesc: "Two ways to submit",
     statTwo: "STATIC CHECK", statTwoDesc: "Uploaded files are not executed",
     statThree: "HUMAN REVIEW", statThreeDesc: "Nothing is published automatically",
-    statFour: "EARLY BUILD", statFourDesc: "Sample cards are clearly labelled",
-    libraryKicker: "THE DISCOVERY SHELF · 01", libraryTitle: "Find your next game.", librarySubtitle: "The cards below are interface samples, not stored or published games.",
+    statFour: "REVIEWED ONLY", statFourDesc: "Games appear after publication",
+    libraryKicker: "THE DISCOVERY SHELF · 01", libraryTitle: "Find your next game.", librarySubtitle: "Only games approved and published by the project owner appear in this library.",
     searchPlaceholder: "Search titles or genres…", searchLabel: "Search games",
-    all: "All", arcade: "Arcade", strategy: "Strategy", puzzle: "Puzzle",
+    all: "All", arcade: "Arcade", strategy: "Strategy", puzzle: "Puzzle", action: "Action", simulation: "Simulation", educational: "Educational", other: "Other",
+    genreLabel: "Genre", descriptionLabel: "Description", descriptionPlaceholder: "What is this game like? (up to 240 characters)", publishedOnly: "Reviewed and published", loadingGames: "Loading the library…", catalogLoadFailed: "The library could not be loaded. Try refreshing the page.", emptyLibraryTitle: "Waiting for the first game.", emptyLibraryText: "No game has been approved for publication yet. You can submit one; it will remain pending until the project owner reviews it.", playGame: "Play game", visitSource: "Visit original site", riskScore: "RISK SIGNAL", htmlGameFallback: "HTML game reviewed by the project owner.", urlGameFallback: "This game is saved as an original link; its external content is not copied.",
     sample: "SAMPLE", unlisted: "Not published", sampleArtwork: "SAMPLE ARTWORK",
     neonCategory: "Arcade · Action", neonDescription: "A small track, a few turns, and just enough speed.",
     kingdomCategory: "Strategy · Building", kingdomDescription: "Place each patch of land and tend to a tiny kingdom.",
@@ -153,12 +156,12 @@ const copy = {
     policyCheck: "Policy review", policyCheckDesc: "Review the licence, copyright, privacy, and GitHub rules.",
     manualApproval: "Manual approval", manualApprovalDesc: "The project owner decides. A scan never approves content by itself.",
     safetyKicker: "LIMITATIONS, MADE CLEAR · 04", safetyTitle: "A scan is not a safety certificate.",
-    safetyText: "GameVault is still a starter build. The queue currently lives only in this browser; shared storage, administrator authentication, and the publishing workflow must be completed before a public launch.",
+    safetyText: "Submissions are stored server-side in a database and private quarantine. Administrator access and GitHub publishing must be configured; nothing is published automatically.",
     readPolicy: "Read GitHub's Acceptable Use Policies", recentTitle: "Recent submissions on this device",
     clearHistory: "Clear local history", pendingReview: "Waiting for owner review",
-    localWarning: "This history stays in the current browser. It is not proof of review and is not shared with other users.",
+    localWarning: "This is only a local activity log for convenience. The server database is authoritative; verified review status is available only in the admin console.",
     footerLine: "A small collection, cared for one game at a time.", footerPolicy: "Policy",
-    footerProcess: "Process", source: "Source code", footerStatus: "Prototype · not a public game library",
+    footerProcess: "Process", source: "Source code", footerStatus: "Published games only; manual review required",
     modalKicker: "START A SUBMISSION", modalTitle: "How would you like to submit?",
     modalText: "Choose an HTML file or keep the original URL. The result will wait for a human review.",
     modalHtml: "Upload an HTML file", modalHtmlDesc: "Choose a file from your device",
@@ -178,11 +181,6 @@ const copy = {
   }
 } as const;
 
-const samples = [
-  { title: "Neon Drift", genre: "arcade" as const, category: { vi: copy.vi.neonCategory, en: copy.en.neonCategory }, description: { vi: copy.vi.neonDescription, en: copy.en.neonDescription }, color: "mint", icon: "↗", index: "01" },
-  { title: "Tiny Kingdom", genre: "strategy" as const, category: { vi: copy.vi.kingdomCategory, en: copy.en.kingdomCategory }, description: { vi: copy.vi.kingdomDescription, en: copy.en.kingdomDescription }, color: "rust", icon: "♜", index: "02" },
-  { title: "Orbit Lab", genre: "puzzle" as const, category: { vi: copy.vi.orbitCategory, en: copy.en.orbitCategory }, description: { vi: copy.vi.orbitDescription, en: copy.en.orbitDescription }, color: "blue", icon: "◎", index: "03" }
-];
 
 function localizeScan(scan: ScanResult, language: Language): ScanResult {
   if (language === "vi") return scan;
@@ -233,6 +231,11 @@ export default function Home() {
   const [activeGenre, setActiveGenre] = useState<Genre>("all");
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [genre, setGenre] = useState<Exclude<Genre, "all">>("other");
+  const [publishedGames, setPublishedGames] = useState<PublishedGame[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [catalogLoadError, setCatalogLoadError] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<ScanResult | null>(null);
@@ -274,6 +277,28 @@ export default function Home() {
   }, [language, theme, largeText, motionReduced, preferencesLoaded]);
 
   useEffect(() => {
+    let active = true;
+    async function loadPublishedGames() {
+      setCatalogLoading(true);
+      try {
+        const response = await fetch("/api/games", { cache: "no-store" });
+        const body = await response.json();
+        if (!response.ok) throw new Error("catalog-unavailable");
+        if (active) {
+          setPublishedGames(Array.isArray(body.games) ? body.games as PublishedGame[] : []);
+          setCatalogLoadError(false);
+        }
+      } catch {
+        if (active) setCatalogLoadError(true);
+      } finally {
+        if (active) setCatalogLoading(false);
+      }
+    }
+    void loadPublishedGames();
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
     function handleKeyboardShortcut(event: KeyboardEvent) {
       if (showSubmit || event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
       const target = event.target;
@@ -294,13 +319,15 @@ export default function Home() {
     return () => window.removeEventListener("keydown", handleEscape);
   }, [showSubmit]);
 
-  const filteredSamples = useMemo(() => {
+  const filteredGames = useMemo(() => {
     const term = query.trim().toLocaleLowerCase(language === "vi" ? "vi-VN" : "en");
-    return samples.filter((game) => {
-      const visibleText = [game.title, game.category[language], game.description[language]].join(" ").toLocaleLowerCase(language === "vi" ? "vi-VN" : "en");
+    return publishedGames.filter((game) => {
+      const visibleText = [game.title, game.genre, game.description, game.sourceUrl ?? "", game.originalFilename ?? ""]
+        .join(" ")
+        .toLocaleLowerCase(language === "vi" ? "vi-VN" : "en");
       return (activeGenre === "all" || game.genre === activeGenre) && (!term || visibleText.includes(term));
     });
-  }, [activeGenre, language, query]);
+  }, [activeGenre, language, query, publishedGames]);
 
   function acceptFile(candidate: File | undefined) {
     if (!candidate) return;
@@ -321,25 +348,28 @@ export default function Home() {
 
     setScanning(true);
     try {
-      const payload: { html?: string; url?: string } = activeTab === "html" && file
-        ? { html: await file.text() }
-        : { url: url.trim() };
-      const response = await fetch("/api/scan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+      const payload = new FormData();
+      payload.set("kind", activeTab);
+      payload.set("title", title.trim());
+      payload.set("description", description.trim());
+      payload.set("genre", genre);
+      payload.set("rightsConfirmed", String(consent));
+      payload.set("website", "");
+      if (activeTab === "html" && file) payload.set("file", file, file.name);
+      else payload.set("url", url.trim());
+
+      const response = await fetch("/api/scan", { method: "POST", body: payload });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || t.scanFailed);
       const scan = data as ScanResult;
       setResult(scan);
       const newItem: Submission = {
-        id: crypto.randomUUID(),
-        title: title.trim() || (activeTab === "html" ? file?.name ?? "HTML" : new URL(url).hostname),
+        id: typeof data.submission?.id === "string" ? data.submission.id : crypto.randomUUID(),
+        title: typeof data.submission?.title === "string" ? data.submission.title : (title.trim() || (activeTab === "html" ? file?.name ?? "HTML" : new URL(url).hostname)),
         source: activeTab === "html" ? file?.name ?? "HTML" : url.trim(),
         kind: activeTab === "html" ? "HTML" : "URL",
         status: "pending",
-        createdAt: new Date().toISOString(),
+        createdAt: typeof data.submission?.submittedAt === "string" ? data.submission.submittedAt : new Date().toISOString(),
         result: scan
       };
       setSubmissions((previous) => {
@@ -358,6 +388,8 @@ export default function Home() {
     setFile(null);
     setUrl("");
     setTitle("");
+    setDescription("");
+    setGenre("other");
     setResult(null);
     setError("");
     setConsent(false);
@@ -460,33 +492,49 @@ export default function Home() {
             <label className="library-search"><Search size={17} aria-hidden="true" /><input ref={searchRef} aria-label={t.searchLabel} placeholder={t.searchPlaceholder} value={query} onChange={(event) => setQuery(event.target.value)} /><kbd>/</kbd></label>
           </div>
           <div className="filter-row" role="group" aria-label={language === "vi" ? "Lọc thể loại" : "Filter by genre"}>
-            <button className={activeGenre === "all" ? "filter-active" : ""} aria-pressed={activeGenre === "all"} onClick={() => setActiveGenre("all")}>{t.all}<b>03</b></button>
-            <button className={activeGenre === "arcade" ? "filter-active" : ""} aria-pressed={activeGenre === "arcade"} onClick={() => setActiveGenre("arcade")}>{t.arcade}</button>
-            <button className={activeGenre === "strategy" ? "filter-active" : ""} aria-pressed={activeGenre === "strategy"} onClick={() => setActiveGenre("strategy")}>{t.strategy}</button>
-            <button className={activeGenre === "puzzle" ? "filter-active" : ""} aria-pressed={activeGenre === "puzzle"} onClick={() => setActiveGenre("puzzle")}>{t.puzzle}</button>
-            <span className="filter-note"><CircleHelp size={14} />{t.sample}</span>
-          </div>
-          <div className="game-grid">
-            {filteredSamples.map((game) => (
-              <article className="game-card" key={game.title}>
-                <div className={"game-cover cover-" + game.color} role="img" aria-label={game.title + " — " + t.sampleArtwork}>
-                  <div className="cover-grain" aria-hidden="true" />
-                  <span className="cover-index">GV / {game.index}</span>
-                  <div className="cover-symbol" aria-hidden="true">{game.icon}</div>
-                  <div className="cover-rings" aria-hidden="true" />
-                  <span className="demo-pill">{t.sample}</span>
-                </div>
-                <div className="game-info">
-                  <div className="game-meta"><span>{game.category[language]}</span><span className="demo-dot" /><span>{t.unlisted}</span></div>
-                  <h3>{game.title}</h3>
-                  <p>{game.description[language]}</p>
-                  <button className="card-link" onClick={() => openSubmit("html")}>{t.submitSimilar}<ArrowDownRight size={15} /></button>
-                </div>
-              </article>
+            {(["all", "arcade", "strategy", "puzzle", "action", "simulation", "educational", "other"] as Genre[]).map((value) => (
+              <button key={value} className={activeGenre === value ? "filter-active" : ""} aria-pressed={activeGenre === value} onClick={() => setActiveGenre(value)}>
+                {value === "all" ? t.all : value === "arcade" ? t.arcade : value === "strategy" ? t.strategy : value === "puzzle" ? t.puzzle : value === "action" ? t.action : value === "simulation" ? t.simulation : value === "educational" ? t.educational : t.other}
+              </button>
             ))}
-            {filteredSamples.length === 0 && <p className="empty-search">{t.noResults}</p>}
+            <span className="filter-note"><ShieldCheck size={14} />{t.publishedOnly}</span>
           </div>
-          <div className="demo-notice"><CircleHelp size={16} /><span>{t.demoNotice}</span></div>
+          {catalogLoading && <p className="catalog-loading" role="status">{t.loadingGames}</p>}
+          {catalogLoadError && <p className="catalog-load-error" role="alert">{t.catalogLoadFailed}</p>}
+          <div className="game-grid">
+            {filteredGames.map((game, index) => {
+              const color = game.genre === "strategy" ? "rust" : game.genre === "puzzle" || game.genre === "educational" ? "blue" : "mint";
+              const coverSymbol = game.genre === "strategy" ? "♜" : game.genre === "puzzle" ? "◎" : game.kind === "url" ? "↗" : "✦";
+              const genreLabel = game.genre === "arcade" ? t.arcade : game.genre === "strategy" ? t.strategy : game.genre === "puzzle" ? t.puzzle : game.genre === "action" ? t.action : game.genre === "simulation" ? t.simulation : game.genre === "educational" ? t.educational : t.other;
+              const gameHref = game.kind === "html" ? "/games/" + game.id : (game.sourceUrl ?? "/");
+              return (
+                <article className="game-card" key={game.id}>
+                  <div className={"game-cover cover-" + color} role="img" aria-label={game.title}>
+                    <div className="cover-grain" aria-hidden="true" />
+                    <span className="cover-index">GV / {String(index + 1).padStart(2, "0")}</span>
+                    <div className="cover-symbol" aria-hidden="true">{coverSymbol}</div>
+                    <div className="cover-rings" aria-hidden="true" />
+                    <span className="demo-pill">{game.kind === "html" ? t.htmlTab : t.urlTab}</span>
+                  </div>
+                  <div className="game-info">
+                    <div className="game-meta"><span>{genreLabel}</span><span className="demo-dot" /><span>{t.publishedOnly}</span></div>
+                    <h3>{game.title}</h3>
+                    <p>{game.description || (game.kind === "html" ? t.htmlGameFallback : t.urlGameFallback)}</p>
+                    <a className="card-link" href={gameHref} target={game.kind === "url" ? "_blank" : undefined} rel={game.kind === "url" ? "noopener noreferrer nofollow" : undefined}>
+                      {game.kind === "html" ? t.playGame : t.visitSource}<ArrowDownRight size={15} />
+                    </a>
+                  </div>
+                </article>
+              );
+            })}
+            {!catalogLoading && !catalogLoadError && filteredGames.length === 0 && (
+              <div className="empty-search">
+                <h3>{query || activeGenre !== "all" ? t.noResults : t.emptyLibraryTitle}</h3>
+                <p>{query || activeGenre !== "all" ? t.noResults : t.emptyLibraryText}</p>
+                {!query && activeGenre === "all" && <button className="reset-button" onClick={() => openSubmit("html")}>{t.submit}<ArrowDownRight size={15} /></button>}
+              </div>
+            )}
+          </div>
         </section>
 
         <section className="submission-section" id="submit">
@@ -510,6 +558,12 @@ export default function Home() {
 
             <label className="field-label" htmlFor="game-title">{t.titleLabel} <span>{t.optional}</span></label>
             <input id="game-title" className="text-field" placeholder={t.titlePlaceholder} maxLength={80} value={title} onChange={(event) => setTitle(event.target.value)} />
+            <label className="field-label" htmlFor="game-description">{t.descriptionLabel} <span>{t.optional}</span></label>
+            <textarea id="game-description" className="textarea-field" rows={2} maxLength={240} placeholder={t.descriptionPlaceholder} value={description} onChange={(event) => setDescription(event.target.value)} />
+            <label className="field-label" htmlFor="game-genre">{t.genreLabel}</label>
+            <select id="game-genre" className="select-field" value={genre} onChange={(event) => setGenre(event.target.value as Exclude<Genre, "all">)}>
+              <option value="arcade">{t.arcade}</option><option value="strategy">{t.strategy}</option><option value="puzzle">{t.puzzle}</option><option value="action">{t.action}</option><option value="simulation">{t.simulation}</option><option value="educational">{t.educational}</option><option value="other">{t.other}</option>
+            </select>
 
             {activeTab === "html" ? (
               <>
@@ -536,7 +590,7 @@ export default function Home() {
             {error && <div className="inline-error" role="alert"><ShieldAlert size={16} />{error}</div>}
             {displayResult && (
               <div className="scan-result" aria-live="polite">
-                <div className="scan-result-head"><span className="result-icon"><ShieldAlert size={17} /></span><div><b>{t.scanResult}</b><small>{displayResult.verdict === "WARNING" ? (language === "vi" ? "Có dấu hiệu cần xem lại" : "Some signals need a closer look") : t.manualReview}</small></div><strong>{displayResult.score}/100</strong></div>
+                <div className="scan-result-head"><span className="result-icon"><ShieldAlert size={17} /></span><div><b>{t.scanResult}</b><small>{displayResult.verdict === "WARNING" ? (language === "vi" ? "Có dấu hiệu cần xem lại" : "Some signals need a closer look") : t.manualReview}</small></div><strong><small>{t.riskScore}</small>{displayResult.score}/100</strong></div>
                 {displayResult.findings.length ? displayResult.findings.map((finding, index) => (
                   <div className="finding" key={finding.label + index}><span className={"severity severity-" + finding.severity}>{severityText(finding.severity, language)}</span><div><b>{finding.label}</b><small>{finding.detail}</small></div></div>
                 )) : <p className="no-findings">{t.noFindings}</p>}

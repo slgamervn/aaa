@@ -348,7 +348,7 @@ function failedRemoteScan(message: string): ScanResult {
   return {
     mode: "url",
     verdict: "WARNING",
-    score: 0,
+    score: 24,
     contentScanned: false,
     scannedResources: 0,
     findings: [{
@@ -373,11 +373,18 @@ export async function scanRemoteUrl(value: string): Promise<ScanResult> {
     }
 
     const contentType = String(page.headers["content-type"] ?? "").split(";")[0].trim().toLowerCase();
+    const contentEncoding = String(page.headers["content-encoding"] ?? "").trim().toLowerCase();
+    if (contentEncoding && contentEncoding !== "identity") {
+      return failedRemoteScan("Trang đích dùng kiểu nén không được hỗ trợ; nội dung chưa được quét.");
+    }
     if (contentType && contentType !== "text/html" && contentType !== "application/xhtml+xml") {
       return failedRemoteScan("URL không trả về tài liệu HTML; nội dung chưa được quét.");
     }
 
     const html = page.body.toString("utf8");
+    if (!contentType && !/<(?:!doctype\s+html|html\b|head\b|body\b|script\b|meta\b|title\b)/i.test(html.slice(0, 4096))) {
+      return failedRemoteScan("Không xác định được nội dung HTML từ phản hồi URL; nội dung chưa được quét.");
+    }
     const scriptPattern = /<script\b[^>]*\bsrc\s*=\s*(["'])([\s\S]*?)\1[^>]*>/gi;
     const scriptUrls = new Set<string>();
     let match: RegExpExecArray | null;
@@ -405,8 +412,9 @@ export async function scanRemoteUrl(value: string): Promise<ScanResult> {
         const response = await fetchPublicResource(scriptUrl, MAX_REMOTE_SCRIPT_BYTES, 2_500);
         if (response.status < 200 || response.status >= 300) throw new Error("Script request failed.");
         const type = String(response.headers["content-type"] ?? "").split(";")[0].trim().toLowerCase();
+        const encoding = String(response.headers["content-encoding"] ?? "").trim().toLowerCase();
         const isScript = !type || /(?:javascript|ecmascript|text\/plain|application\/octet-stream)/i.test(type);
-        if (!isScript) throw new Error("Unexpected script content type.");
+        if ((encoding && encoding !== "identity") || !isScript) throw new Error("Unsupported external script response.");
         return response.body.toString("utf8");
       } catch {
         partial = true;

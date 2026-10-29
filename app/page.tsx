@@ -12,7 +12,7 @@ type Language = "vi" | "en";
 type Theme = "paper" | "night";
 type Genre = "all" | "arcade" | "strategy" | "puzzle" | "action" | "simulation" | "educational" | "other";
 type Finding = { label: string; severity: "high" | "medium" | "low"; detail: string };
-type ScanResult = { mode: string; verdict: string; score: number; findings: Finding[]; message: string; bytes?: number };
+type ScanResult = { mode: string; verdict: string; score: number; findings: Finding[]; message: string; bytes?: number; contentScanned?: boolean; scannedResources?: number };
 type Submission = { id: string; title: string; source: string; kind: "HTML" | "URL"; status: "pending"; createdAt: string; result: ScanResult };
 type PublishedGame = { id: string; title: string; description: string; genre: string; kind: "html" | "url"; sourceUrl: string | null; originalFilename: string | null; publishedAt: string | null };
 
@@ -56,7 +56,7 @@ const copy = {
     dropTitle: "Thả file HTML vào đây", dropOr: "hoặc nhấn để chọn từ thiết bị",
     browse: "Chọn file", changeFile: "Nhấn để đổi tệp",
     urlLabel: "Đường dẫn game", urlPlaceholder: "https://example.com/game",
-    urlNote: "Chỉ kiểm tra định dạng URL. Game bên ngoài không được tải hay chạy trong bước này.",
+    urlNote: "Máy quét sẽ tải trang công khai trong giới hạn an toàn, quét tĩnh HTML và tối đa 4 script ngoài; game không được thực thi. Một số website có thể chặn máy quét.",
     consent: "Tôi có quyền chia sẻ nội dung này hoặc đã kiểm tra giấy phép phù hợp.",
     consentError: "Vui lòng xác nhận quyền chia sẻ nội dung trước khi gửi.",
     fileError: "Hãy chọn file .html hoặc .htm.",
@@ -95,7 +95,8 @@ const copy = {
     findingClipboard: "Có thao tác với clipboard", detailClipboard: "Kiểm tra lý do truy cập clipboard và cách giải thích với người chơi.",
     findingIframe: "Có nhúng iframe", detailIframe: "Kiểm tra nguồn iframe, sandbox và chính sách nhúng.",
     urlFindingDetail: "Đã kiểm tra cú pháp URL. Nội dung chưa được tải hay thực thi; cần kiểm tra nguồn, giấy phép và game thủ công.",
-    scanMessageUrl: "Không thể xác nhận an toàn chỉ từ đường dẫn.",
+    scanMessageUrl: "Đã tải và quét tĩnh nội dung trang công khai; game không được thực thi. Một số tài nguyên có thể bị bỏ qua, vì vậy vẫn cần duyệt thủ công.",
+    scanMessageUrlFailed: "Không thể tải nội dung trang để quét. Không thể đưa ra kết luận về độ an toàn; hãy xem xét thủ công.",
     scanMessageHtml: "Đây là quét tĩnh theo mẫu, không phải chứng nhận không có mã độc hoặc xác nhận tuân thủ điều khoản GitHub."
   },
   en: {
@@ -137,7 +138,7 @@ const copy = {
     dropTitle: "Drop an HTML file here", dropOr: "or choose one from your device",
     browse: "Choose file", changeFile: "Select a different file",
     urlLabel: "Game URL", urlPlaceholder: "https://example.com/game",
-    urlNote: "Only the URL format is checked. External pages are not fetched or executed at this stage.",
+    urlNote: "The scanner fetches a public page within safety limits and statically checks its HTML plus up to 4 external scripts. The game is never executed; some sites may block scanners.",
     consent: "I have permission to share this content or have checked its licence.",
     consentError: "Please confirm that you have permission to share this content.",
     fileError: "Choose an .html or .htm file first.",
@@ -176,7 +177,8 @@ const copy = {
     findingClipboard: "Clipboard access pattern", detailClipboard: "Review why clipboard access is needed and how it is explained to players.",
     findingIframe: "Embedded iframe found", detailIframe: "Review the iframe origin, sandbox attributes, and embedding policy.",
     urlFindingDetail: "The URL syntax was checked. The page was not fetched or executed; its origin, licence, and content need manual review.",
-    scanMessageUrl: "A URL alone cannot establish that a game is safe.",
+    scanMessageUrl: "The public page was fetched and scanned statically; game code was not executed. Some resources may be omitted, so manual review is still required.",
+    scanMessageUrlFailed: "The page content could not be fetched. No safety conclusion can be drawn; manual review is required.",
     scanMessageHtml: "This is a pattern-based static scan, not a malware-free certificate or confirmation of GitHub policy compliance."
   }
 } as const;
@@ -191,12 +193,14 @@ function localizeScan(scan: ScanResult, language: Language): ScanResult {
     "Có tải tài nguyên từ bên ngoài": { label: copy.en.findingExternal, detail: copy.en.detailExternal },
     "Có hành vi clipboard": { label: copy.en.findingClipboard, detail: copy.en.detailClipboard },
     "Có nhúng iframe": { label: copy.en.findingIframe, detail: copy.en.detailIframe },
-    "Chưa phân tích nội dung URL": { label: copy.en.urlFinding, detail: copy.en.urlFindingDetail }
+    "Chưa phân tích nội dung URL": { label: copy.en.urlFinding, detail: copy.en.urlFindingDetail },
+    "Không thể tải nội dung để quét": { label: "Could not retrieve content for scanning", detail: "The scanner could not retrieve public HTML within its safety limits. No safety conclusion can be drawn." },
+    "Không thể quét đầy đủ tài nguyên ngoài": { label: "Some external resources could not be scanned", detail: "Some external scripts were skipped, exceeded limits, or could not be fetched. Manual review is required." }
   };
   return {
     ...scan,
     findings: scan.findings.map((finding) => ({ ...finding, ...(translations[finding.label] ?? {}) })),
-    message: scan.mode === "url" ? copy.en.scanMessageUrl : copy.en.scanMessageHtml
+    message: scan.mode === "url" ? (scan.contentScanned ? copy.en.scanMessageUrl : copy.en.scanMessageUrlFailed) : copy.en.scanMessageHtml
   };
 }
 
@@ -213,6 +217,11 @@ function localizeErrorMessage(message: string, language: Language): string {
     "Thiếu nội dung cần quét.": "No content was provided to scan.",
     "File HTML vượt giới hạn 1 MB.": "The HTML file exceeds the 1 MB limit.",
     "URL không hợp lệ.": "The URL is invalid.",
+    "URL is invalid.": "The URL is invalid.",
+    "Only HTTP and HTTPS URLs are accepted.": "Only HTTP and HTTPS URLs are accepted.",
+    "Only standard HTTP and HTTPS ports are accepted.": "Only standard HTTP and HTTPS ports are accepted.",
+    "URLs must not contain embedded credentials.": "The URL must not contain embedded credentials.",
+    "Local or private network URLs are not accepted.": "Local or private network URLs are not accepted.",
     "Chỉ chấp nhận URL HTTP/HTTPS.": "Only HTTP and HTTPS URLs are accepted.",
     "URL không được chứa thông tin đăng nhập.": "The URL must not contain embedded credentials.",
     "Hãy chọn file HTML hoặc nhập URL.": "Choose an HTML file or enter a URL."
@@ -590,7 +599,7 @@ export default function Home() {
             {error && <div className="inline-error" role="alert"><ShieldAlert size={16} />{error}</div>}
             {displayResult && (
               <div className="scan-result" aria-live="polite">
-                <div className="scan-result-head"><span className="result-icon"><ShieldAlert size={17} /></span><div><b>{t.scanResult}</b><small>{displayResult.verdict === "WARNING" ? (language === "vi" ? "Có dấu hiệu cần xem lại" : "Some signals need a closer look") : t.manualReview}</small></div><strong><small>{displayResult.mode === "url" ? (language === "vi" ? "CHƯA QUÉT NỘI DUNG" : "CONTENT NOT SCANNED") : t.riskScore}</small>{displayResult.mode === "url" ? "—" : `${displayResult.score}/100`}</strong></div>
+                <div className="scan-result-head"><span className="result-icon"><ShieldAlert size={17} /></span><div><b>{t.scanResult}</b><small>{displayResult.verdict === "WARNING" ? (language === "vi" ? "Có dấu hiệu cần xem lại" : "Some signals need a closer look") : t.manualReview}</small></div><strong><small>{displayResult.mode === "url" ? (displayResult.contentScanned ? (language === "vi" ? "ĐÃ QUÉT TĨNH NỘI DUNG" : "STATIC CONTENT SCAN") : (language === "vi" ? "QUÉT CHƯA HOÀN TẤT" : "SCAN INCOMPLETE")) : t.riskScore}</small>{displayResult.mode === "url" ? (displayResult.contentScanned ? `${displayResult.score}/100` : "—") : `${displayResult.score}/100`}</strong></div>
                 {displayResult.findings.length ? displayResult.findings.map((finding, index) => (
                   <div className="finding" key={finding.label + index}><span className={"severity severity-" + finding.severity}>{severityText(finding.severity, language)}</span><div><b>{finding.label}</b><small>{finding.detail}</small></div></div>
                 )) : <p className="no-findings">{t.noFindings}</p>}

@@ -129,7 +129,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, label:focus-within, 
   min-height: 530px; padding: 4.6rem clamp(1.35rem, 8.8vw, 8rem) 5.1rem;
   background: var(--paper-alt); border-bottom: 1px solid var(--line);
 }
-.hero-grid { position: absolute; inset: 0; pointer-events: none; opacity: .2; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M31.5 0V32M0 31.5H32' stroke='%237a826f' stroke-opacity='.24' fill='none'/%3E%3C/svg%3E"); mask-image: linear-gradient(90deg, transparent, #000 30%, #000 75%, transparent); }
+.hero-grid { position: absolute; inset: 0; pointer-events: none; opacity: .16; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M31.5 0V32M0 31.5H32' stroke='%237a826f' stroke-opacity='.24' fill='none'/%3E%3C/svg%3E"); }
 .hero-copy { position: relative; z-index: 1; max-width: 620px; }
 .eyebrow, .section-kicker, .card-kicker, .mini-label {
   font-family: var(--mono); font-size: .66rem; font-weight: 550; letter-spacing: .085em; line-height: 1.5;
@@ -496,3 +496,8 @@ html[data-motion="reduced"] *, html[data-motion="reduced"] *::before, html[data-
   .workflow-card p { grid-column: 2; }
   .workflow-tag { grid-column: 2; }
 }
+
+
+/* Compact controls on tablets and phones. */
+@media (max-width: 900px) { .utility-button .motion-symbol { display: inline; } }
+@media (max-width: 700px) { .utility-button.text-button, .utility-button.motion-button { display: none; } }

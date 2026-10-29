@@ -254,6 +254,7 @@ export default function Home() {
     document.documentElement.dataset.theme = theme;
     document.documentElement.dataset.scale = largeText ? "large" : "normal";
     document.documentElement.dataset.motion = motionReduced ? "reduced" : "normal";
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "paper" ? "#f3f0e7" : "#171c18");
   }, [language, theme, largeText, motionReduced, preferencesLoaded]);
 
   const filteredSamples = useMemo(() => {

@@ -2,6 +2,7 @@ import { isIP } from "node:net";
 import { lookup as dnsLookup } from "node:dns/promises";
 import { request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
+import { checkServerIdentity as tlsCheckServerIdentity } from "node:tls";
 
 export const MAX_HTML_BYTES = 1_000_000;
 export const SCAN_VERSION = "gv-static-3-url-content";
@@ -246,33 +247,28 @@ async function resolvePublicAddressWithin(hostname: string, timeoutMs: number): 
 function requestPinnedAddress(url: URL, address: ResolvedAddress, maxBytes: number, timeoutMs: number): Promise<RemoteResponse> {
   return new Promise((resolve, reject) => {
     const useHttps = url.protocol === "https:";
-    const hostname = url.hostname.replace(/^\[|\]$/g, "");
+    const originalHostname = url.hostname.replace(/^\[|\]$/g, "");
     let settled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const finish = (error?: Error, value?: RemoteResponse) => {
       if (settled) return;
       settled = true;
-      clearTimeout(timer);
+      if (timer) clearTimeout(timer);
       if (error) reject(error);
       else if (value) resolve(value);
       else reject(new Error("The remote response could not be read."));
     };
 
-    const pinnedLookup = ((
-      _requestedHost: string,
-      _options: unknown,
-      callback: (error: NodeJS.ErrnoException | null, address: string, family: number) => void
-    ) => callback(null, address.address, address.family)) as never;
-
-    const requester = useHttps ? httpsRequest : httpRequest;
-    const request = requester({
+    // Connect directly to the IP that was validated by DNS. Keep the URL host
+    // in Host/SNI and verify the TLS certificate against the original hostname.
+    // This avoids a second DNS lookup in the HTTP client's connection path.
+    const options = {
       protocol: url.protocol,
-      hostname,
+      hostname: address.address,
       port: url.port ? Number(url.port) : (useHttps ? 443 : 80),
-      method: "GET",
+      method: "GET" as const,
       path: url.pathname + url.search,
-      agent: false,
-      lookup: pinnedLookup,
-      ...(useHttps && isIP(hostname) === 0 ? { servername: hostname } : {}),
+      agent: false as const,
       headers: {
         "Host": url.host,
         "User-Agent": "GameVault-Static-Scanner/1.0 (+https://github.com/slgamervn/aaa)",
@@ -280,9 +276,17 @@ function requestPinnedAddress(url: URL, address: ResolvedAddress, maxBytes: numb
         "Accept-Encoding": "identity",
         "Connection": "close"
       }
-    });
+    };
 
-    const timer = setTimeout(() => request.destroy(new Error("The remote server timed out.")), timeoutMs);
+    const request = useHttps
+      ? httpsRequest({
+          ...options,
+          ...(isIP(originalHostname) === 0 ? { servername: originalHostname } : {}),
+          checkServerIdentity: (_hostname, certificate) => tlsCheckServerIdentity(originalHostname, certificate)
+        })
+      : httpRequest(options);
+
+    timer = setTimeout(() => request.destroy(new Error("The remote server timed out.")), timeoutMs);
     request.on("error", (error) => finish(error instanceof Error ? error : new Error("The remote request failed.")));
     request.on("response", (response) => {
       const status = response.statusCode ?? 0;
@@ -298,8 +302,9 @@ function requestPinnedAddress(url: URL, address: ResolvedAddress, maxBytes: numb
       let size = 0;
       const declaredLength = Number(headers["content-length"] ?? 0);
       if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
-        response.destroy(new Error("The remote response exceeds the scan-size limit."));
         finish(new Error("The remote response exceeds the scan-size limit."));
+        response.destroy();
+        request.destroy();
         return;
       }
       response.on("data", (chunk: Buffer | string) => {
@@ -326,7 +331,6 @@ function requestPinnedAddress(url: URL, address: ResolvedAddress, maxBytes: numb
     request.end();
   });
 }
-
 async function fetchPublicResource(startUrl: string, maxBytes: number, totalTimeoutMs: number): Promise<RemoteResponse> {
   const deadline = Date.now() + totalTimeoutMs;
   let currentUrl = startUrl;
@@ -465,8 +469,29 @@ export async function scanRemoteUrl(value: string): Promise<ScanResult> {
         ". Game không được thực thi. Kết quả có thể bỏ sót hành vi động, tài nguyên chưa tải hoặc mã được tạo lúc chạy; cần duyệt thủ công."
     };
     return result;
-  } catch {
-    return failedRemoteScan("Không thể tải nội dung từ URL trong giới hạn an toàn. Trang có thể chặn máy quét, không phản hồi, vượt giới hạn hoặc dùng đích chuyển hướng không được phép. Nội dung chưa được quét.");
+  } catch (error) {
+    const failure = error instanceof Error ? error.message : "";
+    const code = error && typeof error === "object" && "code" in error && typeof error.code === "string"
+      ? error.code
+      : "";
+    let reason = "Không thể tải nội dung từ URL trong giới hạn an toàn. Trang có thể chặn máy quét, không phản hồi, vượt giới hạn hoặc dùng đích chuyển hướng không được phép. Nội dung chưa được quét.";
+    if (code === "ENOTFOUND" || code === "EAI_AGAIN" || failure.includes("could not be resolved")) {
+      reason = "Không thể phân giải tên miền hoặc máy chủ DNS không phản hồi. Nội dung chưa được quét.";
+    } else if (code === "ECONNRESET" || code === "ECONNREFUSED" || code === "EHOSTUNREACH" || code === "ENETUNREACH") {
+      reason = "Máy chủ đích từ chối hoặc ngắt kết nối từ máy quét. Nội dung chưa được quét.";
+    } else if (code === "ETIMEDOUT" || failure.includes("timed out")) {
+      reason = "Máy chủ hoặc DNS phản hồi quá chậm so với giới hạn thời gian. Nội dung chưa được quét.";
+    } else if (code.startsWith("ERR_TLS") || code.startsWith("CERT_") || failure.toLowerCase().includes("certificate")) {
+      reason = "Không thể xác minh chứng chỉ TLS của trang đích. Nội dung chưa được quét.";
+    } else if (failure.includes("private or non-public") || failure.includes("not a public IP")) {
+      reason = "Máy quét đã chặn đích kết nối có địa chỉ IP riêng tư hoặc không công khai. Nội dung chưa được quét.";
+    } else if (failure.includes("redirect")) {
+      reason = "Chuỗi chuyển hướng không hợp lệ hoặc vượt giới hạn an toàn. Nội dung chưa được quét.";
+    } else if (failure.includes("scan-size limit")) {
+      reason = "Trang đích vượt giới hạn dung lượng quét. Nội dung chưa được quét.";
+    }
+    console.warn("[GameVault URL scan] fetch failed", { host: validated.host, code: code || "UNCLASSIFIED", category: reason.split(".")[0] });
+    return failedRemoteScan(reason);
   }
 }
 

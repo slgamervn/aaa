@@ -2,15 +2,21 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "GameVault — Game library",
-  description: "Khám phá, gửi và kiểm duyệt game HTML theo quy trình an toàn.",
+  title: "GameVault — A small index of web games",
+  description: "A thoughtfully curated place for browser games, with transparent checks and human review before publication.",
   applicationName: "GameVault",
-  metadataBase: new URL("https://gamevault.vercel.app"),
-  robots: { index: true, follow: true }
+  metadataBase: new URL("https://gamevault-slg-7f71.vercel.app"),
+  openGraph: {
+    title: "GameVault — A small index of web games",
+    description: "Discover browser games. Every submission is reviewed before publication.",
+    siteName: "GameVault",
+    type: "website"
+  },
+  robots: { index: false, follow: true }
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0b100e",
+  themeColor: "#f3f0e7",
   width: "device-width",
   initialScale: 1
 };

@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDownRight, ArrowRight, BadgeCheck, BookOpen, Check,
-  Clock3, Download, ExternalLink, FileCode2, FileUp, Github, Globe2, Languages, Layers3,
-  LockKeyhole, Moon, Search, ShieldAlert, ShieldCheck, Sun,
-  Type, UploadCloud, X
+  Clock3, FileCode2, FileUp, Github, Globe2, Languages, Layers3,
+  LockKeyhole, Moon, Search, Settings2, ShieldAlert, ShieldCheck, Sun,
+  Type
 } from "lucide-react";
 
 type Language = "vi" | "en";
@@ -19,7 +19,7 @@ type PublishedProject = { id: string; title: string; description: string; genre:
 const copy = {
   vi: {
     navLibrary: "Dự án", navProcess: "Quy trình", navSafety: "An toàn & chính sách",
-    submit: "Đóng góp dự án", switchLanguage: "Switch to English", darkMode: "Giao diện tối",
+    submit: "Đóng góp", settings: "Cài đặt", switchLanguage: "Switch to English", darkMode: "Giao diện tối",
     lightMode: "Giao diện sáng", largerText: "Tăng cỡ chữ", smallerText: "Cỡ chữ mặc định",
     reduceMotion: "Giảm chuyển động", restoreMotion: "Bật chuyển động",
     openMenu: "Mở điều hướng", closeMenu: "Đóng điều hướng",
@@ -34,7 +34,7 @@ const copy = {
     statTwo: "QUÉT TĨNH", statTwoDesc: "Không thực thi file tải lên",
     statThree: "DUYỆT TAY", statThreeDesc: "Không tự động xuất bản",
     statFour: "CHỈ DỰ ÁN ĐÃ DUYỆT", statFourDesc: "Dự án chỉ hiện sau khi được công khai",
-    libraryKicker: "KHO DỰ ÁN · 01", libraryTitle: "Khám phá các dự án.", librarySubtitle: "Tải tệp HTML đã được duyệt hoặc mở trang nguồn của dự án. Chỉ nội dung đã qua kiểm duyệt mới xuất hiện tại đây.",
+    libraryKicker: "KHO DỰ ÁN · 01", libraryTitle: "Dự án", librarySubtitle: "Các dự án đã được kiểm duyệt.",
     searchPlaceholder: "Tìm tên hoặc thể loại…", searchLabel: "Tìm dự án",
     all: "Tất cả", arcade: "Arcade", strategy: "Chiến thuật", puzzle: "Giải đố", action: "Hành động", simulation: "Mô phỏng", educational: "Giáo dục", other: "Khác",
     genreLabel: "Thể loại", descriptionLabel: "Mô tả dự án", descriptionPlaceholder: "Giới thiệu ngắn về dự án (tối đa 240 ký tự)", publishedOnly: "Đã được duyệt và xuất bản", loadingProjects: "Đang tải danh sách dự án…", catalogLoadFailed: "Chưa thể tải danh sách dự án. Hãy thử tải lại trang.", emptyLibraryTitle: "Chưa có dự án nào được công khai.", emptyLibraryText: "Các dự án sẽ xuất hiện tại đây sau khi được kiểm tra và phê duyệt. Bạn cũng có thể gửi một dự án để đề nghị xem xét.", downloadProject: "Tải tệp HTML", openProject: "Mở trong GameVault", sourceUnavailable: "Nguồn hiện không khả dụng", riskScore: "TÍN HIỆU KIỂM TRA", htmlProjectFallback: "Tệp HTML đã được kiểm tra và công khai.", urlProjectFallback: "Dự án này được chia sẻ qua trang web gốc.",
@@ -101,7 +101,7 @@ const copy = {
   },
   en: {
     navLibrary: "Projects", navProcess: "How it works", navSafety: "Safety & policy",
-    submit: "Contribute a project", switchLanguage: "Chuyển sang tiếng Việt", darkMode: "Dark appearance",
+    submit: "Contribute", settings: "Settings", switchLanguage: "Chuyển sang tiếng Việt", darkMode: "Dark appearance",
     lightMode: "Light appearance", largerText: "Increase text size", smallerText: "Default text size",
     reduceMotion: "Reduce motion", restoreMotion: "Enable motion",
     openMenu: "Open navigation", closeMenu: "Close navigation",
@@ -116,7 +116,7 @@ const copy = {
     statTwo: "STATIC CHECK", statTwoDesc: "Uploaded files are not executed",
     statThree: "HUMAN REVIEW", statThreeDesc: "Nothing is published automatically",
     statFour: "REVIEWED PROJECTS", statFourDesc: "Projects appear after approval",
-    libraryKicker: "PROJECT COLLECTION · 01", libraryTitle: "Explore the projects.", librarySubtitle: "Download approved HTML files or open a project at its original website. Only reviewed projects appear here.",
+    libraryKicker: "PROJECT COLLECTION · 01", libraryTitle: "Projects", librarySubtitle: "Reviewed projects, ready to explore.",
     searchPlaceholder: "Search titles or genres…", searchLabel: "Search projects",
     all: "All", arcade: "Arcade", strategy: "Strategy", puzzle: "Puzzle", action: "Action", simulation: "Simulation", educational: "Educational", other: "Other",
     genreLabel: "Genre", descriptionLabel: "Project description", descriptionPlaceholder: "Briefly describe the project (up to 240 characters)", publishedOnly: "Reviewed and published", loadingProjects: "Loading the library…", catalogLoadFailed: "The library could not be loaded. Try refreshing the page.", emptyLibraryTitle: "No projects published yet.", emptyLibraryText: "Projects will appear here after review and approval. You can also submit a project for consideration.", downloadProject: "Download HTML file", openProject: "Open in GameVault", sourceUnavailable: "Source unavailable", riskScore: "REVIEW SIGNAL", htmlProjectFallback: "This HTML project has been reviewed and published.", urlProjectFallback: "This project is provided through its original website.",
@@ -235,7 +235,7 @@ export default function Home() {
   const [largeText, setLargeText] = useState(false);
   const [motionReduced, setMotionReduced] = useState(false);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
-  const [activePageTab, setActivePageTab] = useState<"home" | "library" | "submit" | "info">("home");
+  const [activePageTab, setActivePageTab] = useState<"library" | "submit" | "info">("library");
   const [activeTab, setActiveTab] = useState<"html" | "url">("html");
   const [activeGenre, setActiveGenre] = useState<Genre>("all");
   const [url, setUrl] = useState("");
@@ -251,7 +251,6 @@ export default function Home() {
   const [error, setError] = useState("");
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [query, setQuery] = useState("");
-  const [showSubmit, setShowSubmit] = useState(false);
   const [consent, setConsent] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -309,7 +308,7 @@ export default function Home() {
 
   useEffect(() => {
     function handleKeyboardShortcut(event: KeyboardEvent) {
-      if (showSubmit || event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
+      if (activePageTab !== "library" || event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
       const target = event.target;
       if (target instanceof HTMLElement && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))) return;
       event.preventDefault();
@@ -317,16 +316,7 @@ export default function Home() {
     }
     window.addEventListener("keydown", handleKeyboardShortcut);
     return () => window.removeEventListener("keydown", handleKeyboardShortcut);
-  }, [showSubmit]);
-
-  useEffect(() => {
-    if (!showSubmit) return;
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setShowSubmit(false);
-    }
-    window.addEventListener("keydown", handleEscape);
-    return () => window.removeEventListener("keydown", handleEscape);
-  }, [showSubmit]);
+  }, [activePageTab]);
 
   const filteredProjects = useMemo(() => {
     const term = query.trim().toLocaleLowerCase(language === "vi" ? "vi-VN" : "en");
@@ -410,7 +400,6 @@ export default function Home() {
   function openSubmit(tab: "html" | "url" = "html") {
     setActivePageTab("submit");
     setActiveTab(tab);
-    setShowSubmit(true);
   }
 
   function clearQueue() {
@@ -424,83 +413,45 @@ export default function Home() {
     <div className="app-shell" data-theme={theme} data-scale={largeText ? "large" : "normal"} data-motion={motionReduced ? "reduced" : "normal"}>
       <a className="skip-link" href="#main-content">{language === "vi" ? "Bỏ qua điều hướng" : "Skip to content"}</a>
       <header className="topbar">
-        <a className="brand" href="#" onClick={(event) => { event.preventDefault(); setActivePageTab("home"); }} aria-label="GameVault home">
+        <a className="brand" href="#" onClick={(event) => { event.preventDefault(); setActivePageTab("library"); }} aria-label="GameVault home">
           <span className="brand-mark"><Layers3 size={19} strokeWidth={2.2} /></span>
           <span>gamevault<span className="brand-dot">.</span></span>
         </a>
-        <div className="header-controls" aria-label={language === "vi" ? "Tuỳ chỉnh giao diện" : "Appearance preferences"}>
+        <div className="header-controls" aria-label={language === "vi" ? "Tuỳ chỉnh" : "Preferences"}>
           <button className="utility-button language-button" onClick={() => setLanguage(language === "vi" ? "en" : "vi")} aria-label={t.switchLanguage} title={t.switchLanguage}>
-            <Languages size={15} /><span>{language === "vi" ? "EN" : "VI"}</span>
+            <Languages size={16} /><span>{language === "vi" ? "EN" : "VI"}</span>
           </button>
-          <button className="utility-button theme-button" onClick={() => setTheme(theme === "paper" ? "night" : "paper")} aria-label={theme === "paper" ? t.darkMode : t.lightMode} title={theme === "paper" ? t.darkMode : t.lightMode}>
-            {theme === "paper" ? <Moon size={15} /> : <Sun size={15} />}<span>{theme === "paper" ? (language === "vi" ? "Tối" : "Dark") : (language === "vi" ? "Sáng" : "Light")}</span>
-          </button>
-          <button className="utility-button text-button" onClick={() => setLargeText(!largeText)} aria-pressed={largeText} aria-label={largeText ? t.smallerText : t.largerText} title={largeText ? t.smallerText : t.largerText}>
-            <Type size={15} /><span>{largeText ? "A−" : "A+"}</span>
-          </button>
-          <button className="utility-button motion-button" onClick={() => setMotionReduced(!motionReduced)} aria-pressed={motionReduced} aria-label={motionReduced ? t.restoreMotion : t.reduceMotion} title={motionReduced ? t.restoreMotion : t.reduceMotion}>
-            <span className="motion-symbol" aria-hidden="true">{motionReduced ? "Ⅱ" : "↝"}</span><span>{motionReduced ? (language === "vi" ? "Tĩnh" : "Still") : (language === "vi" ? "Chuyển động" : "Motion")}</span>
-          </button>
+          <details className="settings-menu">
+            <summary className="utility-button settings-trigger" aria-label={t.settings} title={t.settings}>
+              <Settings2 size={17} />
+            </summary>
+            <div className="settings-panel">
+              <button type="button" className="settings-option" onClick={() => setTheme(theme === "paper" ? "night" : "paper")}>
+                {theme === "paper" ? <Moon size={16} /> : <Sun size={16} />}
+                <span>{theme === "paper" ? t.darkMode : t.lightMode}</span>
+              </button>
+              <button type="button" className="settings-option" onClick={() => setLargeText(!largeText)} aria-pressed={largeText}>
+                <Type size={16} /><span>{largeText ? t.smallerText : t.largerText}</span>
+              </button>
+              <button type="button" className="settings-option" onClick={() => setMotionReduced(!motionReduced)} aria-pressed={motionReduced}>
+                <span className="motion-symbol" aria-hidden="true">{motionReduced ? "Ⅱ" : "↝"}</span>
+                <span>{motionReduced ? t.restoreMotion : t.reduceMotion}</span>
+              </button>
+            </div>
+          </details>
         </div>
-        <button className="top-cta" onClick={() => openSubmit("html")}>{t.submit}<ArrowDownRight size={15} /></button>
       </header>
 
-      <nav className="browser-tabbar" role="tablist" aria-label={language === "vi" ? "Các trang GameVault" : "GameVault pages"} onKeyDown={(event) => { if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return; const tabs = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>(".browser-tab")); const currentIndex = tabs.indexOf(event.target as HTMLButtonElement); if (currentIndex < 0) return; event.preventDefault(); const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : (currentIndex + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length; tabs[nextIndex].focus(); tabs[nextIndex].click(); }}>
-        <button id="gv-tab-home" className={"browser-tab " + (activePageTab === "home" ? "browser-tab-active" : "")} type="button" role="tab" aria-selected={activePageTab === "home"} aria-controls="gv-panel-home" tabIndex={activePageTab === "home" ? 0 : -1} onClick={() => setActivePageTab("home")}><Layers3 size={15} /><span>{language === "vi" ? "Trang chủ" : "Home"}</span></button>
+      <nav className="browser-tabbar" role="tablist" aria-orientation="horizontal" aria-label={language === "vi" ? "Các mục GameVault" : "GameVault sections"} onKeyDown={(event) => { if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return; const tabs = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>(".browser-tab")); const currentIndex = tabs.indexOf(event.target as HTMLButtonElement); if (currentIndex < 0) return; event.preventDefault(); const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : (currentIndex + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length; tabs[nextIndex].focus(); tabs[nextIndex].click(); }}>
         <button id="gv-tab-library" className={"browser-tab " + (activePageTab === "library" ? "browser-tab-active" : "")} type="button" role="tab" aria-selected={activePageTab === "library"} aria-controls="gv-panel-library" tabIndex={activePageTab === "library" ? 0 : -1} onClick={() => setActivePageTab("library")}><BookOpen size={15} /><span>{t.navLibrary}</span></button>
         <button id="gv-tab-submit" className={"browser-tab " + (activePageTab === "submit" ? "browser-tab-active" : "")} type="button" role="tab" aria-selected={activePageTab === "submit"} aria-controls="gv-panel-submit" tabIndex={activePageTab === "submit" ? 0 : -1} onClick={() => setActivePageTab("submit")}><FileCode2 size={15} /><span>{t.submit}</span></button>
         <button id="gv-tab-info" className={"browser-tab " + (activePageTab === "info" ? "browser-tab-active" : "")} type="button" role="tab" aria-selected={activePageTab === "info"} aria-controls="gv-panel-info" tabIndex={activePageTab === "info" ? 0 : -1} onClick={() => setActivePageTab("info")}><ShieldCheck size={15} /><span>{t.navProcess}</span></button>
       </nav>
 
       <main id="main-content">
-        <section id="gv-panel-home" role="tabpanel" aria-labelledby="gv-tab-home" className="hero" style={{ display: activePageTab === "home" ? undefined : "none" }}>
-          <div className="hero-grid" aria-hidden="true" />
-          <div className="hero-copy">
-            <div className="eyebrow"><span className="live-dot" />{t.eyebrow}</div>
-            <h1 id="hero-title">{t.heroLine1}<br />{t.heroLine2}<br /><span>{t.heroAccent}</span></h1>
-            <p className="hero-lede">{t.heroLede}</p>
-            <div className="hero-actions">
-              <button className="button-primary" type="button" onClick={() => setActivePageTab("library")}>{t.discover}<ArrowRight size={16} /></button>
-              <button className="button-quiet" onClick={() => openSubmit("html")}>{t.sendOne}<ArrowDownRight size={16} /></button>
-            </div>
-            <div className="hero-proof">
-              <span><Check size={14} />{t.proofOne}</span>
-              <span><Check size={14} />{t.proofTwo}</span>
-              <span><Check size={14} />{t.proofThree}</span>
-            </div>
-          </div>
-          <div className="hero-art" aria-label={t.artworkLabel}>
-            <article className="art-panel">
-              <div className="art-panel-head"><span className="art-window-dots"><i /><i /><i /></span><span>FIELD NOTES / 001</span><span className="art-live">{t.artworkReady}</span></div>
-              <div className="art-landscape cover-mint">
-                <span className="cover-index">{t.sampleArtwork}</span>
-                <div className="sun" />
-                <div className="mountain mountain-back" />
-                <div className="mountain mountain-front" />
-                <div className="land-grid" />
-                <div className="pixel-player">✦</div>
-                <span className="art-landscape-caption">{t.artworkLabel}</span>
-              </div>
-              <div className="art-panel-foot">
-                <div><span className="mini-label">GV / NOTE 001</span><strong><span className="check-circle"><Check size={11} /></span>{t.artworkFoot}</strong></div>
-                <span className="art-index-stamp">HTML<br />PROJECT</span>
-              </div>
-            </article>
-            <p className="hero-caption">{t.artCaption}</p>
-          </div>
-          <div className="hero-bottomline"><span>GAMEVAULT FIELD NOTES</span><span>AN OPEN-ENDED COLLECTION</span></div>
-        </section>
-
-        <section className="stats-row" style={{ display: activePageTab === "home" ? undefined : "none" }} aria-label={language === "vi" ? "Tóm tắt quy trình" : "Process summary"}>
-          <div><strong>{t.statOne}</strong><span>{t.statOneDesc}</span></div>
-          <div><strong>{t.statTwo}</strong><span>{t.statTwoDesc}</span></div>
-          <div><strong>{t.statThree}</strong><span>{t.statThreeDesc}</span></div>
-          <div><strong>{t.statFour}</strong><span>{t.statFourDesc}</span></div>
-        </section>
-
-        <section className="section library-section" id="gv-panel-library" role="tabpanel" aria-labelledby="gv-tab-library" style={{ display: activePageTab === "library" ? undefined : "none" }}>
-          <div className="section-heading">
-            <div><div className="section-kicker">{t.libraryKicker}</div><h2>{t.libraryTitle}</h2><p>{t.librarySubtitle}</p></div>
+        <section className="section library-section" id="gv-panel-library" role="tabpanel" aria-labelledby="gv-tab-library" tabIndex={0} style={{ display: activePageTab === "library" ? undefined : "none" }}>
+          <div className="section-heading library-heading">
+            <h1 className="library-title">{t.libraryTitle}</h1>
             <label className="library-search"><Search size={17} aria-hidden="true" /><input ref={searchRef} aria-label={t.searchLabel} placeholder={t.searchPlaceholder} value={query} onChange={(event) => setQuery(event.target.value)} /><kbd>/</kbd></label>
           </div>
           <div className="filter-row" role="group" aria-label={language === "vi" ? "Lọc thể loại" : "Filter by genre"}>
@@ -509,31 +460,27 @@ export default function Home() {
                 {value === "all" ? t.all : value === "arcade" ? t.arcade : value === "strategy" ? t.strategy : value === "puzzle" ? t.puzzle : value === "action" ? t.action : value === "simulation" ? t.simulation : value === "educational" ? t.educational : t.other}
               </button>
             ))}
-            <span className="filter-note"><ShieldCheck size={14} />{t.publishedOnly}</span>
           </div>
           {catalogLoading && <p className="catalog-loading" role="status">{t.loadingProjects}</p>}
           {catalogLoadError && <p className="catalog-load-error" role="alert">{t.catalogLoadFailed}</p>}
           <div className="game-grid">
-            {filteredProjects.map((project, index) => {
+            {filteredProjects.map((project) => {
               const color = project.genre === "strategy" ? "rust" : project.genre === "puzzle" || project.genre === "educational" ? "blue" : "mint";
               const coverSymbol = project.genre === "strategy" ? "♜" : project.genre === "puzzle" ? "◎" : project.kind === "url" ? "↗" : "✦";
               const genreLabel = project.genre === "arcade" ? t.arcade : project.genre === "strategy" ? t.strategy : project.genre === "puzzle" ? t.puzzle : project.genre === "action" ? t.action : project.genre === "simulation" ? t.simulation : project.genre === "educational" ? t.educational : t.other;
               const projectHref = "/games/" + encodeURIComponent(project.id);
               return (
                 <article className="game-card" key={project.id}>
-                  <div className={"game-cover cover-" + color} role="img" aria-label={project.title}>
-                    <div className="cover-grain" aria-hidden="true" />
-                    <span className="cover-index">GV / {String(index + 1).padStart(2, "0")}</span>
-                    <div className="cover-symbol" aria-hidden="true">{coverSymbol}</div>
-                    <div className="cover-rings" aria-hidden="true" />
-                    <span className="demo-pill">{project.kind === "html" ? t.htmlTab : t.urlTab}</span>
+                  <div className={"game-cover cover-" + color} aria-hidden="true">
+                    <div className="cover-symbol">{coverSymbol}</div>
+                    <span className="demo-pill">{project.kind === "html" ? "HTML" : "URL"}</span>
                   </div>
                   <div className="game-info">
-                    <div className="game-meta"><span>{genreLabel}</span><span className="demo-dot" /><span>{t.publishedOnly}</span></div>
+                    <div className="game-meta"><span>{genreLabel}</span><span className="game-type">{project.kind === "html" ? "HTML" : "URL"}</span></div>
                     <h3>{project.title}</h3>
                     <p>{project.description || (project.kind === "html" ? t.htmlProjectFallback : t.urlProjectFallback)}</p>
                     <a className="card-link" href={projectHref}>
-                      {t.openProject}<ArrowDownRight size={15} />
+                      {t.openProject}<ArrowRight size={15} />
                     </a>
                   </div>
                 </article>
@@ -549,16 +496,10 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="submission-section" id="gv-panel-submit" role="tabpanel" aria-labelledby="gv-tab-submit" style={{ display: activePageTab === "submit" ? undefined : "none" }}>
-          <div className="submission-intro">
-            <div className="section-kicker">{t.submitKicker}</div>
+        <section className="submission-section" id="gv-panel-submit" role="tabpanel" aria-labelledby="gv-tab-submit" tabIndex={0} style={{ display: activePageTab === "submit" ? undefined : "none" }}>
+          <div className="submission-intro submission-intro-compact">
             <h2>{t.submitTitle}</h2>
             <p>{t.submitLede}</p>
-            <div className="steps-list">
-              <div><span>01</span><div><b>{t.stepOne}</b><small>{t.stepOneDesc}</small></div></div>
-              <div><span>02</span><div><b>{t.stepTwo}</b><small>{t.stepTwoDesc}</small></div></div>
-              <div><span>03</span><div><b>{t.stepThree}</b><small>{t.stepThreeDesc}</small></div></div>
-            </div>
           </div>
 
           <div className="submit-card">
@@ -616,7 +557,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="workflow-section" id="gv-panel-info" role="tabpanel" aria-labelledby="gv-tab-info" style={{ display: activePageTab === "info" ? undefined : "none" }}>
+        <section className="workflow-section" id="gv-panel-info" role="tabpanel" aria-labelledby="gv-tab-info" tabIndex={0} style={{ display: activePageTab === "info" ? undefined : "none" }}>
           <div className="section-heading">
             <div><div className="section-kicker">{t.workflowKicker}</div><h2>{t.workflowTitle}</h2></div>
             <p className="workflow-lede">{t.workflowLede}</p>
@@ -645,26 +586,12 @@ export default function Home() {
         </main>
 
         <footer className="footer">
-          <a className="brand footer-brand" href="#"><span className="brand-mark"><Layers3 size={17} /></span><span>gamevault<span className="brand-dot">.</span></span></a>
+          <a className="brand footer-brand" href="#" onClick={(event) => { event.preventDefault(); setActivePageTab("library"); }}><span className="brand-mark"><Layers3 size={17} /></span><span>gamevault<span className="brand-dot">.</span></span></a>
           <span>{t.footerLine}</span>
           <div><a href="#safety" onClick={(event) => { event.preventDefault(); setActivePageTab("info"); }}>{t.footerPolicy}</a><a href="#how-it-works" onClick={(event) => { event.preventDefault(); setActivePageTab("info"); }}>{t.footerProcess}</a><a href="https://github.com/slgamervn/aaa" target="_blank" rel="noreferrer"><Github size={15} />{t.source}</a></div>
           <small>© 2026 GameVault · {t.footerStatus}</small>
         </footer>
 
-      {showSubmit && (
-        <div className="modal-backdrop" role="presentation" onClick={(event) => { if (event.target === event.currentTarget) setShowSubmit(false); }}>
-          <div className="modal-card" role="dialog" aria-modal="true" aria-labelledby="submit-modal-title">
-            <button className="modal-close" aria-label={language === "vi" ? "Đóng" : "Close"} onClick={() => setShowSubmit(false)}><X size={19} /></button>
-            <div className="modal-mark"><UploadCloud size={22} /></div>
-            <div className="section-kicker">{t.modalKicker}</div><h2 id="submit-modal-title">{t.modalTitle}</h2><p>{t.modalText}</p>
-            <div className="modal-choice">
-              <button onClick={() => { setActiveTab("html"); setActivePageTab("submit"); setShowSubmit(false); }}><FileCode2 size={20} /><span><b>{t.modalHtml}</b><small>{t.modalHtmlDesc}</small></span><ArrowRight size={16} /></button>
-              <button onClick={() => { setActiveTab("url"); setActivePageTab("submit"); setShowSubmit(false); }}><Globe2 size={20} /><span><b>{t.modalUrl}</b><small>{t.modalUrlDesc}</small></span><ArrowRight size={16} /></button>
-            </div>
-            <div className="modal-note"><ShieldCheck size={15} />{t.modalFoot}</div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

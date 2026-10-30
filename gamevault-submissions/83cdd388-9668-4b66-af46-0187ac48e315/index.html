@@ -400,8 +400,10 @@ const ARENA=23.5;
    ========================================================= */
 const Snd={ctx:null,on:true,
  init(){
-  if(this.ctx){if(this.ctx.state==='suspended')this.ctx.resume();return;}
+  if(this.ctx){if(this.ctx.state==='suspended')this.ctx.resume().catch(()=>{});return;}
   const C=window.AudioContext||window.webkitAudioContext;if(!C)return;const c=this.ctx=new C();
+   // Resume audio from user input when mobile browsers suspend embedded Web Audio.
+   if(c.state==='suspended')c.resume().catch(()=>{});
   this.comp=c.createDynamicsCompressor();this.comp.threshold.value=-12;this.comp.knee.value=8;this.comp.ratio.value=5;this.comp.attack.value=.002;this.comp.release.value=.18;
   this.master=c.createGain();this.master.gain.value=.85;this.master.connect(this.comp);this.comp.connect(c.destination);
   this.sfx=c.createGain();this.sfx.connect(this.master);
@@ -2674,7 +2676,11 @@ function boot(){
  bind('#b-resume',()=>Game.resume());bind('#b-phelp',()=>{Game.helpThen=null;Game.openHelp();Game.helpFrom='pause';});bind('#b-quit',()=>{Snd.play('ui');Game.toTitle();});
  bind('#b-retry',()=>Game.retry());bind('#b-dquit',()=>{Snd.play('ui');Game.toTitle();});bind('#b-again',()=>{Snd.play('uiok');Game.toTitle();});
  $('#pausebtn').addEventListener('pointerdown',e=>{e.preventDefault();Game.pause();});
- $('#sndtoggle').addEventListener('click',()=>{Snd.init();Snd.on=!Snd.on;if(Snd.master)Snd.master.gain.value=Snd.on?.85:0;$('#sndtoggle').textContent='♪ ÂM THANH: '+(Snd.on?'BẬT':'TẮT');});
+ const unlockSound=()=>{Snd.init();if(Snd.ctx&&Snd.ctx.state==='suspended')Snd.ctx.resume().catch(()=>{});};
+  document.addEventListener('pointerdown',unlockSound,{capture:true,passive:true});
+  document.addEventListener('keydown',unlockSound,{capture:true});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Snd.on)unlockSound();});
+  $('#sndtoggle').addEventListener('click',()=>{unlockSound();Snd.on=!Snd.on;if(Snd.master)Snd.master.gain.value=Snd.on?.85:0;$('#sndtoggle').textContent='♪ ÂM THANH: '+(Snd.on?'BẬT':'TẮT');});
  document.addEventListener('visibilitychange',()=>{if(document.hidden&&G.state==='fight')Game.pause();});
  loop();
  window.__G=G;window.__Game=Game;window.__sim=(n,dt)=>{for(let i=0;i<n;i++)tick(dt);};window.__IN=IN;window.__loadEnv=loadEnv;window.__PL=()=>PL;

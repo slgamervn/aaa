@@ -383,7 +383,6 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
 
   function handleToolbarPointerDown(event: ReactPointerEvent<HTMLButtonElement>) {
     if (event.pointerType === "mouse" && event.button !== 0) return;
-    event.preventDefault();
     try {
       event.currentTarget.setPointerCapture(event.pointerId);
     } catch {

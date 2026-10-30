@@ -631,6 +631,10 @@ html[data-theme="night"] .admin-status-pending_review { color: var(--yellow); }
 .admin-auth-foot { padding-top: .8rem; margin-top: 1.1rem !important; border-top: 1px solid var(--line); font-size: .74rem !important; }
 .play-page { min-height: 100vh; min-height: 100svh; padding-bottom: max(3rem, env(safe-area-inset-bottom)); }
 .play-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .9rem clamp(1rem, 5vw, 4rem); border-bottom: 1px solid var(--line); background: var(--surface); }
+.play-header-actions { display: flex; align-items: center; gap: .85rem; flex-shrink: 0; }
+.play-language-button { display: inline-flex; align-items: center; justify-content: center; gap: .35rem; min-height: 38px; padding: .4rem .6rem; border: 1px solid var(--line-strong); border-radius: 3px; background: transparent; color: var(--ink); font: inherit; font-size: .73rem; font-weight: 700; cursor: pointer; touch-action: manipulation; }
+.play-language-button:hover { background: var(--surface-strong); }
+.play-language-button:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
 .play-back, .play-safe { display: inline-flex; align-items: center; gap: .45rem; font-size: .8rem; }
 .play-back { font-weight: 700; }
 .play-safe { color: var(--green); font-size: .72rem; }
@@ -683,6 +687,8 @@ html[data-theme="night"] .admin-status-pending_review { color: var(--yellow); }
   .admin-button { width: 100%; }
   .admin-metadata { gap: .45rem; }
   .admin-scan-summary strong { font-size: .9rem; }
+  .play-header-actions { gap: .45rem; }
+  .play-language-button { min-width: 38px; min-height: 36px; padding: .4rem; }
   .play-safe { font-size: 0; }
   .play-safe svg { width: 17px; height: 17px; }
 }
@@ -692,7 +698,7 @@ html[data-theme="night"] .admin-status-pending_review { color: var(--yellow); }
   .play-intro { padding-top: .8rem; padding-bottom: .35rem; }
   .play-intro h1 { font-size: clamp(1.5rem, 4vw, 2.2rem); }
   .play-frame-wrap { width: calc(100% - 1rem); height: min(72vh, 720px); height: min(72svh, 720px); min-height: 210px; margin: .5rem auto; }
-  .play-frame-wrap:fullscreen iframe { height: calc(100% - 49px); }
+  .play-frame-wrap:fullscreen iframe { height: 100%; flex: 1; }
   .play-disclaimer { margin: .55rem auto; }
 }
 

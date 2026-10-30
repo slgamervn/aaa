@@ -808,3 +808,15 @@ html[data-theme="night"] .admin-status-pending_review { color: var(--yellow); }
   .project-preview-frame { height: 68vh; min-height: 360px; }
   .project-preview-fallback { max-width: 65%; }
 }
+
+
+/* Keep optional outbound source links visually secondary to the in-app preview. */
+.project-preview-help { max-width: 820px; margin: 0; padding: .7rem .9rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .74rem; line-height: 1.6; }
+.project-source-details { width: min(1180px, calc(100% - 2rem)); margin: -1.75rem auto 3rem; border-top: 1px solid var(--line); color: var(--muted); }
+.project-source-details summary { width: fit-content; padding: .8rem 0; cursor: pointer; color: var(--muted); font-size: .78rem; }
+.project-source-details > div { display: flex; flex-wrap: wrap; gap: .75rem 1.2rem; padding: .1rem 0 1rem; }
+.project-source-details a { display: inline-flex; align-items: center; gap: .4rem; color: var(--muted); font-size: .76rem; }
+.project-source-details a:hover { color: var(--ink); }
+@media (max-width: 600px) {
+  .project-source-details { width: calc(100% - 1rem); margin-top: -1.25rem; }
+}

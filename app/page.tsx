@@ -18,7 +18,7 @@ type PublishedProject = { id: string; title: string; description: string; genre:
 
 const copy = {
   vi: {
-    navLibrary: "Dự án", navProcess: "Giới thiệu", navSafety: "An toàn & chính sách",
+    navLibrary: "Dự án", navProcess: "Quy trình", navSafety: "An toàn & chính sách",
     submit: "Đóng góp dự án", switchLanguage: "Switch to English", darkMode: "Giao diện tối",
     lightMode: "Giao diện sáng", largerText: "Tăng cỡ chữ", smallerText: "Cỡ chữ mặc định",
     reduceMotion: "Giảm chuyển động", restoreMotion: "Bật chuyển động",
@@ -37,7 +37,7 @@ const copy = {
     libraryKicker: "KHO DỰ ÁN · 01", libraryTitle: "Khám phá các dự án.", librarySubtitle: "Tải tệp HTML đã được duyệt hoặc mở trang nguồn của dự án. Chỉ nội dung đã qua kiểm duyệt mới xuất hiện tại đây.",
     searchPlaceholder: "Tìm tên hoặc thể loại…", searchLabel: "Tìm dự án",
     all: "Tất cả", arcade: "Arcade", strategy: "Chiến thuật", puzzle: "Giải đố", action: "Hành động", simulation: "Mô phỏng", educational: "Giáo dục", other: "Khác",
-    genreLabel: "Thể loại", descriptionLabel: "Mô tả dự án", descriptionPlaceholder: "Giới thiệu ngắn về dự án (tối đa 240 ký tự)", publishedOnly: "Đã được duyệt và xuất bản", loadingProjects: "Đang tải danh sách dự án…", catalogLoadFailed: "Chưa thể tải danh sách dự án. Hãy thử tải lại trang.", emptyLibraryTitle: "Chưa có dự án nào được công khai.", emptyLibraryText: "Các dự án sẽ xuất hiện tại đây sau khi được kiểm tra và phê duyệt. Bạn cũng có thể gửi một dự án để đề nghị xem xét.", downloadProject: "Tải tệp HTML", openProject: "Mở trang nguồn", sourceUnavailable: "Nguồn hiện không khả dụng", riskScore: "TÍN HIỆU KIỂM TRA", htmlProjectFallback: "Tệp HTML đã được kiểm tra và công khai.", urlProjectFallback: "Dự án này được chia sẻ qua trang web gốc.",
+    genreLabel: "Thể loại", descriptionLabel: "Mô tả dự án", descriptionPlaceholder: "Giới thiệu ngắn về dự án (tối đa 240 ký tự)", publishedOnly: "Đã được duyệt và xuất bản", loadingProjects: "Đang tải danh sách dự án…", catalogLoadFailed: "Chưa thể tải danh sách dự án. Hãy thử tải lại trang.", emptyLibraryTitle: "Chưa có dự án nào được công khai.", emptyLibraryText: "Các dự án sẽ xuất hiện tại đây sau khi được kiểm tra và phê duyệt. Bạn cũng có thể gửi một dự án để đề nghị xem xét.", downloadProject: "Tải tệp HTML", openProject: "Mở website gốc", sourceUnavailable: "Nguồn hiện không khả dụng", riskScore: "TÍN HIỆU KIỂM TRA", htmlProjectFallback: "Tệp HTML đã được kiểm tra và công khai.", urlProjectFallback: "Dự án này được chia sẻ qua trang web gốc.",
     sample: "MẪU", unlisted: "Chưa xuất bản", sampleArtwork: "ARTWORK MẪU",
     neonCategory: "Arcade · Nhịp độ", neonDescription: "Một đường đua nhỏ, vài khúc cua và cảm giác vừa đủ nhanh.",
     kingdomCategory: "Chiến thuật · Xây dựng", kingdomDescription: "Xếp từng mảnh đất và chăm chút cho một vương quốc tí hon.",
@@ -100,7 +100,7 @@ const copy = {
     scanMessageHtml: "Đây là quét tĩnh theo mẫu, không phải chứng nhận không có mã độc hoặc xác nhận tuân thủ điều khoản GitHub."
   },
   en: {
-    navLibrary: "Projects", navProcess: "About", navSafety: "Safety & policy",
+    navLibrary: "Projects", navProcess: "How it works", navSafety: "Safety & policy",
     submit: "Contribute a project", switchLanguage: "Chuyển sang tiếng Việt", darkMode: "Dark appearance",
     lightMode: "Light appearance", largerText: "Increase text size", smallerText: "Default text size",
     reduceMotion: "Reduce motion", restoreMotion: "Enable motion",
@@ -119,7 +119,7 @@ const copy = {
     libraryKicker: "PROJECT COLLECTION · 01", libraryTitle: "Explore the projects.", librarySubtitle: "Download approved HTML files or open a project at its original website. Only reviewed projects appear here.",
     searchPlaceholder: "Search titles or genres…", searchLabel: "Search projects",
     all: "All", arcade: "Arcade", strategy: "Strategy", puzzle: "Puzzle", action: "Action", simulation: "Simulation", educational: "Educational", other: "Other",
-    genreLabel: "Genre", descriptionLabel: "Project description", descriptionPlaceholder: "Briefly describe the project (up to 240 characters)", publishedOnly: "Reviewed and published", loadingProjects: "Loading the library…", catalogLoadFailed: "The library could not be loaded. Try refreshing the page.", emptyLibraryTitle: "No projects published yet.", emptyLibraryText: "Projects will appear here after review and approval. You can also submit a project for consideration.", downloadProject: "Download HTML file", openProject: "Open source website", sourceUnavailable: "Source unavailable", riskScore: "REVIEW SIGNAL", htmlProjectFallback: "This HTML project has been reviewed and published.", urlProjectFallback: "This project is provided through its original website.",
+    genreLabel: "Genre", descriptionLabel: "Project description", descriptionPlaceholder: "Briefly describe the project (up to 240 characters)", publishedOnly: "Reviewed and published", loadingProjects: "Loading the library…", catalogLoadFailed: "The library could not be loaded. Try refreshing the page.", emptyLibraryTitle: "No projects published yet.", emptyLibraryText: "Projects will appear here after review and approval. You can also submit a project for consideration.", downloadProject: "Download HTML file", openProject: "Visit original website", sourceUnavailable: "Source unavailable", riskScore: "REVIEW SIGNAL", htmlProjectFallback: "This HTML project has been reviewed and published.", urlProjectFallback: "This project is provided through its original website.",
     sample: "SAMPLE", unlisted: "Not published", sampleArtwork: "SAMPLE ARTWORK",
     neonCategory: "Arcade · Action", neonDescription: "A small track, a few turns, and just enough speed.",
     kingdomCategory: "Strategy · Building", kingdomDescription: "Place each patch of land and tend to a tiny kingdom.",

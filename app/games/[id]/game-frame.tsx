@@ -40,8 +40,11 @@ export default function GameFrame({ title, src, sandbox, language = "vi", unavai
 
   const lockLandscape = useCallback(async () => {
     try {
-      if (screen.orientation?.lock) {
-        await screen.orientation.lock("landscape");
+      const orientation = screen.orientation as ScreenOrientation & {
+        lock?: (orientation: OrientationLockType) => Promise<void>;
+      };
+      if (typeof orientation.lock === "function") {
+        await orientation.lock("landscape");
       }
     } catch {
       // Orientation locking is not supported in every browser, especially iOS Safari.

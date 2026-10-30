@@ -647,16 +647,21 @@ html[data-theme="night"] .admin-status-pending_review { color: var(--yellow); }
 .play-fullscreen-button:hover { background: var(--ink); color: var(--paper); }
 .play-frame-wrap iframe { width: 100%; min-width: 0; height: auto; flex: 1 1 auto; min-height: 0; }
 .play-frame-wrap:fullscreen { box-sizing: border-box; width: 100%; height: 100%; max-height: none; min-height: 0; margin: 0; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); border: 0; box-shadow: none; background: #fff; overscroll-behavior: contain; }
-.play-frame-wrap:fullscreen iframe { width: 100%; height: calc(100% - 49px); flex: 1; }
+.play-frame-wrap:fullscreen .play-frame-toolbar { display: none; }
+.play-frame-wrap:fullscreen iframe { width: 100%; height: 100%; flex: 1; }
 .play-frame-wrap.is-fallback-fullscreen { position: fixed; inset: 0; z-index: 9999; box-sizing: border-box; width: 100%; height: 100vh; height: 100dvh; min-height: 0; max-height: none; margin: 0; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); border: 0; box-shadow: none; overscroll-behavior: contain; }
-.play-frame-wrap.is-fallback-fullscreen iframe { height: auto; flex: 1; }
+.play-frame-wrap.is-fallback-fullscreen .play-frame-toolbar { position: absolute; top: calc(env(safe-area-inset-top) + .5rem); right: calc(env(safe-area-inset-right) + .5rem); z-index: 2; min-height: 0; padding: 0; border: 0; background: transparent; }
+.play-frame-wrap.is-fallback-fullscreen .play-frame-toolbar > span { display: none; }
+.play-frame-wrap.is-fallback-fullscreen .play-fullscreen-button { min-width: 44px; min-height: 44px; padding: .7rem; border-color: rgba(255,255,255,.35); background: rgba(20,24,22,.78); color: #fff; }
+.play-frame-wrap.is-fallback-fullscreen .play-fullscreen-button span { display: none; }
+.play-frame-wrap.is-fallback-fullscreen iframe { height: 100%; flex: 1; }
 .play-frame-unavailable { flex: 1; display: grid; align-content: center; justify-items: start; gap: .5rem; padding: 1.5rem; background: var(--surface); }
 .play-frame-unavailable h2, .play-frame-unavailable p { margin: 0; }
 @media (max-width: 720px) {
   .play-frame-toolbar { min-height: 46px; padding: .3rem; }
   .play-fullscreen-button { min-width: 44px; min-height: 44px; padding: .5rem; }
   .play-fullscreen-button span { font-size: .74rem; }
-  .play-frame-wrap:fullscreen iframe { height: calc(100% - 47px); }
+  .play-frame-wrap:fullscreen iframe { height: 100%; }
 }
 .play-disclaimer { width: min(1200px, calc(100% - 2rem)); margin: 1rem auto; color: var(--muted); font-size: .76rem; line-height: 1.7; }
 @media (max-width: 720px) {

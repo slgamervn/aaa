@@ -1,53 +1,55 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft, ExternalLink, Languages, ShieldCheck } from "lucide-react";
-import GameFrame from "./game-frame";
+import { ArrowLeft, Download, ExternalLink, FileCode2, Globe2, Languages, ShieldCheck } from "lucide-react";
 
 type Language = "vi" | "en";
-type GameOrientation = "auto" | "landscape" | "portrait";
-
-type GamePlayerData = {
+type ProjectDetailsData = {
   title: string;
   description: string;
   kind: "html" | "url";
-  orientation: GameOrientation;
   externalUrl: string | null;
-  embeddedUrl: string | null;
   sourceUrl: string | null;
+  downloadUrl: string | null;
 };
 
 const PREFERENCES_KEY = "gamevault-preferences-v1";
 
 const copy = {
   vi: {
-    safeMode: "Game đang chạy trong khung cô lập",
-    htmlKicker: "GAME HTML ĐÃ XUẤT BẢN",
-    urlKicker: "GAME WEB BÊN NGOÀI",
-    htmlFallback: "Game HTML này đã được chủ dự án xem xét và xuất bản.",
-    urlFallback: "Trò chơi được mở trong trang chơi riêng của GameVault.",
-    externalLimit: "Trò chơi này được hiển thị trong một khung có giới hạn. Website bên ngoài có thể chặn nhúng hoặc yêu cầu những tính năng mà khung bảo vệ không cho phép.",
-    originalSite: "Mở trang gốc",
-    publishedSource: "Xem mã nguồn đã xuất bản trên GitHub",
-    unavailable: "GameVault chỉ nhúng đường dẫn HTTPS. Bạn vẫn có thể mở trang gốc bằng nút phía trên.",
-    htmlDisclaimer: "Tệp HTML đã tải lên chạy trong môi trường cô lập với quyền hạn giới hạn. Một số game cần API bên ngoài hoặc bộ nhớ trình duyệt lưu lâu dài có thể không hoạt động.",
-    urlDisclaimer: "Game bên ngoài được hiển thị trong khung riêng. Nếu khung trắng hoặc game không nhận điều khiển, website gốc có thể chặn iframe hoặc yêu cầu quyền mà trình duyệt không cấp. Hãy dùng nút “Mở trang gốc” để chơi trực tiếp trên website đó.",
-    switchLanguage: "Chuyển sang tiếng Anh",
+    htmlKicker: "DỰ ÁN HTML ĐÃ CÔNG KHAI",
+    urlKicker: "DỰ ÁN LIÊN KẾT",
+    htmlFallback: "Tệp HTML của dự án đã được kiểm tra và phê duyệt trước khi công khai.",
+    urlFallback: "Đây là dự án được chia sẻ qua website gốc. GameVault không lưu bản tải xuống của trang bên ngoài.",
+    originalSite: "Mở website gốc",
+    publishedSource: "Xem bản lưu trên GitHub",
+    downloadProject: "Tải tệp HTML",
+    downloadInfo: "Tệp HTML sẽ được tải trực tiếp về thiết bị của bạn.",
+    urlInfo: "Đây là đường dẫn đến website gốc. Hãy kiểm tra tùy chọn tải xuống tại website đó.",
+    reviewed: "Đã qua kiểm duyệt",
+    sourceUnavailable: "Hiện không có đường dẫn nguồn cho dự án này.",
+    backHome: "Quay lại GameVault",
+    switchLanguage: "Switch to English",
+    projectFile: "Tệp dự án",
+    projectLink: "Liên kết dự án"
   },
   en: {
-    safeMode: "Game running in an isolated frame",
-    htmlKicker: "PUBLISHED HTML GAME",
-    urlKicker: "EXTERNAL WEB GAME",
-    htmlFallback: "This HTML game has been reviewed and published by the project owner.",
-    urlFallback: "This game opens in its own GameVault play page.",
-    externalLimit: "This game is displayed in a restricted frame. The external site may block embedding or require features that the sandbox does not allow.",
-    originalSite: "Open original site",
-    publishedSource: "View published source on GitHub",
-    unavailable: "GameVault only embeds HTTPS URLs. You can still open the original site using the link above.",
-    htmlDisclaimer: "The uploaded HTML runs in a restricted sandbox. Some games that require external APIs or persistent browser storage may not work.",
-    urlDisclaimer: "External games are shown in a separate frame. If the frame is blank or the game does not respond to controls, the original website may block iframe embedding or require permissions that the browser does not grant. Use “Open original site” to play directly on that website.",
-    switchLanguage: "Switch to Vietnamese",
-  },
+    htmlKicker: "PUBLISHED HTML PROJECT",
+    urlKicker: "LINKED PROJECT",
+    htmlFallback: "This project's HTML file was checked and approved before publication.",
+    urlFallback: "This project is shared through its original website. GameVault does not host a downloadable copy of the external page.",
+    originalSite: "Open original website",
+    publishedSource: "View archived copy on GitHub",
+    downloadProject: "Download HTML file",
+    downloadInfo: "The HTML file will be downloaded directly to your device.",
+    urlInfo: "This is a link to the original website. Check that website for its own download options.",
+    reviewed: "Reviewed",
+    sourceUnavailable: "No source link is currently available for this project.",
+    backHome: "Back to GameVault",
+    switchLanguage: "Chuyển sang tiếng Việt",
+    projectFile: "Project file",
+    projectLink: "Project link"
+  }
 } as const;
 
 function readSavedPreferences(): Record<string, unknown> {
@@ -59,20 +61,18 @@ function readSavedPreferences(): Record<string, unknown> {
       return parsed as Record<string, unknown>;
     }
   } catch {
-    // Keep the page usable when local storage is unavailable or contains invalid data.
+    // Keep this page usable if browser storage is disabled or invalid.
   }
   return {};
 }
 
-export default function GamePlayer({ game }: { game: GamePlayerData }) {
+export default function ProjectDetails({ project }: { project: ProjectDetailsData }) {
   const [language, setLanguage] = useState<Language>("vi");
   const t = copy[language];
 
   useEffect(() => {
     const savedLanguage = readSavedPreferences().language;
-    if (savedLanguage === "vi" || savedLanguage === "en") {
-      setLanguage(savedLanguage);
-    }
+    if (savedLanguage === "vi" || savedLanguage === "en") setLanguage(savedLanguage);
   }, []);
 
   useEffect(() => {
@@ -84,19 +84,16 @@ export default function GamePlayer({ game }: { game: GamePlayerData }) {
     setLanguage(nextLanguage);
     try {
       const preferences = readSavedPreferences();
-      window.localStorage.setItem(
-        PREFERENCES_KEY,
-        JSON.stringify({ ...preferences, language: nextLanguage }),
-      );
+      window.localStorage.setItem(PREFERENCES_KEY, JSON.stringify({ ...preferences, language: nextLanguage }));
     } catch {
-      // The language still changes for the current page when storage is unavailable.
+      // The selected language remains active for this page.
     }
   }
 
   return (
-    <main className="play-page">
+    <main className="play-page project-detail-page">
       <header className="play-header">
-        <a href="/" className="play-back"><ArrowLeft size={16} /> GameVault</a>
+        <a href="/" className="play-back"><ArrowLeft size={16} /> {t.backHome}</a>
         <div className="play-header-actions">
           <button
             type="button"
@@ -108,39 +105,43 @@ export default function GamePlayer({ game }: { game: GamePlayerData }) {
             <Languages size={15} />
             <span>{language === "vi" ? "EN" : "VI"}</span>
           </button>
-          <span className="play-safe"><ShieldCheck size={15} /> {t.safeMode}</span>
+          <span className="play-safe"><ShieldCheck size={15} /> {t.reviewed}</span>
         </div>
       </header>
-      <section className="play-intro">
-        <div className="section-kicker">{game.kind === "html" ? t.htmlKicker : t.urlKicker}</div>
-        <h1>{game.title}</h1>
-        {game.description ? (
-          <p>{game.description}</p>
-        ) : (
-          <p>{game.kind === "html" ? t.htmlFallback : t.externalLimit}</p>
-        )}
-        {game.externalUrl ? (
-          <a className="play-open-source" href={game.externalUrl} target="_blank" rel="noopener noreferrer nofollow">
-            <ExternalLink size={15} /> {t.originalSite}
-          </a>
-        ) : null}
-        {game.sourceUrl ? (
-          <a className="play-open-source" href={game.sourceUrl} target="_blank" rel="noopener noreferrer">
-            <ExternalLink size={15} /> {t.publishedSource}
-          </a>
-        ) : null}
+
+      <section className="play-intro project-detail-intro">
+        <div className="section-kicker">{project.kind === "html" ? t.htmlKicker : t.urlKicker}</div>
+        <h1>{project.title}</h1>
+        <p>{project.description || (project.kind === "html" ? t.htmlFallback : t.urlFallback)}</p>
+
+        <div className="project-detail-meta">
+          {project.kind === "html" ? <><FileCode2 size={15} /> {t.projectFile} · HTML</> : <><Globe2 size={15} /> {t.projectLink} · URL</>}
+        </div>
+
+        <div className="project-detail-actions">
+          {project.downloadUrl ? (
+            <a className="project-download-button" href={project.downloadUrl} download>
+              <Download size={17} /> {t.downloadProject}
+            </a>
+          ) : project.externalUrl ? (
+            <a className="project-download-button" href={project.externalUrl} target="_blank" rel="noopener noreferrer nofollow">
+              <ExternalLink size={17} /> {t.originalSite}
+            </a>
+          ) : (
+            <p className="project-detail-note">{t.sourceUnavailable}</p>
+          )}
+
+          {project.sourceUrl && (
+            <a className="play-open-source" href={project.sourceUrl} target="_blank" rel="noopener noreferrer">
+              <ExternalLink size={15} /> {t.publishedSource}
+            </a>
+          )}
+        </div>
+
+        <p className="project-detail-note">
+          {project.kind === "html" ? t.downloadInfo : t.urlInfo}
+        </p>
       </section>
-      <GameFrame
-        title={game.title}
-        src={game.embeddedUrl}
-        orientation={game.orientation}
-        sandbox={game.kind === "html" ? "allow-scripts allow-orientation-lock" : "allow-scripts allow-forms allow-pointer-lock allow-orientation-lock"}
-        language={language}
-        unavailableMessage={t.unavailable}
-      />
-      <p className="play-disclaimer">
-        {game.kind === "html" ? t.htmlDisclaimer : t.urlDisclaimer}
-      </p>
     </main>
   );
 }

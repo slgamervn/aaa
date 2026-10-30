@@ -792,3 +792,19 @@ html[data-theme="night"] .admin-status-pending_review { color: var(--yellow); }
   .project-detail-actions { align-items: stretch; flex-direction: column; }
   .project-download-button { width: 100%; }
 }
+
+
+/* Keep the project playable within GameVault rather than navigating away. */
+.project-preview-shell { width: min(1180px, calc(100% - 2rem)); margin: 1.5rem auto 3rem; overflow: hidden; border: 1px solid var(--line); background: var(--surface); }
+.project-preview-toolbar { display: flex; align-items: center; gap: .65rem; min-height: 42px; padding: .55rem .85rem; border-bottom: 1px solid var(--line); color: var(--muted); font: .72rem var(--mono); }
+.project-preview-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex: 0 0 auto; }
+.project-preview-fallback { display: inline-flex; align-items: center; gap: .35rem; margin-left: auto; padding: .35rem .5rem; border: 1px solid var(--line); background: transparent; color: var(--ink); font: inherit; cursor: pointer; }
+.project-preview-frame { display: block; width: 100%; height: min(72vh, 760px); min-height: 420px; border: 0; background: #fff; }
+.project-preview-blocked { display: grid; justify-items: start; align-content: center; gap: .7rem; min-height: 360px; padding: clamp(1.25rem, 5vw, 3rem); }
+.project-preview-blocked h2 { margin: 0; font-size: clamp(1.15rem, 3vw, 1.6rem); }
+.project-preview-blocked p { max-width: 600px; margin: 0 0 .7rem; color: var(--muted); line-height: 1.65; }
+@media (max-width: 600px) {
+  .project-preview-shell { width: calc(100% - 1rem); margin-top: 1rem; }
+  .project-preview-frame { height: 68vh; min-height: 360px; }
+  .project-preview-fallback { max-width: 65%; }
+}

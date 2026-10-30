@@ -37,7 +37,7 @@ const copy = {
     libraryKicker: "GÓC KHÁM PHÁ · 01", libraryTitle: "Tìm trò tiếp theo.", librarySubtitle: "Chỉ game đã được chủ dự án duyệt và xuất bản mới xuất hiện trong thư viện.",
     searchPlaceholder: "Tìm tên hoặc thể loại…", searchLabel: "Tìm game",
     all: "Tất cả", arcade: "Arcade", strategy: "Chiến thuật", puzzle: "Giải đố", action: "Hành động", simulation: "Mô phỏng", educational: "Giáo dục", other: "Khác",
-    genreLabel: "Thể loại", descriptionLabel: "Mô tả", descriptionPlaceholder: "Game này chơi như thế nào? (tối đa 240 ký tự)", publishedOnly: "Đã được duyệt và xuất bản", loadingGames: "Đang tải thư viện…", catalogLoadFailed: "Chưa thể tải thư viện. Thử tải lại trang.", emptyLibraryTitle: "Kệ game đang chờ trò đầu tiên.", emptyLibraryText: "Chưa có trò chơi nào được duyệt xuất bản. Bạn có thể gửi game; nội dung sẽ nằm ở trạng thái chờ đến khi chủ dự án xem xét.", playGame: "Chơi game", visitSource: "Mở trang gốc", riskScore: "TÍN HIỆU RỦI RO", htmlGameFallback: "Game HTML đã được chủ dự án duyệt.", urlGameFallback: "Game được lưu dưới dạng liên kết gốc; nội dung bên ngoài không được sao chép.",
+    genreLabel: "Thể loại", descriptionLabel: "Mô tả", descriptionPlaceholder: "Game này chơi như thế nào? (tối đa 240 ký tự)", publishedOnly: "Đã được duyệt và xuất bản", loadingGames: "Đang tải thư viện…", catalogLoadFailed: "Chưa thể tải thư viện. Thử tải lại trang.", emptyLibraryTitle: "Kệ game đang chờ trò đầu tiên.", emptyLibraryText: "Chưa có trò chơi nào được duyệt xuất bản. Bạn có thể gửi game; nội dung sẽ nằm ở trạng thái chờ đến khi chủ dự án xem xét.", playGame: "Chơi game", visitSource: "Mở trang gốc", riskScore: "TÍN HIỆU RỦI RO", htmlGameFallback: "Game HTML đã được chủ dự án duyệt.", urlGameFallback: "Game sẽ được mở trong trang chơi riêng của GameVault.",
     sample: "MẪU", unlisted: "Chưa xuất bản", sampleArtwork: "ARTWORK MẪU",
     neonCategory: "Arcade · Nhịp độ", neonDescription: "Một đường đua nhỏ, vài khúc cua và cảm giác vừa đủ nhanh.",
     kingdomCategory: "Chiến thuật · Xây dựng", kingdomDescription: "Xếp từng mảnh đất và chăm chút cho một vương quốc tí hon.",
@@ -119,7 +119,7 @@ const copy = {
     libraryKicker: "THE DISCOVERY SHELF · 01", libraryTitle: "Find your next game.", librarySubtitle: "Only games approved and published by the project owner appear in this library.",
     searchPlaceholder: "Search titles or genres…", searchLabel: "Search games",
     all: "All", arcade: "Arcade", strategy: "Strategy", puzzle: "Puzzle", action: "Action", simulation: "Simulation", educational: "Educational", other: "Other",
-    genreLabel: "Genre", descriptionLabel: "Description", descriptionPlaceholder: "What is this game like? (up to 240 characters)", publishedOnly: "Reviewed and published", loadingGames: "Loading the library…", catalogLoadFailed: "The library could not be loaded. Try refreshing the page.", emptyLibraryTitle: "Waiting for the first game.", emptyLibraryText: "No game has been approved for publication yet. You can submit one; it will remain pending until the project owner reviews it.", playGame: "Play game", visitSource: "Visit original site", riskScore: "RISK SIGNAL", htmlGameFallback: "HTML game reviewed by the project owner.", urlGameFallback: "This game is saved as an original link; its external content is not copied.",
+    genreLabel: "Genre", descriptionLabel: "Description", descriptionPlaceholder: "What is this game like? (up to 240 characters)", publishedOnly: "Reviewed and published", loadingGames: "Loading the library…", catalogLoadFailed: "The library could not be loaded. Try refreshing the page.", emptyLibraryTitle: "Waiting for the first game.", emptyLibraryText: "No game has been approved for publication yet. You can submit one; it will remain pending until the project owner reviews it.", playGame: "Play game", visitSource: "Visit original site", riskScore: "RISK SIGNAL", htmlGameFallback: "HTML game reviewed by the project owner.", urlGameFallback: "This game opens in its own GameVault play page.",
     sample: "SAMPLE", unlisted: "Not published", sampleArtwork: "SAMPLE ARTWORK",
     neonCategory: "Arcade · Action", neonDescription: "A small track, a few turns, and just enough speed.",
     kingdomCategory: "Strategy · Building", kingdomDescription: "Place each patch of land and tend to a tiny kingdom.",
@@ -517,7 +517,7 @@ export default function Home() {
               const color = game.genre === "strategy" ? "rust" : game.genre === "puzzle" || game.genre === "educational" ? "blue" : "mint";
               const coverSymbol = game.genre === "strategy" ? "♜" : game.genre === "puzzle" ? "◎" : game.kind === "url" ? "↗" : "✦";
               const genreLabel = game.genre === "arcade" ? t.arcade : game.genre === "strategy" ? t.strategy : game.genre === "puzzle" ? t.puzzle : game.genre === "action" ? t.action : game.genre === "simulation" ? t.simulation : game.genre === "educational" ? t.educational : t.other;
-              const gameHref = game.kind === "html" ? "/games/" + game.id : (game.sourceUrl ?? "/");
+              const gameHref = "/games/" + game.id;
               return (
                 <article className="game-card" key={game.id}>
                   <div className={"game-cover cover-" + color} role="img" aria-label={game.title}>
@@ -531,8 +531,8 @@ export default function Home() {
                     <div className="game-meta"><span>{genreLabel}</span><span className="demo-dot" /><span>{t.publishedOnly}</span></div>
                     <h3>{game.title}</h3>
                     <p>{game.description || (game.kind === "html" ? t.htmlGameFallback : t.urlGameFallback)}</p>
-                    <a className="card-link" href={gameHref} target={game.kind === "url" ? "_blank" : undefined} rel={game.kind === "url" ? "noopener noreferrer nofollow" : undefined}>
-                      {game.kind === "html" ? t.playGame : t.visitSource}<ArrowDownRight size={15} />
+                    <a className="card-link" href={gameHref}>
+                      {t.playGame}<ArrowDownRight size={15} />
                     </a>
                   </div>
                 </article>

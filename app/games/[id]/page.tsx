@@ -52,18 +52,18 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
         <div className="section-kicker">{isHtml ? "PUBLISHED HTML GAME" : "EXTERNAL WEB GAME"}</div>
         <h1>{game.title}</h1>
         {game.description ? <p>{game.description}</p> : <p>This game is displayed in a restricted frame. The external site may limit embedding or require features that the sandbox disables.</p>}
-        {externalUrl ? <a className="play-open-source" href={externalUrl.toString()} target="_blank" rel="noopener noreferrer nofollow"><ExternalLink size={15} /> Open original website</a> : null}
+        {externalUrl ? <a className="play-open-source" href={externalUrl.toString()} target="_blank" rel="noopener noreferrer nofollow"><ExternalLink size={15} /> Mở trang gốc</a> : null}
         {isHtml ? <a className="play-open-source" href={"https://github.com/slgamervn/aaa/tree/main/gamevault-submissions/" + game.id} target="_blank" rel="noopener noreferrer"><ExternalLink size={15} /> View published source on GitHub</a> : null}
       </section>
       <GameFrame
         title={game.title}
         src={embeddedUrl}
-        sandbox={isHtml ? "allow-scripts" : "allow-scripts allow-forms"}
+        sandbox={isHtml ? "allow-scripts" : "allow-scripts allow-forms allow-pointer-lock"}
         unavailableMessage="GameVault chỉ nhúng đường dẫn HTTPS. Bạn vẫn có thể mở trang gốc bằng nút phía trên."
       />
       <p className="play-disclaimer">{isHtml
         ? "The uploaded HTML runs in a restricted sandbox. Network requests and form submissions are disabled. Some games that require external APIs or persistent browser storage may not work."
-        : "The original website is embedded in a restricted sandbox. Some websites prohibit iframe embedding or require cookies, storage, popups, or other permissions; if the game does not appear, use “Open original website” above."}</p>
+        : "Game bên ngoài được hiển thị trong khung riêng. Nếu khung trắng hoặc game không nhận điều khiển, website gốc có thể chặn iframe hoặc yêu cầu quyền mà trình duyệt không cấp. Hãy dùng nút “Mở trang gốc” để chơi trực tiếp trên website đó."}</p>
     </main>
   );
 }

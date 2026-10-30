@@ -1,9 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ArrowLeft, Download, ExternalLink, Languages, ShieldCheck } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  ArrowLeft,
+  Download,
+  ExternalLink,
+  Languages,
+  Maximize2,
+  Minimize2,
+  Moon,
+  RefreshCw,
+  RotateCw,
+  ShieldCheck,
+  Sun,
+  Type,
+  MoveVertical,
+  Activity
+} from "lucide-react";
 
 type Language = "vi" | "en";
+type Theme = "paper" | "night";
+type PreviewSize = "normal" | "large";
+type ProjectOrientation = "auto" | "landscape" | "portrait";
+
 type ProjectDetailsData = {
   title: string;
   description: string;
@@ -12,9 +31,18 @@ type ProjectDetailsData = {
   embeddedUrl: string | null;
   sourceUrl: string | null;
   downloadUrl: string | null;
+  orientation: ProjectOrientation;
+};
+
+type SavedPreferences = {
+  language?: Language;
+  theme?: Theme;
+  largeText?: boolean;
+  motionReduced?: boolean;
 };
 
 const PREFERENCES_KEY = "gamevault-preferences-v1";
+const PLAYER_PREFERENCES_KEY = "gamevault-player-preferences-v1";
 
 const copy = {
   vi: {
@@ -32,7 +60,25 @@ const copy = {
     previewHelp: "Nếu khung xem trước trống, website nguồn có thể đang từ chối nhúng. GameVault không thể ghi đè giới hạn do website đó đặt ra.",
     sourceDisclosure: "Nguồn dự án (tùy chọn)",
     originalSite: "Mở website gốc",
-    sourceUnavailable: "Không có liên kết nguồn."
+    sourceUnavailable: "Không có liên kết nguồn.",
+    fullscreen: "Toàn màn hình",
+    exitFullscreen: "Thoát toàn màn hình",
+    fullscreenFallback: "Trình duyệt không hỗ trợ toàn màn hình gốc; đang dùng chế độ tràn màn hình dự phòng.",
+    reload: "Tải lại dự án",
+    largerPreview: "Khung xem lớn",
+    normalPreview: "Khung xem tiêu chuẩn",
+    darkTheme: "Bật giao diện tối",
+    lightTheme: "Bật giao diện sáng",
+    largerText: "Tăng cỡ chữ",
+    normalText: "Cỡ chữ tiêu chuẩn",
+    reduceMotion: "Giảm chuyển động",
+    restoreMotion: "Bật chuyển động",
+    lockOrientation: "Khóa hướng màn hình",
+    unlockOrientation: "Bỏ khóa hướng màn hình",
+    orientationUnavailable: "Thiết bị hoặc trình duyệt không cho phép khóa hướng màn hình.",
+    orientationNeedsFullscreen: "Hãy bật toàn màn hình trước khi khóa hướng màn hình.",
+    customControls: "Tùy chỉnh trình xem",
+    frameReloaded: "Đã tải lại dự án."
   },
   en: {
     htmlKicker: "PUBLISHED HTML PROJECT",
@@ -49,53 +95,273 @@ const copy = {
     previewHelp: "If the preview is blank, the source website may be refusing embedding. GameVault cannot override restrictions set by that website.",
     sourceDisclosure: "Project source (optional)",
     originalSite: "Open original website",
-    sourceUnavailable: "No source link is available."
+    sourceUnavailable: "No source link is available.",
+    fullscreen: "Fullscreen",
+    exitFullscreen: "Exit fullscreen",
+    fullscreenFallback: "Native fullscreen is unavailable; using an expanded in-page view.",
+    reload: "Reload project",
+    largerPreview: "Larger preview",
+    normalPreview: "Standard preview",
+    darkTheme: "Use dark appearance",
+    lightTheme: "Use light appearance",
+    largerText: "Increase text size",
+    normalText: "Default text size",
+    reduceMotion: "Reduce motion",
+    restoreMotion: "Enable motion",
+    lockOrientation: "Lock screen orientation",
+    unlockOrientation: "Unlock screen orientation",
+    orientationUnavailable: "This device or browser cannot lock screen orientation.",
+    orientationNeedsFullscreen: "Enter fullscreen before locking the screen orientation.",
+    customControls: "Viewer preferences",
+    frameReloaded: "Project reloaded."
   }
 } as const;
 
-function readSavedPreferences(): Record<string, unknown> {
+function readStorageObject(key: string): Record<string, unknown> {
   try {
-    const raw = window.localStorage.getItem(PREFERENCES_KEY);
+    const raw = window.localStorage.getItem(key);
     if (!raw) return {};
     const parsed: unknown = JSON.parse(raw);
-    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed as Record<string, unknown>;
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return parsed as Record<string, unknown>;
+    }
   } catch {
-    // Keep the page usable when storage is unavailable.
+    // Continue with defaults when storage is unavailable or malformed.
   }
   return {};
 }
 
 export default function ProjectDetails({ project }: { project: ProjectDetailsData }) {
   const [language, setLanguage] = useState<Language>("vi");
+  const [theme, setTheme] = useState<Theme>("paper");
+  const [largeText, setLargeText] = useState(false);
+  const [motionReduced, setMotionReduced] = useState(false);
+  const [previewSize, setPreviewSize] = useState<PreviewSize>("normal");
+  const [preferencesLoaded, setPreferencesLoaded] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [fallbackFullscreen, setFallbackFullscreen] = useState(false);
+  const [orientationSupported, setOrientationSupported] = useState(false);
+  const [orientationLocked, setOrientationLocked] = useState(false);
+  const [frameKey, setFrameKey] = useState(0);
+  const [notice, setNotice] = useState("");
+  const previewRef = useRef<HTMLDivElement>(null);
   const t = copy[language];
+  const fullscreenActive = isFullscreen || fallbackFullscreen;
 
   useEffect(() => {
-    const savedLanguage = readSavedPreferences().language;
-    if (savedLanguage === "vi" || savedLanguage === "en") setLanguage(savedLanguage);
+    const saved = readStorageObject(PREFERENCES_KEY) as SavedPreferences;
+    const playerPrefs = readStorageObject(PLAYER_PREFERENCES_KEY);
+
+    if (saved.language === "vi" || saved.language === "en") setLanguage(saved.language);
+    if (saved.theme === "paper" || saved.theme === "night") setTheme(saved.theme);
+    if (typeof saved.largeText === "boolean") setLargeText(saved.largeText);
+    if (typeof saved.motionReduced === "boolean") {
+      setMotionReduced(saved.motionReduced);
+    } else {
+      setMotionReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    }
+    if (playerPrefs.previewSize === "normal" || playerPrefs.previewSize === "large") {
+      setPreviewSize(playerPrefs.previewSize);
+    }
+
+    setOrientationSupported(typeof window.screen?.orientation?.lock === "function");
+    setPreferencesLoaded(true);
   }, []);
 
   useEffect(() => {
+    if (!preferencesLoaded) return;
+
     document.documentElement.lang = language;
-  }, [language]);
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.dataset.scale = largeText ? "large" : "normal";
+    document.documentElement.dataset.motion = motionReduced ? "reduced" : "normal";
+    document.querySelector('meta[name="theme-color"]')?.setAttribute(
+      "content",
+      theme === "paper" ? "#f3f0e7" : "#171c18"
+    );
+
+    try {
+      const shared = readStorageObject(PREFERENCES_KEY);
+      window.localStorage.setItem(PREFERENCES_KEY, JSON.stringify({
+        ...shared,
+        language,
+        theme,
+        largeText,
+        motionReduced
+      }));
+      const playerPrefs = readStorageObject(PLAYER_PREFERENCES_KEY);
+      window.localStorage.setItem(PLAYER_PREFERENCES_KEY, JSON.stringify({
+        ...playerPrefs,
+        previewSize
+      }));
+    } catch {
+      // Preferences remain active for this session if storage is blocked.
+    }
+  }, [language, theme, largeText, motionReduced, previewSize, preferencesLoaded]);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const activeElement = document.fullscreenElement;
+      const active = Boolean(
+        activeElement &&
+        (activeElement === previewRef.current || previewRef.current?.contains(activeElement))
+      );
+      setIsFullscreen(active);
+
+      if (!active) {
+        setOrientationLocked(false);
+        try {
+          window.screen?.orientation?.unlock?.();
+        } catch {
+          // Orientation may already have been released by the browser.
+        }
+      }
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  useEffect(() => {
+    if (!fallbackFullscreen) return;
+
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousRootOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setFallbackFullscreen(false);
+    };
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousRootOverflow;
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [fallbackFullscreen]);
+
+  useEffect(() => {
+    return () => {
+      if (document.fullscreenElement === previewRef.current) {
+        void document.exitFullscreen().catch(() => undefined);
+      }
+      try {
+        window.screen?.orientation?.unlock?.();
+      } catch {
+        // Ignore cleanup errors when orientation locking is unsupported.
+      }
+    };
+  }, []);
 
   function toggleLanguage() {
-    const nextLanguage: Language = language === "vi" ? "en" : "vi";
-    setLanguage(nextLanguage);
+    setLanguage(current => current === "vi" ? "en" : "vi");
+  }
+
+  async function applyProjectOrientation() {
+    if (project.orientation === "auto") return;
+
+    const orientation = window.screen?.orientation;
+    if (!orientation || typeof orientation.lock !== "function") return;
+
     try {
-      const preferences = readSavedPreferences();
-      window.localStorage.setItem(PREFERENCES_KEY, JSON.stringify({ ...preferences, language: nextLanguage }));
+      await orientation.lock(project.orientation);
+      setOrientationLocked(true);
+      setNotice("");
     } catch {
-      // The selected language remains active for this page.
+      setOrientationLocked(false);
+      setNotice(t.orientationUnavailable);
     }
   }
 
+  async function toggleOrientationLock() {
+    if (!document.fullscreenElement) {
+      setNotice(t.orientationNeedsFullscreen);
+      return;
+    }
+
+    const orientation = window.screen?.orientation;
+    if (!orientation || typeof orientation.lock !== "function") {
+      setNotice(t.orientationUnavailable);
+      return;
+    }
+
+    try {
+      if (orientationLocked) {
+        orientation.unlock();
+        setOrientationLocked(false);
+      } else if (project.orientation !== "auto") {
+        await orientation.lock(project.orientation);
+        setOrientationLocked(true);
+      } else {
+        setNotice(t.orientationUnavailable);
+      }
+      setNotice("");
+    } catch {
+      setNotice(t.orientationUnavailable);
+    }
+  }
+
+  async function toggleFullscreen() {
+    const container = previewRef.current;
+    if (!container) return;
+
+    if (fallbackFullscreen) {
+      setFallbackFullscreen(false);
+      return;
+    }
+
+    if (document.fullscreenElement === container) {
+      try {
+        await document.exitFullscreen();
+      } catch {
+        setNotice(t.fullscreenFallback);
+      }
+      return;
+    }
+
+    if (typeof container.requestFullscreen === "function") {
+      try {
+        await container.requestFullscreen();
+        setIsFullscreen(document.fullscreenElement === container);
+        await applyProjectOrientation();
+        return;
+      } catch {
+        setIsFullscreen(false);
+      }
+    }
+
+    setFallbackFullscreen(true);
+    setNotice(t.fullscreenFallback);
+  }
+
+  function reloadProject() {
+    setFrameKey(current => current + 1);
+    setNotice(t.frameReloaded);
+  }
+
+  const pageClassName = "play-page project-detail-page";
+  const previewClassName = "project-preview-shell" + (fallbackFullscreen ? " is-fallback-fullscreen" : "");
+
   return (
-    <main className="play-page project-detail-page">
+    <main
+      className={pageClassName}
+      data-large-text={largeText ? "true" : "false"}
+      data-motion={motionReduced ? "reduced" : "normal"}
+    >
       <header className="play-header">
         <a href="/" className="play-back"><ArrowLeft size={16} /> {t.backHome}</a>
         <div className="play-header-actions">
-          <button type="button" className="play-language-button" onClick={toggleLanguage} aria-label={t.switchLanguage} title={t.switchLanguage}>
-            <Languages size={15} /><span>{language === "vi" ? "EN" : "VI"}</span>
+          <button
+            type="button"
+            className="play-language-button"
+            onClick={toggleLanguage}
+            aria-label={t.switchLanguage}
+            title={t.switchLanguage}
+          >
+            <Languages size={15} />
+            <span>{language === "vi" ? "EN" : "VI"}</span>
           </button>
           <span className="play-safe"><ShieldCheck size={15} /> {t.reviewed}</span>
         </div>
@@ -114,13 +380,104 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
         )}
       </section>
 
-      <section className="project-preview-shell" aria-label={t.previewLabel}>
+      <section
+        ref={previewRef}
+        className={previewClassName}
+        data-preview-size={previewSize}
+        aria-label={t.previewLabel}
+      >
         <div className="project-preview-toolbar">
-          <span className="project-preview-dot" aria-hidden="true" />
-          <span>{t.previewLabel}</span>
+          <div className="project-preview-heading">
+            <span className="project-preview-dot" aria-hidden="true" />
+            <span>{t.previewLabel}</span>
+          </div>
+
+          <div className="project-preview-controls" role="group" aria-label={t.customControls}>
+            <button
+              type="button"
+              className="preview-control-btn"
+              onClick={() => setPreviewSize(current => current === "normal" ? "large" : "normal")}
+              aria-pressed={previewSize === "large"}
+              aria-label={previewSize === "large" ? t.normalPreview : t.largerPreview}
+              title={previewSize === "large" ? t.normalPreview : t.largerPreview}
+            >
+              <MoveVertical size={16} />
+            </button>
+
+            <button
+              type="button"
+              className="preview-control-btn"
+              onClick={() => setTheme(current => current === "paper" ? "night" : "paper")}
+              aria-pressed={theme === "night"}
+              aria-label={theme === "paper" ? t.darkTheme : t.lightTheme}
+              title={theme === "paper" ? t.darkTheme : t.lightTheme}
+            >
+              {theme === "paper" ? <Moon size={16} /> : <Sun size={16} />}
+            </button>
+
+            <button
+              type="button"
+              className="preview-control-btn"
+              onClick={() => setLargeText(current => !current)}
+              aria-pressed={largeText}
+              aria-label={largeText ? t.normalText : t.largerText}
+              title={largeText ? t.normalText : t.largerText}
+            >
+              <Type size={16} />
+            </button>
+
+            <button
+              type="button"
+              className="preview-control-btn"
+              onClick={() => setMotionReduced(current => !current)}
+              aria-pressed={motionReduced}
+              aria-label={motionReduced ? t.restoreMotion : t.reduceMotion}
+              title={motionReduced ? t.restoreMotion : t.reduceMotion}
+            >
+              <Activity size={16} />
+            </button>
+
+            {orientationSupported && project.orientation !== "auto" && (
+              <button
+                type="button"
+                className="preview-control-btn"
+                onClick={() => void toggleOrientationLock()}
+                disabled={!isFullscreen}
+                aria-pressed={orientationLocked}
+                aria-label={orientationLocked ? t.unlockOrientation : t.lockOrientation}
+                title={orientationLocked ? t.unlockOrientation : t.lockOrientation}
+              >
+                <RotateCw size={16} />
+              </button>
+            )}
+
+            <button
+              type="button"
+              className="preview-control-btn"
+              onClick={reloadProject}
+              aria-label={t.reload}
+              title={t.reload}
+            >
+              <RefreshCw size={16} />
+            </button>
+
+            <button
+              type="button"
+              className="preview-control-btn preview-fullscreen-btn"
+              onClick={() => void toggleFullscreen()}
+              aria-pressed={fullscreenActive}
+              aria-label={fullscreenActive ? t.exitFullscreen : t.fullscreen}
+              title={fullscreenActive ? t.exitFullscreen : t.fullscreen}
+            >
+              {fullscreenActive ? <Minimize2 size={17} /> : <Maximize2 size={17} />}
+              <span>{fullscreenActive ? t.exitFullscreen : t.fullscreen}</span>
+            </button>
+          </div>
         </div>
+
         {project.embeddedUrl ? (
           <iframe
+            key={frameKey}
             className="project-preview-frame"
             title={project.title}
             src={project.embeddedUrl}
@@ -129,6 +486,7 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
               : "allow-scripts allow-forms allow-same-origin allow-pointer-lock allow-orientation-lock"}
             referrerPolicy="strict-origin-when-cross-origin"
             allow="fullscreen; autoplay; gamepad; accelerometer; gyroscope"
+            allowFullScreen
             loading="eager"
           />
         ) : (
@@ -137,6 +495,8 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
             <p>{t.sourceUnavailable}</p>
           </div>
         )}
+
+        {notice && <p className="project-preview-notice" role="status">{notice}</p>}
         <p className="project-preview-help">{t.previewHelp}</p>
       </section>
 

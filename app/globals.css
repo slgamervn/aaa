@@ -1237,3 +1237,23 @@ html[data-motion="reduced"] .fullscreen-toolbar-panel { animation: none; }
   .fullscreen-toolbar-dot { transition: none; }
 }
 html[data-motion="reduced"] .fullscreen-toolbar-dot { transition: none; }
+
+
+/* Fade the floating handle when idle, but keep it easy to find and tap. */
+.fullscreen-toolbar-dot {
+  opacity: .3;
+  transition: opacity .22s ease, box-shadow .14s, background .14s, border-color .14s, scale .14s;
+}
+.fullscreen-toolbar-dot:hover,
+.fullscreen-toolbar-dot:focus-visible,
+.fullscreen-toolbar-dot:active,
+.fullscreen-toolbar-dot.is-dragging {
+  opacity: 1;
+}
+@media (hover: none) {
+  .fullscreen-toolbar-dot { opacity: .42; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fullscreen-toolbar-dot { transition: none; }
+}
+html[data-motion="reduced"] .fullscreen-toolbar-dot { transition: none; }

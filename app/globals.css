@@ -1011,3 +1011,147 @@ html[data-motion="reduced"] .preview-control-btn { transition: none; }
 @media (max-width: 720px) {
   .project-preview-controls { touch-action: pan-x pan-y pinch-zoom; }
 }
+
+
+/* Collapsible fullscreen toolbar handle. */
+.project-preview-toolbar.is-fullscreen-toolbar,
+.project-preview-shell:fullscreen .project-preview-toolbar.is-fullscreen-toolbar,
+.project-preview-shell:-webkit-full-screen .project-preview-toolbar.is-fullscreen-toolbar {
+  position: absolute;
+  top: calc(env(safe-area-inset-top) + .7rem);
+  right: calc(env(safe-area-inset-right) + .7rem);
+  left: auto;
+  z-index: 40;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  width: auto;
+  min-height: 0;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  pointer-events: none;
+}
+.fullscreen-toolbar-dot {
+  display: inline-grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  min-width: 50px;
+  min-height: 50px;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, .24);
+  pointer-events: auto;
+  touch-action: manipulation;
+  animation: fullscreen-handle-in .18s ease-out both;
+}
+.fullscreen-toolbar-dot:hover {
+  border-color: var(--green);
+  background: var(--green-soft);
+}
+.fullscreen-toolbar-dot:focus-visible,
+.fullscreen-toolbar-collapse:focus-visible {
+  outline: 3px solid var(--rust);
+  outline-offset: 3px;
+}
+.fullscreen-toolbar-panel {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  width: min(560px, calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 1.4rem));
+  max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1.4rem);
+  overflow: auto;
+  padding: .55rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 4px 22px rgba(0, 0, 0, .24);
+  pointer-events: auto;
+  animation: fullscreen-panel-in .16s ease-out both;
+}
+.project-preview-toolbar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .6rem;
+  min-height: 34px;
+}
+.fullscreen-toolbar-collapse {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-strong);
+  color: var(--ink);
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+.fullscreen-toolbar-collapse:hover { border-color: var(--green); background: var(--green-soft); }
+.fullscreen-toolbar-panel .project-preview-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: .25rem;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+}
+.fullscreen-toolbar-panel .preview-control-btn {
+  min-width: 44px;
+  min-height: 44px;
+  flex: 0 0 auto;
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--ink);
+}
+.fullscreen-toolbar-panel .preview-fullscreen-btn {
+  border-color: var(--ink);
+  background: var(--green);
+  color: var(--green-ink);
+}
+@keyframes fullscreen-handle-in {
+  from { opacity: 0; transform: scale(.82); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes fullscreen-panel-in {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 720px) {
+  .project-preview-toolbar.is-fullscreen-toolbar,
+  .project-preview-shell:fullscreen .project-preview-toolbar.is-fullscreen-toolbar,
+  .project-preview-shell:-webkit-full-screen .project-preview-toolbar.is-fullscreen-toolbar {
+    top: calc(env(safe-area-inset-top) + .55rem);
+    right: calc(env(safe-area-inset-right) + .55rem);
+  }
+  .fullscreen-toolbar-dot { width: 48px; height: 48px; min-width: 48px; min-height: 48px; }
+  .fullscreen-toolbar-panel {
+    width: min(420px, calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 1.1rem));
+    padding: .4rem;
+  }
+  .fullscreen-toolbar-panel .project-preview-controls {
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fullscreen-toolbar-dot,
+  .fullscreen-toolbar-panel { animation: none; }
+}
+html[data-motion="reduced"] .fullscreen-toolbar-dot,
+html[data-motion="reduced"] .fullscreen-toolbar-panel { animation: none; }

@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDownRight, ArrowRight, BadgeCheck, BookOpen, Check,
-  Clock3, FileCode2, FileUp, Github, Globe2, Languages, Layers3,
-  LockKeyhole, Menu, Moon, Search, ShieldAlert, ShieldCheck, Sun,
+  Clock3, Download, ExternalLink, FileCode2, FileUp, Github, Globe2, Languages, Layers3,
+  LockKeyhole, Moon, Search, ShieldAlert, ShieldCheck, Sun,
   Type, UploadCloud, X
 } from "lucide-react";
 
@@ -14,7 +14,7 @@ type Genre = "all" | "arcade" | "strategy" | "puzzle" | "action" | "simulation" 
 type Finding = { label: string; severity: "high" | "medium" | "low"; detail: string };
 type ScanResult = { mode: string; verdict: string; score: number; findings: Finding[]; message: string; bytes?: number; contentScanned?: boolean; scannedResources?: number; submitted?: boolean; submissionId?: string };
 type Submission = { id: string; title: string; source: string; kind: "HTML" | "URL"; status: "pending"; createdAt: string; result: ScanResult };
-type PublishedGame = { id: string; title: string; description: string; genre: string; kind: "html" | "url"; sourceUrl: string | null; originalFilename: string | null; publishedAt: string | null };
+type PublishedProject = { id: string; title: string; description: string; genre: string; kind: "html" | "url"; sourceUrl: string | null; originalFilename: string | null; publishedAt: string | null };
 
 const copy = {
   vi: {
@@ -235,7 +235,6 @@ export default function Home() {
   const [largeText, setLargeText] = useState(false);
   const [motionReduced, setMotionReduced] = useState(false);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [activePageTab, setActivePageTab] = useState<"home" | "library" | "submit" | "info">("home");
   const [activeTab, setActiveTab] = useState<"html" | "url">("html");
   const [activeGenre, setActiveGenre] = useState<Genre>("all");
@@ -243,7 +242,7 @@ export default function Home() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [genre, setGenre] = useState<Exclude<Genre, "all">>("other");
-  const [publishedGames, setPublishedGames] = useState<PublishedGame[]>([]);
+  const [publishedProjects, setPublishedProjects] = useState<PublishedProject[]>([]);
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [catalogLoadError, setCatalogLoadError] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -288,14 +287,14 @@ export default function Home() {
 
   useEffect(() => {
     let active = true;
-    async function loadPublishedGames() {
+    async function loadPublishedProjects() {
       setCatalogLoading(true);
       try {
         const response = await fetch("/api/games", { cache: "no-store" });
         const body = await response.json();
         if (!response.ok) throw new Error("catalog-unavailable");
         if (active) {
-          setPublishedGames(Array.isArray(body.games) ? body.games as PublishedGame[] : []);
+          setPublishedProjects(Array.isArray(body.games) ? body.games as PublishedProject[] : []);
           setCatalogLoadError(false);
         }
       } catch {
@@ -304,7 +303,7 @@ export default function Home() {
         if (active) setCatalogLoading(false);
       }
     }
-    void loadPublishedGames();
+    void loadPublishedProjects();
     return () => { active = false; };
   }, []);
 
@@ -329,15 +328,15 @@ export default function Home() {
     return () => window.removeEventListener("keydown", handleEscape);
   }, [showSubmit]);
 
-  const filteredGames = useMemo(() => {
+  const filteredProjects = useMemo(() => {
     const term = query.trim().toLocaleLowerCase(language === "vi" ? "vi-VN" : "en");
-    return publishedGames.filter((game) => {
+    return publishedProjects.filter((game) => {
       const visibleText = [game.title, game.genre, game.description, game.sourceUrl ?? "", game.originalFilename ?? ""]
         .join(" ")
         .toLocaleLowerCase(language === "vi" ? "vi-VN" : "en");
       return (activeGenre === "all" || game.genre === activeGenre) && (!term || visibleText.includes(term));
     });
-  }, [activeGenre, language, query, publishedGames]);
+  }, [activeGenre, language, query, publishedProjects]);
 
   function acceptFile(candidate: File | undefined) {
     if (!candidate) return;
@@ -412,7 +411,6 @@ export default function Home() {
     setActivePageTab("submit");
     setActiveTab(tab);
     setShowSubmit(true);
-    setMenuOpen(false);
   }
 
   function clearQueue() {
@@ -430,10 +428,6 @@ export default function Home() {
           <span className="brand-mark"><Layers3 size={19} strokeWidth={2.2} /></span>
           <span>gamevault<span className="brand-dot">.</span></span>
         </a>
-        <nav className={"nav-links " + (menuOpen ? "nav-open" : "")} aria-label={language === "vi" ? "Điều hướng" : "Main navigation"}>
-          <button className={activePageTab === "library" ? "nav-active" : ""} type="button" onClick={() => { setActivePageTab("library"); setMenuOpen(false); }}>{t.navLibrary}</button>
-          <button className={activePageTab === "info" ? "nav-active" : ""} type="button" onClick={() => { setActivePageTab("info"); setMenuOpen(false); }}>{t.navProcess}</button>
-        </nav>
         <div className="header-controls" aria-label={language === "vi" ? "Tuỳ chỉnh giao diện" : "Appearance preferences"}>
           <button className="utility-button language-button" onClick={() => setLanguage(language === "vi" ? "en" : "vi")} aria-label={t.switchLanguage} title={t.switchLanguage}>
             <Languages size={15} /><span>{language === "vi" ? "EN" : "VI"}</span>
@@ -449,14 +443,13 @@ export default function Home() {
           </button>
         </div>
         <button className="top-cta" onClick={() => openSubmit("html")}>{t.submit}<ArrowDownRight size={15} /></button>
-        <button className="mobile-menu" aria-label={menuOpen ? t.closeMenu : t.openMenu} aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X size={20} /> : <Menu size={20} />}</button>
       </header>
 
       <nav className="browser-tabbar" role="tablist" aria-label={language === "vi" ? "Các trang GameVault" : "GameVault pages"} onKeyDown={(event) => { if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return; const tabs = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>(".browser-tab")); const currentIndex = tabs.indexOf(event.target as HTMLButtonElement); if (currentIndex < 0) return; event.preventDefault(); const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : (currentIndex + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length; tabs[nextIndex].focus(); tabs[nextIndex].click(); }}>
         <button id="gv-tab-home" className={"browser-tab " + (activePageTab === "home" ? "browser-tab-active" : "")} type="button" role="tab" aria-selected={activePageTab === "home"} aria-controls="gv-panel-home" tabIndex={activePageTab === "home" ? 0 : -1} onClick={() => setActivePageTab("home")}><Layers3 size={15} /><span>{language === "vi" ? "Trang chủ" : "Home"}</span></button>
         <button id="gv-tab-library" className={"browser-tab " + (activePageTab === "library" ? "browser-tab-active" : "")} type="button" role="tab" aria-selected={activePageTab === "library"} aria-controls="gv-panel-library" tabIndex={activePageTab === "library" ? 0 : -1} onClick={() => setActivePageTab("library")}><BookOpen size={15} /><span>{t.navLibrary}</span></button>
         <button id="gv-tab-submit" className={"browser-tab " + (activePageTab === "submit" ? "browser-tab-active" : "")} type="button" role="tab" aria-selected={activePageTab === "submit"} aria-controls="gv-panel-submit" tabIndex={activePageTab === "submit" ? 0 : -1} onClick={() => setActivePageTab("submit")}><FileCode2 size={15} /><span>{t.submit}</span></button>
-        <button id="gv-tab-info" className={"browser-tab " + (activePageTab === "info" ? "browser-tab-active" : "")} type="button" role="tab" aria-selected={activePageTab === "info"} aria-controls="gv-panel-info" tabIndex={activePageTab === "info" ? 0 : -1} onClick={() => setActivePageTab("info")}><ShieldCheck size={15} /><span>{language === "vi" ? "Quy trình" : "Process"}</span></button>
+        <button id="gv-tab-info" className={"browser-tab " + (activePageTab === "info" ? "browser-tab-active" : "")} type="button" role="tab" aria-selected={activePageTab === "info"} aria-controls="gv-panel-info" tabIndex={activePageTab === "info" ? 0 : -1} onClick={() => setActivePageTab("info")}><ShieldCheck size={15} /><span>{t.navProcess}</span></button>
       </nav>
 
       <main id="main-content">
@@ -521,7 +514,7 @@ export default function Home() {
           {catalogLoading && <p className="catalog-loading" role="status">{t.loadingGames}</p>}
           {catalogLoadError && <p className="catalog-load-error" role="alert">{t.catalogLoadFailed}</p>}
           <div className="game-grid">
-            {filteredGames.map((game, index) => {
+            {filteredProjects.map((game, index) => {
               const color = game.genre === "strategy" ? "rust" : game.genre === "puzzle" || game.genre === "educational" ? "blue" : "mint";
               const coverSymbol = game.genre === "strategy" ? "♜" : game.genre === "puzzle" ? "◎" : game.kind === "url" ? "↗" : "✦";
               const genreLabel = game.genre === "arcade" ? t.arcade : game.genre === "strategy" ? t.strategy : game.genre === "puzzle" ? t.puzzle : game.genre === "action" ? t.action : game.genre === "simulation" ? t.simulation : game.genre === "educational" ? t.educational : t.other;
@@ -546,7 +539,7 @@ export default function Home() {
                 </article>
               );
             })}
-            {!catalogLoading && !catalogLoadError && filteredGames.length === 0 && (
+            {!catalogLoading && !catalogLoadError && filteredProjects.length === 0 && (
               <div className="empty-search">
                 <h3>{query || activeGenre !== "all" ? t.noResults : t.emptyLibraryTitle}</h3>
                 <p>{query || activeGenre !== "all" ? t.noResults : t.emptyLibraryText}</p>

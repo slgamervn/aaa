@@ -50,6 +50,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
         description: project.description,
         kind: isHtml ? "html" : "url",
         externalUrl: externalUrl?.toString() ?? null,
+        embeddedUrl: isHtml ? "/api/games/" + project.id : externalUrl?.toString() ?? null,
         sourceUrl,
         downloadUrl: isHtml ? "/api/games/" + project.id + "/download" : null
       }}

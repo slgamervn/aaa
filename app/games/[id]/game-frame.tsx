@@ -7,13 +7,34 @@ type GameFrameProps = {
   title: string;
   src: string | null;
   sandbox: string;
+  language?: "vi" | "en";
   unavailableMessage?: string;
 };
 
-export default function GameFrame({ title, src, sandbox, unavailableMessage }: GameFrameProps) {
+export default function GameFrame({ title, src, sandbox, language = "vi", unavailableMessage }: GameFrameProps) {
   const frameRef = useRef<HTMLElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fallbackFullscreen, setFallbackFullscreen] = useState(false);
+
+  const labels = language === "en"
+    ? {
+        frame: "Game frame",
+        enter: "Enter fullscreen",
+        exit: "Exit fullscreen",
+        enterShort: "Fullscreen",
+        exitShort: "Exit",
+        unavailable: "This URL cannot be embedded",
+        fallback: "GameVault only embeds HTTPS URLs. You can still open the original site using the link above."
+      }
+    : {
+        frame: "Khung trò chơi",
+        enter: "Vào chế độ toàn màn hình",
+        exit: "Thoát chế độ toàn màn hình",
+        enterShort: "Toàn màn hình",
+        exitShort: "Thoát",
+        unavailable: "Không thể nhúng đường dẫn này",
+        fallback: "GameVault chỉ nhúng đường dẫn HTTPS. Bạn vẫn có thể mở trang gốc bằng nút phía trên."
+      };
 
   const exitFallback = useCallback(() => setFallbackFullscreen(false), []);
 
@@ -70,7 +91,7 @@ export default function GameFrame({ title, src, sandbox, unavailableMessage }: G
     <section
       ref={frameRef}
       className={"play-frame-wrap" + (fallbackFullscreen ? " is-fallback-fullscreen" : "")}
-      aria-label="Game frame"
+      aria-label={labels.frame}
     >
       <div className="play-frame-toolbar">
         <span>{title}</span>
@@ -78,11 +99,11 @@ export default function GameFrame({ title, src, sandbox, unavailableMessage }: G
           type="button"
           className="play-fullscreen-button"
           onClick={toggleFullscreen}
-          aria-label={isFullscreen ? "Thoát toàn màn hình" : "Chơi toàn màn hình"}
-          title={isFullscreen ? "Thoát toàn màn hình" : "Chơi toàn màn hình"}
+          aria-label={isFullscreen ? labels.exit : labels.enter}
+          title={isFullscreen ? labels.exit : labels.enter}
         >
           {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-          <span>{isFullscreen ? "Thoát" : "Toàn màn hình"}</span>
+          <span>{isFullscreen ? labels.exitShort : labels.enterShort}</span>
         </button>
       </div>
       {src ? (
@@ -96,8 +117,8 @@ export default function GameFrame({ title, src, sandbox, unavailableMessage }: G
         />
       ) : (
         <div className="play-frame-unavailable">
-          <h2>Không thể nhúng đường dẫn này</h2>
-          <p>{unavailableMessage ?? "GameVault chỉ nhúng đường dẫn HTTPS. Bạn vẫn có thể mở trang gốc bằng nút phía trên."}</p>
+          <h2>{labels.unavailable}</h2>
+          <p>{unavailableMessage ?? labels.fallback}</p>
         </div>
       )}
     </section>

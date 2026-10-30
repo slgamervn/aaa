@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDownRight, ArrowRight, BadgeCheck, BookOpen, Check,
-  Clock3, Download, ExternalLink, FileCode2, FileUp, Github, Globe2, Languages, Layers3,
-  LockKeyhole, Moon, Search, ShieldAlert, ShieldCheck, Sun,
-  Type, UploadCloud, X
+  Clock3, FileCode2, FileUp, Github, Globe2, Languages, Layers3,
+  LockKeyhole, Moon, Search, Settings2, ShieldAlert, ShieldCheck, Sun,
+  Type
 } from "lucide-react";
 
 type Language = "vi" | "en";

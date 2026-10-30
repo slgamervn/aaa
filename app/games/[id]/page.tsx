@@ -22,11 +22,11 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const { id } = await params;
   if (!UUID_PATTERN.test(id)) notFound();
 
-  let project: { id: string; title: string; description: string; kind: string; source_url: string | null; published_at: string | null } | null = null;
+  let project: { id: string; title: string; description: string; kind: string; source_url: string | null; published_at: string | null; orientation: "auto" | "landscape" | "portrait" } | null = null;
   try {
     const admin = createAdminClient();
     const { data } = await admin.from("gamevault_submissions")
-      .select("id,title,description,kind,source_url,published_at")
+      .select("id,title,description,kind,source_url,published_at,orientation")
       .eq("id", id)
       .eq("status", "published")
       .maybeSingle();
@@ -51,6 +51,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
         kind: isHtml ? "html" : "url",
         externalUrl: externalUrl?.toString() ?? null,
         embeddedUrl: isHtml ? "/api/games/" + project.id : externalUrl?.toString() ?? null,
+        orientation: project.orientation === "landscape" || project.orientation === "portrait" ? project.orientation : "auto",
         sourceUrl,
         downloadUrl: isHtml ? "/api/games/" + project.id + "/download" : null
       }}

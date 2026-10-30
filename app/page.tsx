@@ -665,8 +665,8 @@ export default function Home() {
             <div className="modal-mark"><UploadCloud size={22} /></div>
             <div className="section-kicker">{t.modalKicker}</div><h2 id="submit-modal-title">{t.modalTitle}</h2><p>{t.modalText}</p>
             <div className="modal-choice">
-              <button onClick={() => { setActiveTab("html"); setShowSubmit(false); document.getElementById("submit")?.scrollIntoView({ behavior: motionReduced ? "auto" : "smooth" }); }}><FileCode2 size={20} /><span><b>{t.modalHtml}</b><small>{t.modalHtmlDesc}</small></span><ArrowRight size={16} /></button>
-              <button onClick={() => { setActiveTab("url"); setShowSubmit(false); document.getElementById("submit")?.scrollIntoView({ behavior: motionReduced ? "auto" : "smooth" }); }}><Globe2 size={20} /><span><b>{t.modalUrl}</b><small>{t.modalUrlDesc}</small></span><ArrowRight size={16} /></button>
+              <button onClick={() => { setActiveTab("html"); setActivePageTab("submit"); setShowSubmit(false); }}><FileCode2 size={20} /><span><b>{t.modalHtml}</b><small>{t.modalHtmlDesc}</small></span><ArrowRight size={16} /></button>
+              <button onClick={() => { setActiveTab("url"); setActivePageTab("submit"); setShowSubmit(false); }}><Globe2 size={20} /><span><b>{t.modalUrl}</b><small>{t.modalUrlDesc}</small></span><ArrowRight size={16} /></button>
             </div>
             <div className="modal-note"><ShieldCheck size={15} />{t.modalFoot}</div>
           </div>

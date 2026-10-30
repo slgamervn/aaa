@@ -514,27 +514,31 @@ export default function Home() {
           {catalogLoading && <p className="catalog-loading" role="status">{t.loadingGames}</p>}
           {catalogLoadError && <p className="catalog-load-error" role="alert">{t.catalogLoadFailed}</p>}
           <div className="game-grid">
-            {filteredProjects.map((game, index) => {
-              const color = game.genre === "strategy" ? "rust" : game.genre === "puzzle" || game.genre === "educational" ? "blue" : "mint";
-              const coverSymbol = game.genre === "strategy" ? "♜" : game.genre === "puzzle" ? "◎" : game.kind === "url" ? "↗" : "✦";
-              const genreLabel = game.genre === "arcade" ? t.arcade : game.genre === "strategy" ? t.strategy : game.genre === "puzzle" ? t.puzzle : game.genre === "action" ? t.action : game.genre === "simulation" ? t.simulation : game.genre === "educational" ? t.educational : t.other;
-              const gameHref = "/games/" + game.id;
+            {filteredProjects.map((project, index) => {
+              const color = project.genre === "strategy" ? "rust" : project.genre === "puzzle" || project.genre === "educational" ? "blue" : "mint";
+              const coverSymbol = project.genre === "strategy" ? "♜" : project.genre === "puzzle" ? "◎" : project.kind === "url" ? "↗" : "✦";
+              const genreLabel = project.genre === "arcade" ? t.arcade : project.genre === "strategy" ? t.strategy : project.genre === "puzzle" ? t.puzzle : project.genre === "action" ? t.action : project.genre === "simulation" ? t.simulation : project.genre === "educational" ? t.educational : t.other;
+              const projectHref = project.kind === "html" ? "/api/games/" + encodeURIComponent(project.id) + "/download" : project.sourceUrl;
               return (
-                <article className="game-card" key={game.id}>
-                  <div className={"game-cover cover-" + color} role="img" aria-label={game.title}>
+                <article className="game-card" key={project.id}>
+                  <div className={"game-cover cover-" + color} role="img" aria-label={project.title}>
                     <div className="cover-grain" aria-hidden="true" />
                     <span className="cover-index">GV / {String(index + 1).padStart(2, "0")}</span>
                     <div className="cover-symbol" aria-hidden="true">{coverSymbol}</div>
                     <div className="cover-rings" aria-hidden="true" />
-                    <span className="demo-pill">{game.kind === "html" ? t.htmlTab : t.urlTab}</span>
+                    <span className="demo-pill">{project.kind === "html" ? t.htmlTab : t.urlTab}</span>
                   </div>
                   <div className="game-info">
                     <div className="game-meta"><span>{genreLabel}</span><span className="demo-dot" /><span>{t.publishedOnly}</span></div>
-                    <h3>{game.title}</h3>
-                    <p>{game.description || (game.kind === "html" ? t.htmlGameFallback : t.urlGameFallback)}</p>
-                    <a className="card-link" href={gameHref}>
-                      {t.playGame}<ArrowDownRight size={15} />
-                    </a>
+                    <h3>{project.title}</h3>
+                    <p>{project.description || (project.kind === "html" ? t.htmlProjectFallback : t.urlProjectFallback)}</p>
+                    {projectHref ? (
+                      <a className="card-link" href={projectHref} target={project.kind === "url" ? "_blank" : undefined} rel={project.kind === "url" ? "noopener noreferrer nofollow" : undefined} download={project.kind === "html" ? true : undefined}>
+                        {project.kind === "html" ? t.downloadProject : t.openProject}{project.kind === "html" ? <Download size={15} /> : <ExternalLink size={15} />}
+                      </a>
+                    ) : (
+                      <span className="card-link card-link-disabled" aria-disabled="true">{t.sourceUnavailable}</span>
+                    )}
                   </div>
                 </article>
               );

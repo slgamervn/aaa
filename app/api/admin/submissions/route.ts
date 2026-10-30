@@ -27,7 +27,7 @@ export async function GET() {
     });
   }
 
-  return NextResponse.json({ submissions: data ?? [], adminEmail: access.email }, {
+  return NextResponse.json({ submissions: data ?? [], adminUsername: process.env.GAMEVAULT_ADMIN_USERNAME ?? "admin" }, {
     headers: {
       "Cache-Control": "private, no-store, max-age=0",
       "X-Content-Type-Options": "nosniff"

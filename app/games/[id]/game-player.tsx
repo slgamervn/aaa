@@ -131,7 +131,7 @@ export default function GamePlayer({ game }: { game: GamePlayerData }) {
       <GameFrame
         title={game.title}
         src={game.embeddedUrl}
-        sandbox={game.kind === "html" ? "allow-scripts" : "allow-scripts allow-forms allow-pointer-lock"}
+        sandbox={game.kind === "html" ? "allow-scripts allow-orientation-lock" : "allow-scripts allow-forms allow-pointer-lock allow-orientation-lock"}
         language={language}
         unavailableMessage={t.unavailable}
       />

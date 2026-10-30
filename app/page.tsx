@@ -460,7 +460,7 @@ export default function Home() {
       </nav>
 
       <main id="main-content">
-        <section id="gv-panel-home" role="tabpanel" aria-labelledby="gv-tab-home" className="hero" style={{ display: activePageTab === "home" ? undefined : "none" }} aria-labelledby="hero-title">
+        <section id="gv-panel-home" role="tabpanel" aria-labelledby="gv-tab-home" className="hero" style={{ display: activePageTab === "home" ? undefined : "none" }}>
           <div className="hero-grid" aria-hidden="true" />
           <div className="hero-copy">
             <div className="eyebrow"><span className="live-dot" />{t.eyebrow}</div>

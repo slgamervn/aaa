@@ -776,3 +776,19 @@ html[data-theme="night"] .admin-status-pending_review { color: var(--yellow); }
 @media (prefers-reduced-motion: reduce) {
   .browser-tab, .browser-tab::before { transition: none !important; }
 }
+
+
+/* Project detail and download actions. */
+.project-detail-page { background: var(--paper); }
+.project-detail-intro { width: min(960px, 100%); padding-top: clamp(2.5rem, 7vw, 5.5rem); }
+.project-detail-intro > p { max-width: 760px; }
+.project-detail-meta { display: inline-flex; align-items: center; gap: .5rem; margin-top: .9rem; padding: .45rem .65rem; border: 1px solid var(--line); background: var(--surface); color: var(--muted); font: .72rem var(--mono); }
+.project-detail-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .9rem 1.25rem; margin: 1.5rem 0 .5rem; }
+.project-download-button { display: inline-flex; align-items: center; justify-content: center; gap: .55rem; min-height: 46px; padding: .7rem 1rem; border: 1px solid var(--ink); border-radius: 3px; background: var(--green); color: var(--green-ink); font-size: .84rem; font-weight: 700; transition: background .16s, color .16s, transform .16s; }
+.project-download-button:hover { background: var(--ink); color: var(--paper); transform: translateY(-1px); }
+.project-detail-intro .project-detail-note { margin: 1.2rem 0 0; padding-left: .8rem; border-left: 2px solid var(--line-strong); color: var(--muted); font-size: .78rem; }
+.card-link-disabled { color: var(--muted); cursor: not-allowed; }
+@media (max-width: 520px) {
+  .project-detail-actions { align-items: stretch; flex-direction: column; }
+  .project-download-button { width: 100%; }
+}

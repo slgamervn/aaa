@@ -8,10 +8,12 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3
 const GAME_CSP = [
   "default-src 'none'",
   "sandbox allow-scripts",
-  "script-src 'unsafe-inline'",
-  "style-src 'unsafe-inline'",
+  // Published HTML games may use reviewed static libraries and fonts.
+  // Keep network APIs blocked unless a project is separately reviewed for them.
+  "script-src 'unsafe-inline' https://cdn.jsdelivr.net",
+  "style-src 'unsafe-inline' https://fonts.googleapis.com",
   "img-src data: blob:",
-  "font-src data:",
+  "font-src data: https://fonts.gstatic.com",
   "media-src data: blob:",
   "frame-src 'none'",
   "connect-src 'none'",

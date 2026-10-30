@@ -19,7 +19,7 @@ type PublishedProject = { id: string; title: string; description: string; genre:
 const copy = {
   vi: {
     navLibrary: "Dự án", navProcess: "Quy trình", navSafety: "An toàn & chính sách",
-    submit: "Đóng góp dự án", switchLanguage: "Switch to English", darkMode: "Giao diện tối",
+    submit: "Đóng góp", settings: "Cài đặt", switchLanguage: "Switch to English", darkMode: "Giao diện tối",
     lightMode: "Giao diện sáng", largerText: "Tăng cỡ chữ", smallerText: "Cỡ chữ mặc định",
     reduceMotion: "Giảm chuyển động", restoreMotion: "Bật chuyển động",
     openMenu: "Mở điều hướng", closeMenu: "Đóng điều hướng",
@@ -34,7 +34,7 @@ const copy = {
     statTwo: "QUÉT TĨNH", statTwoDesc: "Không thực thi file tải lên",
     statThree: "DUYỆT TAY", statThreeDesc: "Không tự động xuất bản",
     statFour: "CHỈ DỰ ÁN ĐÃ DUYỆT", statFourDesc: "Dự án chỉ hiện sau khi được công khai",
-    libraryKicker: "KHO DỰ ÁN · 01", libraryTitle: "Khám phá các dự án.", librarySubtitle: "Tải tệp HTML đã được duyệt hoặc mở trang nguồn của dự án. Chỉ nội dung đã qua kiểm duyệt mới xuất hiện tại đây.",
+    libraryKicker: "KHO DỰ ÁN · 01", libraryTitle: "Dự án", librarySubtitle: "Các dự án đã được kiểm duyệt.",
     searchPlaceholder: "Tìm tên hoặc thể loại…", searchLabel: "Tìm dự án",
     all: "Tất cả", arcade: "Arcade", strategy: "Chiến thuật", puzzle: "Giải đố", action: "Hành động", simulation: "Mô phỏng", educational: "Giáo dục", other: "Khác",
     genreLabel: "Thể loại", descriptionLabel: "Mô tả dự án", descriptionPlaceholder: "Giới thiệu ngắn về dự án (tối đa 240 ký tự)", publishedOnly: "Đã được duyệt và xuất bản", loadingProjects: "Đang tải danh sách dự án…", catalogLoadFailed: "Chưa thể tải danh sách dự án. Hãy thử tải lại trang.", emptyLibraryTitle: "Chưa có dự án nào được công khai.", emptyLibraryText: "Các dự án sẽ xuất hiện tại đây sau khi được kiểm tra và phê duyệt. Bạn cũng có thể gửi một dự án để đề nghị xem xét.", downloadProject: "Tải tệp HTML", openProject: "Mở trong GameVault", sourceUnavailable: "Nguồn hiện không khả dụng", riskScore: "TÍN HIỆU KIỂM TRA", htmlProjectFallback: "Tệp HTML đã được kiểm tra và công khai.", urlProjectFallback: "Dự án này được chia sẻ qua trang web gốc.",
@@ -101,7 +101,7 @@ const copy = {
   },
   en: {
     navLibrary: "Projects", navProcess: "How it works", navSafety: "Safety & policy",
-    submit: "Contribute a project", switchLanguage: "Chuyển sang tiếng Việt", darkMode: "Dark appearance",
+    submit: "Contribute", settings: "Settings", switchLanguage: "Chuyển sang tiếng Việt", darkMode: "Dark appearance",
     lightMode: "Light appearance", largerText: "Increase text size", smallerText: "Default text size",
     reduceMotion: "Reduce motion", restoreMotion: "Enable motion",
     openMenu: "Open navigation", closeMenu: "Close navigation",
@@ -116,7 +116,7 @@ const copy = {
     statTwo: "STATIC CHECK", statTwoDesc: "Uploaded files are not executed",
     statThree: "HUMAN REVIEW", statThreeDesc: "Nothing is published automatically",
     statFour: "REVIEWED PROJECTS", statFourDesc: "Projects appear after approval",
-    libraryKicker: "PROJECT COLLECTION · 01", libraryTitle: "Explore the projects.", librarySubtitle: "Download approved HTML files or open a project at its original website. Only reviewed projects appear here.",
+    libraryKicker: "PROJECT COLLECTION · 01", libraryTitle: "Projects", librarySubtitle: "Reviewed projects, ready to explore.",
     searchPlaceholder: "Search titles or genres…", searchLabel: "Search projects",
     all: "All", arcade: "Arcade", strategy: "Strategy", puzzle: "Puzzle", action: "Action", simulation: "Simulation", educational: "Educational", other: "Other",
     genreLabel: "Genre", descriptionLabel: "Project description", descriptionPlaceholder: "Briefly describe the project (up to 240 characters)", publishedOnly: "Reviewed and published", loadingProjects: "Loading the library…", catalogLoadFailed: "The library could not be loaded. Try refreshing the page.", emptyLibraryTitle: "No projects published yet.", emptyLibraryText: "Projects will appear here after review and approval. You can also submit a project for consideration.", downloadProject: "Download HTML file", openProject: "Open in GameVault", sourceUnavailable: "Source unavailable", riskScore: "REVIEW SIGNAL", htmlProjectFallback: "This HTML project has been reviewed and published.", urlProjectFallback: "This project is provided through its original website.",
@@ -235,7 +235,7 @@ export default function Home() {
   const [largeText, setLargeText] = useState(false);
   const [motionReduced, setMotionReduced] = useState(false);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
-  const [activePageTab, setActivePageTab] = useState<"home" | "library" | "submit" | "info">("home");
+  const [activePageTab, setActivePageTab] = useState<"library" | "submit" | "info">("library");
   const [activeTab, setActiveTab] = useState<"html" | "url">("html");
   const [activeGenre, setActiveGenre] = useState<Genre>("all");
   const [url, setUrl] = useState("");
@@ -251,7 +251,6 @@ export default function Home() {
   const [error, setError] = useState("");
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [query, setQuery] = useState("");
-  const [showSubmit, setShowSubmit] = useState(false);
   const [consent, setConsent] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -309,7 +308,7 @@ export default function Home() {
 
   useEffect(() => {
     function handleKeyboardShortcut(event: KeyboardEvent) {
-      if (showSubmit || event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
+      if (activePageTab !== "library" || event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
       const target = event.target;
       if (target instanceof HTMLElement && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))) return;
       event.preventDefault();
@@ -317,16 +316,7 @@ export default function Home() {
     }
     window.addEventListener("keydown", handleKeyboardShortcut);
     return () => window.removeEventListener("keydown", handleKeyboardShortcut);
-  }, [showSubmit]);
-
-  useEffect(() => {
-    if (!showSubmit) return;
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setShowSubmit(false);
-    }
-    window.addEventListener("keydown", handleEscape);
-    return () => window.removeEventListener("keydown", handleEscape);
-  }, [showSubmit]);
+  }, [activePageTab]);
 
   const filteredProjects = useMemo(() => {
     const term = query.trim().toLocaleLowerCase(language === "vi" ? "vi-VN" : "en");
@@ -410,7 +400,6 @@ export default function Home() {
   function openSubmit(tab: "html" | "url" = "html") {
     setActivePageTab("submit");
     setActiveTab(tab);
-    setShowSubmit(true);
   }
 
   function clearQueue() {

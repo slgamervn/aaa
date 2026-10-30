@@ -274,6 +274,7 @@ html[data-motion="reduced"] *, html[data-motion="reduced"] *::before, html[data-
   .safety-section { margin-inline: 4.5vw; }
 }
 @media (max-width: 900px) {
+  .game-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
   .header-controls { margin-left: auto; }
   .utility-button span { display: none; }
   .utility-button { min-width: 36px; padding-inline: .35rem; }

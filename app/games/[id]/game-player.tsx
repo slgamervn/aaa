@@ -22,6 +22,14 @@ type Language = "vi" | "en";
 type Theme = "paper" | "night";
 type PreviewSize = "normal" | "large";
 type ProjectOrientation = "auto" | "landscape" | "portrait";
+type LockableScreenOrientation = ScreenOrientation & {
+  lock: (orientation: "landscape" | "portrait") => Promise<void>;
+};
+
+function getLockableScreenOrientation(): LockableScreenOrientation | null {
+  const orientation = window.screen?.orientation as LockableScreenOrientation | undefined;
+  return orientation && typeof orientation.lock === "function" ? orientation : null;
+}
 
 type ProjectDetailsData = {
   title: string;
@@ -164,7 +172,7 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
       setPreviewSize(playerPrefs.previewSize);
     }
 
-    setOrientationSupported(typeof window.screen?.orientation?.lock === "function");
+    setOrientationSupported(Boolean(getLockableScreenOrientation()));
     setPreferencesLoaded(true);
   }, []);
 
@@ -262,8 +270,8 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
   async function applyProjectOrientation() {
     if (project.orientation === "auto") return;
 
-    const orientation = window.screen?.orientation;
-    if (!orientation || typeof orientation.lock !== "function") return;
+    const orientation = getLockableScreenOrientation();
+    if (!orientation) return;
 
     try {
       await orientation.lock(project.orientation);
@@ -281,15 +289,15 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
       return;
     }
 
-    const orientation = window.screen?.orientation;
-    if (!orientation || typeof orientation.lock !== "function") {
+    const orientation = getLockableScreenOrientation();
+    if (!orientation) {
       setNotice(t.orientationUnavailable);
       return;
     }
 
     try {
       if (orientationLocked) {
-        orientation.unlock();
+        window.screen.orientation.unlock();
         setOrientationLocked(false);
       } else if (project.orientation !== "auto") {
         await orientation.lock(project.orientation);

@@ -90,8 +90,8 @@ export default function GameFrame({ title, src, sandbox, unavailableMessage }: G
           title={title}
           src={src}
           sandbox={sandbox}
-          referrerPolicy="no-referrer"
-          allow="fullscreen; gamepad"
+          referrerPolicy="strict-origin-when-cross-origin"
+          allow="autoplay; fullscreen; gamepad; picture-in-picture; pointer-lock"
           allowFullScreen
         />
       ) : (

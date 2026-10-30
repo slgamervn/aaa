@@ -485,21 +485,17 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
         aria-label={t.previewLabel}
       >
         <div className={"project-preview-toolbar" + (fullscreenActive ? " is-fullscreen-toolbar" : "")}>
-          {fullscreenActive && !toolbarExpanded ? (
+          {fullscreenActive ? (
             <button
               type="button"
-              className={"fullscreen-toolbar-dot" + (toolbarDragging ? " is-dragging" : "")}
-              style={{ left: toolbarPosition.x + "%", top: toolbarPosition.y + "%" }}
-              onPointerDown={handleToolbarPointerDown}
-              onPointerMove={handleToolbarPointerMove}
-              onPointerUp={finishToolbarDrag}
-              onPointerCancel={finishToolbarDrag}
-              onClick={activateToolbarHandle}
-              aria-label={t.moveControls}
-              aria-expanded={false}
-              title={t.moveControls}
+              className="preview-control-btn preview-fullscreen-btn fullscreen-exit-only"
+              onClick={() => void toggleFullscreen()}
+              aria-pressed={true}
+              aria-label={t.exitFullscreen}
+              title={t.exitFullscreen}
             >
-              <CircleDot size={22} strokeWidth={2.1} />
+              <Minimize2 size={17} />
+              <span>{t.exitFullscreen}</span>
             </button>
           ) : (
             <div className={fullscreenActive ? "fullscreen-toolbar-panel" : "project-preview-toolbar-inner"}>

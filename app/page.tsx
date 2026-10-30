@@ -236,6 +236,7 @@ export default function Home() {
   const [motionReduced, setMotionReduced] = useState(false);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [activePageTab, setActivePageTab] = useState<"home" | "library" | "submit" | "info">("home");
   const [activeTab, setActiveTab] = useState<"html" | "url">("html");
   const [activeGenre, setActiveGenre] = useState<Genre>("all");
   const [url, setUrl] = useState("");
@@ -408,6 +409,7 @@ export default function Home() {
   }
 
   function openSubmit(tab: "html" | "url" = "html") {
+    setActivePageTab("submit");
     setActiveTab(tab);
     setShowSubmit(true);
     setMenuOpen(false);
@@ -424,14 +426,13 @@ export default function Home() {
     <div className="app-shell" data-theme={theme} data-scale={largeText ? "large" : "normal"} data-motion={motionReduced ? "reduced" : "normal"}>
       <a className="skip-link" href="#main-content">{language === "vi" ? "Bỏ qua điều hướng" : "Skip to content"}</a>
       <header className="topbar">
-        <a className="brand" href="#" aria-label="GameVault home">
+        <a className="brand" href="#" onClick={(event) => { event.preventDefault(); setActivePageTab("home"); }} aria-label="GameVault home">
           <span className="brand-mark"><Layers3 size={19} strokeWidth={2.2} /></span>
           <span>gamevault<span className="brand-dot">.</span></span>
         </a>
         <nav className={"nav-links " + (menuOpen ? "nav-open" : "")} aria-label={language === "vi" ? "Điều hướng" : "Main navigation"}>
-          <a className="nav-active" href="#library" onClick={() => setMenuOpen(false)}>{t.navLibrary}</a>
-          <a href="#how-it-works" onClick={() => setMenuOpen(false)}>{t.navProcess}</a>
-          <a href="#safety" onClick={() => setMenuOpen(false)}>{t.navSafety}</a>
+          <button className={activePageTab === "library" ? "nav-active" : ""} type="button" onClick={() => { setActivePageTab("library"); setMenuOpen(false); }}>{t.navLibrary}</button>
+          <button className={activePageTab === "info" ? "nav-active" : ""} type="button" onClick={() => { setActivePageTab("info"); setMenuOpen(false); }}>{t.navProcess}</button>
         </nav>
         <div className="header-controls" aria-label={language === "vi" ? "Tuỳ chỉnh giao diện" : "Appearance preferences"}>
           <button className="utility-button language-button" onClick={() => setLanguage(language === "vi" ? "en" : "vi")} aria-label={t.switchLanguage} title={t.switchLanguage}>
@@ -451,15 +452,22 @@ export default function Home() {
         <button className="mobile-menu" aria-label={menuOpen ? t.closeMenu : t.openMenu} aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X size={20} /> : <Menu size={20} />}</button>
       </header>
 
+      <nav className="browser-tabbar" role="tablist" aria-label={language === "vi" ? "Các trang GameVault" : "GameVault pages"}>
+        <button id="gv-tab-home" className={"browser-tab " + (activePageTab === "home" ? "browser-tab-active" : "")} type="button" role="tab" aria-selected={activePageTab === "home"} aria-controls="gv-panel-home" onClick={() => setActivePageTab("home")}><Layers3 size={15} /><span>{language === "vi" ? "Trang chủ" : "Home"}</span></button>
+        <button id="gv-tab-library" className={"browser-tab " + (activePageTab === "library" ? "browser-tab-active" : "")} type="button" role="tab" aria-selected={activePageTab === "library"} aria-controls="gv-panel-library" onClick={() => setActivePageTab("library")}><BookOpen size={15} /><span>{t.navLibrary}</span></button>
+        <button id="gv-tab-submit" className={"browser-tab " + (activePageTab === "submit" ? "browser-tab-active" : "")} type="button" role="tab" aria-selected={activePageTab === "submit"} aria-controls="gv-panel-submit" onClick={() => setActivePageTab("submit")}><FileCode2 size={15} /><span>{t.submit}</span><span className="browser-tab-close" aria-hidden="true">×</span></button>
+        <button id="gv-tab-info" className={"browser-tab " + (activePageTab === "info" ? "browser-tab-active" : "")} type="button" role="tab" aria-selected={activePageTab === "info"} aria-controls="gv-panel-info" onClick={() => setActivePageTab("info")}><ShieldCheck size={15} /><span>{language === "vi" ? "Quy trình" : "Process"}</span></button>
+      </nav>
+
       <main id="main-content">
-        <section className="hero" aria-labelledby="hero-title">
+        <section id="gv-panel-home" role="tabpanel" aria-labelledby="gv-tab-home" className="hero" style={{ display: activePageTab === "home" ? undefined : "none" }} aria-labelledby="hero-title">
           <div className="hero-grid" aria-hidden="true" />
           <div className="hero-copy">
             <div className="eyebrow"><span className="live-dot" />{t.eyebrow}</div>
             <h1 id="hero-title">{t.heroLine1}<br />{t.heroLine2}<br /><span>{t.heroAccent}</span></h1>
             <p className="hero-lede">{t.heroLede}</p>
             <div className="hero-actions">
-              <a className="button-primary" href="#library">{t.discover}<ArrowRight size={16} /></a>
+              <button className="button-primary" type="button" onClick={() => setActivePageTab("library")}>{t.discover}<ArrowRight size={16} /></button>
               <button className="button-quiet" onClick={() => openSubmit("html")}>{t.sendOne}<ArrowDownRight size={16} /></button>
             </div>
             <div className="hero-proof">
@@ -490,14 +498,14 @@ export default function Home() {
           <div className="hero-bottomline"><span>GAMEVAULT FIELD NOTES</span><span>AN OPEN-ENDED COLLECTION</span></div>
         </section>
 
-        <section className="stats-row" aria-label={language === "vi" ? "Tóm tắt quy trình" : "Process summary"}>
+        <section className="stats-row" style={{ display: activePageTab === "home" ? undefined : "none" }} aria-label={language === "vi" ? "Tóm tắt quy trình" : "Process summary"}>
           <div><strong>{t.statOne}</strong><span>{t.statOneDesc}</span></div>
           <div><strong>{t.statTwo}</strong><span>{t.statTwoDesc}</span></div>
           <div><strong>{t.statThree}</strong><span>{t.statThreeDesc}</span></div>
           <div><strong>{t.statFour}</strong><span>{t.statFourDesc}</span></div>
         </section>
 
-        <section className="section library-section" id="library">
+        <section className="section library-section" id="gv-panel-library" role="tabpanel" aria-labelledby="gv-tab-library" style={{ display: activePageTab === "library" ? undefined : "none" }}>
           <div className="section-heading">
             <div><div className="section-kicker">{t.libraryKicker}</div><h2>{t.libraryTitle}</h2><p>{t.librarySubtitle}</p></div>
             <label className="library-search"><Search size={17} aria-hidden="true" /><input ref={searchRef} aria-label={t.searchLabel} placeholder={t.searchPlaceholder} value={query} onChange={(event) => setQuery(event.target.value)} /><kbd>/</kbd></label>
@@ -548,7 +556,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="submission-section" id="submit">
+        <section className="submission-section" id="gv-panel-submit" role="tabpanel" aria-labelledby="gv-tab-submit" style={{ display: activePageTab === "submit" ? undefined : "none" }}>
           <div className="submission-intro">
             <div className="section-kicker">{t.submitKicker}</div>
             <h2>{t.submitTitle}</h2>
@@ -615,7 +623,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="workflow-section" id="how-it-works">
+        <section className="workflow-section" id="gv-panel-info" role="tabpanel" aria-labelledby="gv-tab-info" style={{ display: activePageTab === "info" ? undefined : "none" }}>
           <div className="section-heading">
             <div><div className="section-kicker">{t.workflowKicker}</div><h2>{t.workflowTitle}</h2></div>
             <p className="workflow-lede">{t.workflowLede}</p>
@@ -628,12 +636,12 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="safety-section" id="safety">
+        <section className="safety-section" style={{ display: activePageTab === "info" ? undefined : "none" }} id="safety">
           <div className="safety-icon"><ShieldCheck size={23} /></div>
           <div><div className="section-kicker">{t.safetyKicker}</div><h2>{t.safetyTitle}</h2><p>{t.safetyText}</p><a href="https://docs.github.com/en/site-policy/acceptable-use-policies/github-acceptable-use-policies" target="_blank" rel="noreferrer">{t.readPolicy}<ArrowRight size={15} /></a></div>
         </section>
 
-        {submissions.length > 0 && (
+        {submissions.length > 0 && activePageTab === "submit" && (
           <section className="queue-section" aria-labelledby="queue-title">
             <div className="section-heading"><div><div className="section-kicker">{language === "vi" ? "CHỈ TRÊN THIẾT BỊ NÀY" : "THIS DEVICE ONLY"}</div><h2 id="queue-title">{t.recentTitle}</h2></div><button className="clear-queue" onClick={clearQueue}>{t.clearHistory}</button></div>
             <div className="queue-list">{submissions.map((item) => <div className="queue-item" key={item.id}><span className="queue-file">{item.kind === "HTML" ? <FileCode2 size={18} /> : <Globe2 size={18} />}</span><div className="queue-details"><b>{item.title}</b><small>{item.source}</small></div><span className="queue-status"><Clock3 size={13} />{t.pendingReview}</span><time dateTime={item.createdAt}>{new Date(item.createdAt).toLocaleDateString(language === "vi" ? "vi-VN" : "en-GB")}</time></div>)}</div>
@@ -646,7 +654,7 @@ export default function Home() {
         <footer className="footer">
           <a className="brand footer-brand" href="#"><span className="brand-mark"><Layers3 size={17} /></span><span>gamevault<span className="brand-dot">.</span></span></a>
           <span>{t.footerLine}</span>
-          <div><a href="#safety">{t.footerPolicy}</a><a href="#how-it-works">{t.footerProcess}</a><a href="https://github.com/slgamervn/aaa" target="_blank" rel="noreferrer"><Github size={15} />{t.source}</a></div>
+          <div><a href="#safety" onClick={(event) => { event.preventDefault(); setActivePageTab("info"); }}>{t.footerPolicy}</a><a href="#how-it-works" onClick={(event) => { event.preventDefault(); setActivePageTab("info"); }}>{t.footerProcess}</a><a href="https://github.com/slgamervn/aaa" target="_blank" rel="noreferrer"><Github size={15} />{t.source}</a></div>
           <small>© 2026 GameVault · {t.footerStatus}</small>
         </footer>
 

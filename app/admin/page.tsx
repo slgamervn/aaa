@@ -103,7 +103,7 @@ export default function AdminPage() {
       return;
     }
     if (action === "publish" && !window.confirm("Xác nhận xuất bản nội dung này lên GitHub? Hành động này tạo commit công khai trong repository đã cấu hình.")) return;
-    if (action === "unpublish" && !window.confirm("Gỡ game này khỏi thư viện công khai? Tệp đã xuất bản sẽ bị xóa khỏi GitHub, còn bản gửi và lịch sử kiểm duyệt sẽ được giữ lại để có thể xuất bản lại.")) return;
+    if (action === "unpublish" && !window.confirm("Gỡ dự án này khỏi danh sách công khai? Tệp đã xuất bản sẽ bị xóa khỏi GitHub, còn bản gửi và lịch sử kiểm duyệt vẫn được giữ lại để có thể xuất bản lại.")) return;
 
     setBusy(item.id + ":" + action);
     setError("");
@@ -119,7 +119,7 @@ export default function AdminPage() {
         setError(body.error || "Thao tác không thành công.");
         return;
       }
-      setNotice(action === "approve" ? "Đã duyệt. Nội dung vẫn chưa công khai." : action === "reject" ? "Đã từ chối và lưu lý do." : action === "unpublish" ? "Đã gỡ game khỏi thư viện công khai. Bản gửi vẫn được giữ lại." : "Đã xuất bản lên GitHub sau khi bạn xác nhận.");
+      setNotice(action === "approve" ? "Đã duyệt. Nội dung vẫn chưa công khai." : action === "reject" ? "Đã từ chối và lưu lý do." : action === "unpublish" ? "Đã gỡ dự án khỏi danh sách công khai. Bản gửi vẫn được giữ lại." : "Đã xuất bản lên GitHub sau khi bạn xác nhận.");
       await load();
     } catch {
       setError("Máy chủ không phản hồi. Hãy tải lại hàng đợi trước khi thử lần nữa.");
@@ -163,7 +163,7 @@ export default function AdminPage() {
         setError(body.error || "Không thể lưu hướng màn hình.");
         return;
       }
-      setNotice("Đã lưu thiết lập hướng màn hình cho game.");
+      setNotice("Đã lưu thiết lập hướng màn hình cho dự án.");
       await load();
     } catch {
       setError("Không thể kết nối để lưu hướng màn hình.");
@@ -197,7 +197,7 @@ export default function AdminPage() {
         {error && <div className="admin-banner admin-banner-error" role="alert"><AlertCircle size={17} />{error}</div>}
         {notice && <div className="admin-banner admin-banner-success" role="status"><BadgeCheck size={17} />{notice}</div>}
         {loading ? <div className="admin-empty">Đang tải hàng đợi…</div> : items.length === 0 ? (
-          <div className="admin-empty"><FileCode2 size={28} /><h2>Chưa có nội dung nào được gửi</h2><p>Khi có người gửi game, nội dung sẽ xuất hiện ở đây để bạn xem xét.</p></div>
+          <div className="admin-empty"><FileCode2 size={28} /><h2>Chưa có dự án nào được gửi</h2><p>Khi có người gửi dự án, nội dung sẽ xuất hiện ở đây để bạn xem xét.</p></div>
         ) : (
           <div className="admin-queue">
             {items.map((item) => (

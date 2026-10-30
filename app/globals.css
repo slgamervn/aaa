@@ -1257,3 +1257,16 @@ html[data-motion="reduced"] .fullscreen-toolbar-dot { transition: none; }
   .fullscreen-toolbar-dot { transition: none; }
 }
 html[data-motion="reduced"] .fullscreen-toolbar-dot { transition: none; }
+
+
+/* Only the fullscreen toggle remains in the normal preview toolbar. */
+.project-preview-toolbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  min-height: 44px;
+}
+.project-preview-toolbar-inner .preview-fullscreen-btn {
+  margin-left: auto;
+}

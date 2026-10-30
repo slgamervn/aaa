@@ -38,11 +38,37 @@ export default function GameFrame({ title, src, sandbox, language = "vi", unavai
 
   const exitFallback = useCallback(() => setFallbackFullscreen(false), []);
 
+  const lockLandscape = useCallback(async () => {
+    try {
+      if (screen.orientation?.lock) {
+        await screen.orientation.lock("landscape");
+      }
+    } catch {
+      // Orientation locking is not supported in every browser, especially iOS Safari.
+    }
+  }, []);
+
+  const unlockOrientation = useCallback(() => {
+    try {
+      screen.orientation?.unlock();
+    } catch {
+      // Ignore browsers that do not implement the Screen Orientation API.
+    }
+  }, []);
+
   useEffect(() => {
-    const syncFullscreen = () => setIsFullscreen(Boolean(document.fullscreenElement) || fallbackFullscreen);
+    const syncFullscreen = () => {
+      const nativeFullscreen = Boolean(document.fullscreenElement);
+      setIsFullscreen(nativeFullscreen || fallbackFullscreen);
+      if (nativeFullscreen) {
+        void lockLandscape();
+      } else {
+        unlockOrientation();
+      }
+    };
     document.addEventListener("fullscreenchange", syncFullscreen);
     return () => document.removeEventListener("fullscreenchange", syncFullscreen);
-  }, [fallbackFullscreen]);
+  }, [fallbackFullscreen, lockLandscape, unlockOrientation]);
 
   useEffect(() => {
     if (!fallbackFullscreen) return;
@@ -69,6 +95,7 @@ export default function GameFrame({ title, src, sandbox, language = "vi", unavai
       }
       setFallbackFullscreen(false);
       setIsFullscreen(false);
+      unlockOrientation();
       return;
     }
 
@@ -77,6 +104,7 @@ export default function GameFrame({ title, src, sandbox, language = "vi", unavai
       try {
         await element.requestFullscreen();
         setIsFullscreen(true);
+        await lockLandscape();
         return;
       } catch {
         // Some mobile browsers do not support fullscreen for regular page elements.

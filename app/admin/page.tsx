@@ -149,7 +149,7 @@ export default function AdminPage() {
 
       <section className="admin-content">
         <div className="admin-heading">
-          <div><div className="section-kicker">OWNER CONSOLE / REVIEW QUEUE</div><h1>Kiểm duyệt nội dung</h1><p>Đọc nguồn, kiểm tra giấy phép, rồi quyết định. Quét tĩnh chỉ hỗ trợ việc xem xét.</p></div>
+          <div><div className="section-kicker">BẢNG QUẢN TRỊ / HÀNG CHỜ KIỂM DUYỆT</div><h1>Kiểm duyệt nội dung</h1><p>Đọc nguồn, kiểm tra giấy phép, rồi quyết định. Quét tĩnh chỉ hỗ trợ việc xem xét.</p></div>
           <button className="admin-refresh" onClick={() => void load()} disabled={loading}><RefreshCw size={15} /> Làm mới</button>
         </div>
 

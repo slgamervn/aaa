@@ -15,7 +15,9 @@ import {
   Sun,
   Type,
   MoveVertical,
-  Activity
+  Activity,
+  ChevronUp,
+  ChevronDown
 } from "lucide-react";
 
 type Language = "vi" | "en";
@@ -86,6 +88,8 @@ const copy = {
     orientationUnavailable: "Thiết bị hoặc trình duyệt không cho phép khóa hướng màn hình.",
     orientationNeedsFullscreen: "Hãy bật toàn màn hình trước khi khóa hướng màn hình.",
     customControls: "Tùy chỉnh trình xem",
+    scrollPageUp: "Cuộn trang lên",
+    scrollPageDown: "Cuộn trang xuống",
     frameReloaded: "Đã tải lại dự án."
   },
   en: {
@@ -121,6 +125,8 @@ const copy = {
     orientationUnavailable: "This device or browser cannot lock screen orientation.",
     orientationNeedsFullscreen: "Enter fullscreen before locking the screen orientation.",
     customControls: "Viewer preferences",
+    scrollPageUp: "Scroll page up",
+    scrollPageDown: "Scroll page down",
     frameReloaded: "Project reloaded."
   }
 } as const;
@@ -349,6 +355,11 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
     setNotice(t.frameReloaded);
   }
 
+  function scrollPage(direction: "up" | "down") {
+    const distance = Math.max(320, Math.round(window.innerHeight * 0.72));
+    window.scrollBy({ top: direction === "up" ? -distance : distance, behavior: motionReduced ? "auto" : "smooth" });
+  }
+
   const pageClassName = "play-page project-detail-page";
   const previewClassName = "project-preview-shell" + (fallbackFullscreen ? " is-fallback-fullscreen" : "");
 
@@ -401,6 +412,26 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
           </div>
 
           <div className="project-preview-controls" role="group" aria-label={t.customControls}>
+            <button
+              type="button"
+              className="preview-control-btn page-scroll-control"
+              onClick={() => scrollPage("up")}
+              aria-label={t.scrollPageUp}
+              title={t.scrollPageUp}
+            >
+              <ChevronUp size={17} />
+            </button>
+
+            <button
+              type="button"
+              className="preview-control-btn page-scroll-control"
+              onClick={() => scrollPage("down")}
+              aria-label={t.scrollPageDown}
+              title={t.scrollPageDown}
+            >
+              <ChevronDown size={17} />
+            </button>
+
             <button
               type="button"
               className="preview-control-btn"

@@ -449,7 +449,7 @@ export default function Home() {
       </nav>
 
       <main id="main-content">
-        <section className="section library-section" id="gv-panel-library" role="tabpanel" aria-labelledby="gv-tab-library" style={{ display: activePageTab === "library" ? undefined : "none" }}>
+        <section className="section library-section" id="gv-panel-library" role="tabpanel" aria-labelledby="gv-tab-library" tabIndex={0} style={{ display: activePageTab === "library" ? undefined : "none" }}>
           <div className="section-heading library-heading">
             <h1 className="library-title">{t.libraryTitle}</h1>
             <label className="library-search"><Search size={17} aria-hidden="true" /><input ref={searchRef} aria-label={t.searchLabel} placeholder={t.searchPlaceholder} value={query} onChange={(event) => setQuery(event.target.value)} /><kbd>/</kbd></label>
@@ -496,7 +496,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="submission-section" id="gv-panel-submit" role="tabpanel" aria-labelledby="gv-tab-submit" style={{ display: activePageTab === "submit" ? undefined : "none" }}>
+        <section className="submission-section" id="gv-panel-submit" role="tabpanel" aria-labelledby="gv-tab-submit" tabIndex={0} style={{ display: activePageTab === "submit" ? undefined : "none" }}>
           <div className="submission-intro submission-intro-compact">
             <h2>{t.submitTitle}</h2>
             <p>{t.submitLede}</p>
@@ -557,7 +557,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="workflow-section" id="gv-panel-info" role="tabpanel" aria-labelledby="gv-tab-info" style={{ display: activePageTab === "info" ? undefined : "none" }}>
+        <section className="workflow-section" id="gv-panel-info" role="tabpanel" aria-labelledby="gv-tab-info" tabIndex={0} style={{ display: activePageTab === "info" ? undefined : "none" }}>
           <div className="section-heading">
             <div><div className="section-kicker">{t.workflowKicker}</div><h2>{t.workflowTitle}</h2></div>
             <p className="workflow-lede">{t.workflowLede}</p>

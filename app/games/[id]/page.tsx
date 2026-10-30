@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import GamePlayer from "./game-player";
+import ProjectDetails from "./game-player";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -18,42 +18,40 @@ function parseExternalUrl(value: string | null): URL | null {
   }
 }
 
-export default async function GamePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!UUID_PATTERN.test(id)) notFound();
 
-  let game: { id: string; title: string; description: string; kind: string; source_url: string | null; orientation: "auto" | "landscape" | "portrait"; published_at: string | null } | null = null;
+  let project: { id: string; title: string; description: string; kind: string; source_url: string | null; published_at: string | null } | null = null;
   try {
     const admin = createAdminClient();
     const { data } = await admin.from("gamevault_submissions")
-      .select("id,title,description,kind,source_url,orientation,published_at")
+      .select("id,title,description,kind,source_url,published_at")
       .eq("id", id)
       .eq("status", "published")
       .maybeSingle();
-    game = data;
+    project = data;
   } catch {
     notFound();
   }
 
-  if (!game || (game.kind !== "html" && game.kind !== "url")) notFound();
+  if (!project || (project.kind !== "html" && project.kind !== "url")) notFound();
 
-  const isHtml = game.kind === "html";
-  const externalUrl = parseExternalUrl(game.source_url);
-  const embeddedUrl = isHtml ? "/api/games/" + game.id : externalUrl?.protocol === "https:" ? externalUrl.toString() : null;
+  const isHtml = project.kind === "html";
+  const externalUrl = parseExternalUrl(project.source_url);
   const sourceUrl = isHtml
-    ? "https://github.com/slgamervn/aaa/tree/main/gamevault-submissions/" + game.id
+    ? "https://github.com/slgamervn/aaa/tree/main/gamevault-submissions/" + project.id
     : null;
 
   return (
-    <GamePlayer
-      game={{
-        title: game.title,
-        description: game.description,
+    <ProjectDetails
+      project={{
+        title: project.title,
+        description: project.description,
         kind: isHtml ? "html" : "url",
         externalUrl: externalUrl?.toString() ?? null,
-        embeddedUrl,
         sourceUrl,
-        orientation: game.orientation === "landscape" || game.orientation === "portrait" ? game.orientation : "auto"
+        downloadUrl: isHtml ? "/api/games/" + project.id + "/download" : null
       }}
     />
   );

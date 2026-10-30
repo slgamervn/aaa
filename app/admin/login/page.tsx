@@ -54,7 +54,7 @@ export default function AdminLoginPage() {
       <a href="/" className="admin-back"><ArrowLeft size={15} /> Quay lại GameVault</a>
       <section className="admin-auth-card">
         <div className="admin-auth-mark"><KeyRound size={22} /></div>
-        <div className="section-kicker">GAMEVAULT / OWNER ACCESS</div>
+        <div className="section-kicker">GAMEVAULT / TRUY CẬP QUẢN TRỊ</div>
         <h1>Đăng nhập quản trị</h1>
         <p>Trang này chỉ dành cho email đã được chủ dự án thêm vào danh sách quản trị và tạo tài khoản trong Supabase Auth.</p>
         <form onSubmit={signIn} className="admin-auth-form">

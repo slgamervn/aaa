@@ -1000,3 +1000,14 @@ html[data-theme="night"] .admin-status-pending_review { color: var(--yellow); }
 }
 html[data-motion="reduced"] .project-preview-frame { animation: none; }
 html[data-motion="reduced"] .preview-control-btn { transition: none; }
+
+
+/* Keep the host page navigable even when an embedded game consumes swipe gestures. */
+.project-preview-shell { overscroll-behavior-y: auto; }
+.project-preview-frame { overscroll-behavior: auto; }
+.page-scroll-control { border-color: var(--line); background: var(--surface); color: var(--ink); }
+.page-scroll-control:hover { background: var(--green-soft); }
+.project-preview-toolbar { touch-action: pan-y pinch-zoom; }
+@media (max-width: 720px) {
+  .project-preview-controls { touch-action: pan-x pan-y pinch-zoom; }
+}

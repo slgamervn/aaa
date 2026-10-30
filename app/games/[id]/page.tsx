@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink, ShieldCheck } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/admin";
+import GameFrame from "./game-frame";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -54,23 +55,12 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
         {externalUrl ? <a className="play-open-source" href={externalUrl.toString()} target="_blank" rel="noopener noreferrer nofollow"><ExternalLink size={15} /> Open original website</a> : null}
         {isHtml ? <a className="play-open-source" href={"https://github.com/slgamervn/aaa/tree/main/gamevault-submissions/" + game.id} target="_blank" rel="noopener noreferrer"><ExternalLink size={15} /> View published source on GitHub</a> : null}
       </section>
-      <section className="play-frame-wrap" aria-label="Game frame">
-        {embeddedUrl ? (
-          <iframe
-            title={game.title}
-            src={embeddedUrl}
-            sandbox={isHtml ? "allow-scripts" : "allow-scripts allow-forms"}
-            referrerPolicy="no-referrer"
-            allow="fullscreen; gamepad"
-            allowFullScreen
-          />
-        ) : (
-          <div className="play-frame-unavailable">
-            <h2>Không thể nhúng đường dẫn này</h2>
-            <p>GameVault chỉ nhúng đường dẫn HTTPS. Bạn vẫn có thể mở trang gốc bằng nút phía trên.</p>
-          </div>
-        )}
-      </section>
+      <GameFrame
+        title={game.title}
+        src={embeddedUrl}
+        sandbox={isHtml ? "allow-scripts" : "allow-scripts allow-forms"}
+        unavailableMessage="GameVault chỉ nhúng đường dẫn HTTPS. Bạn vẫn có thể mở trang gốc bằng nút phía trên."
+      />
       <p className="play-disclaimer">{isHtml
         ? "The uploaded HTML runs in a restricted sandbox. Network requests and form submissions are disabled. Some games that require external APIs or persistent browser storage may not work."
         : "The original website is embedded in a restricted sandbox. Some websites prohibit iframe embedding or require cookies, storage, popups, or other permissions; if the game does not appear, use “Open original website” above."}</p>

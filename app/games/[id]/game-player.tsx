@@ -166,7 +166,6 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fallbackFullscreen, setFallbackFullscreen] = useState(false);
-  const [toolbarExpanded, setToolbarExpanded] = useState(true);
   const [toolbarPosition, setToolbarPosition] = useState<ToolbarPosition>(DEFAULT_TOOLBAR_POSITION);
   const [toolbarDragging, setToolbarDragging] = useState(false);
   const [orientationSupported, setOrientationSupported] = useState(false);
@@ -243,7 +242,6 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
         (activeElement === previewRef.current || previewRef.current?.contains(activeElement))
       );
       setIsFullscreen(active);
-      setToolbarExpanded(!active);
 
       if (!active) {
         setOrientationLocked(false);
@@ -346,7 +344,6 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
 
     if (fallbackFullscreen) {
       setFallbackFullscreen(false);
-      setToolbarExpanded(true);
       return;
     }
 
@@ -363,7 +360,6 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
       try {
         await container.requestFullscreen();
         setIsFullscreen(document.fullscreenElement === container);
-        setToolbarExpanded(false);
         await applyProjectOrientation();
         return;
       } catch {
@@ -372,7 +368,6 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
     }
 
     setFallbackFullscreen(true);
-    setToolbarExpanded(false);
     setNotice(t.fullscreenFallback);
   }
 
@@ -426,7 +421,7 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
       toolbarMovedRef.current = false;
       return;
     }
-    setToolbarExpanded(true);
+    void toggleFullscreen();
   }
 
   function resetToolbarPosition() {
@@ -488,152 +483,31 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
           {fullscreenActive ? (
             <button
               type="button"
-              className="preview-control-btn preview-fullscreen-btn fullscreen-exit-only"
-              onClick={() => void toggleFullscreen()}
-              aria-pressed={true}
+              className={"fullscreen-toolbar-dot" + (toolbarDragging ? " is-dragging" : "")}
+              style={{ left: toolbarPosition.x + "%", top: toolbarPosition.y + "%" }}
+              onPointerDown={handleToolbarPointerDown}
+              onPointerMove={handleToolbarPointerMove}
+              onPointerUp={finishToolbarDrag}
+              onPointerCancel={finishToolbarDrag}
+              onClick={activateToolbarHandle}
               aria-label={t.exitFullscreen}
               title={t.exitFullscreen}
             >
-              <Minimize2 size={17} />
-              <span>{t.exitFullscreen}</span>
+              <Minimize2 size={21} strokeWidth={2.2} />
             </button>
           ) : (
-            <div className={fullscreenActive ? "fullscreen-toolbar-panel" : "project-preview-toolbar-inner"}>
-              <div className="project-preview-toolbar-top">
-                <div className="project-preview-heading">
-                  <span className="project-preview-dot" aria-hidden="true" />
-                  <span>{t.previewLabel}</span>
-                </div>
-                {fullscreenActive && (
-                  <div className="fullscreen-toolbar-panel-actions">
-                    <button
-                      type="button"
-                      className="fullscreen-toolbar-reset"
-                      onClick={resetToolbarPosition}
-                      aria-label={t.resetPosition}
-                      title={t.resetPosition}
-                    >
-                      <Crosshair size={17} />
-                    </button>
-                    <button
-                      type="button"
-                      className="fullscreen-toolbar-collapse"
-                      onClick={() => setToolbarExpanded(false)}
-                      aria-label={t.hideControls}
-                      aria-expanded={true}
-                      title={t.hideControls}
-                    >
-                      <ChevronUp size={19} />
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="project-preview-controls" role="group" aria-label={t.customControls}>
-                {!fullscreenActive && (
-                  <>
-                    <button
-                      type="button"
-                      className="preview-control-btn page-scroll-control"
-                      onClick={() => scrollPage("up")}
-                      aria-label={t.scrollPageUp}
-                      title={t.scrollPageUp}
-                    >
-                      <ChevronUp size={17} />
-                    </button>
-
-                    <button
-                      type="button"
-                      className="preview-control-btn page-scroll-control"
-                      onClick={() => scrollPage("down")}
-                      aria-label={t.scrollPageDown}
-                      title={t.scrollPageDown}
-                    >
-                      <ChevronDown size={17} />
-                    </button>
-                  </>
-                )}
-
-                <button
-                  type="button"
-                  className="preview-control-btn"
-                  onClick={() => setPreviewSize(current => current === "normal" ? "large" : "normal")}
-                  aria-pressed={previewSize === "large"}
-                  aria-label={previewSize === "large" ? t.normalPreview : t.largerPreview}
-                  title={previewSize === "large" ? t.normalPreview : t.largerPreview}
-                >
-                  <MoveVertical size={16} />
-                </button>
-
-                <button
-                  type="button"
-                  className="preview-control-btn"
-                  onClick={() => setTheme(current => current === "paper" ? "night" : "paper")}
-                  aria-pressed={theme === "night"}
-                  aria-label={theme === "paper" ? t.darkTheme : t.lightTheme}
-                  title={theme === "paper" ? t.darkTheme : t.lightTheme}
-                >
-                  {theme === "paper" ? <Moon size={16} /> : <Sun size={16} />}
-                </button>
-
-                <button
-                  type="button"
-                  className="preview-control-btn"
-                  onClick={() => setLargeText(current => !current)}
-                  aria-pressed={largeText}
-                  aria-label={largeText ? t.normalText : t.largerText}
-                  title={largeText ? t.normalText : t.largerText}
-                >
-                  <Type size={16} />
-                </button>
-
-                <button
-                  type="button"
-                  className="preview-control-btn"
-                  onClick={() => setMotionReduced(current => !current)}
-                  aria-pressed={motionReduced}
-                  aria-label={motionReduced ? t.restoreMotion : t.reduceMotion}
-                  title={motionReduced ? t.restoreMotion : t.reduceMotion}
-                >
-                  <Activity size={16} />
-                </button>
-
-                {orientationSupported && project.orientation !== "auto" && (
-                  <button
-                    type="button"
-                    className="preview-control-btn"
-                    onClick={() => void toggleOrientationLock()}
-                    disabled={!isFullscreen}
-                    aria-pressed={orientationLocked}
-                    aria-label={orientationLocked ? t.unlockOrientation : t.lockOrientation}
-                    title={orientationLocked ? t.unlockOrientation : t.lockOrientation}
-                  >
-                    <RotateCw size={16} />
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  className="preview-control-btn"
-                  onClick={reloadProject}
-                  aria-label={t.reload}
-                  title={t.reload}
-                >
-                  <RefreshCw size={16} />
-                </button>
-
-                <button
-                  type="button"
-                  className="preview-control-btn preview-fullscreen-btn"
-                  onClick={() => void toggleFullscreen()}
-                  aria-pressed={fullscreenActive}
-                  aria-label={fullscreenActive ? t.exitFullscreen : t.fullscreen}
-                  title={fullscreenActive ? t.exitFullscreen : t.fullscreen}
-                >
-                  {fullscreenActive ? <Minimize2 size={17} /> : <Maximize2 size={17} />}
-                  <span>{fullscreenActive ? t.exitFullscreen : t.fullscreen}</span>
-                </button>
-              </div>
+            <div className="project-preview-toolbar-inner">
+              <button
+                type="button"
+                className="preview-control-btn preview-fullscreen-btn"
+                onClick={() => void toggleFullscreen()}
+                aria-pressed={false}
+                aria-label={t.fullscreen}
+                title={t.fullscreen}
+              >
+                <Maximize2 size={17} />
+                <span>{t.fullscreen}</span>
+              </button>
             </div>
           )}
         </div>

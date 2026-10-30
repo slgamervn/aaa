@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AlertCircle, BadgeCheck, Clock3, ExternalLink, EyeOff, FileCode2, Globe2, LogOut, RefreshCw, ShieldCheck, XCircle } from "lucide-react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
+type GameOrientation = "auto" | "landscape" | "portrait";
 type AdminFinding = { label: string; severity: "high" | "medium" | "low"; detail: string };
 type AdminSubmission = {
   id: string;
@@ -12,6 +13,7 @@ type AdminSubmission = {
   description: string;
   genre: string;
   kind: "html" | "url";
+  orientation: GameOrientation;
   source_url: string | null;
   original_filename: string | null;
   file_size: number;
@@ -48,6 +50,7 @@ export default function AdminPage() {
   const [adminEmail, setAdminEmail] = useState("");
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [sources, setSources] = useState<Record<string, string>>({});
+  const [orientationDrafts, setOrientationDrafts] = useState<Record<string, GameOrientation>>({});
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
@@ -68,7 +71,11 @@ export default function AdminPage() {
         setError(body.error || "Không thể tải hàng đợi duyệt.");
         return;
       }
-      setItems(body.submissions ?? []);
+      const submissions = (body.submissions ?? []) as AdminSubmission[];
+      setItems(submissions);
+      setOrientationDrafts(Object.fromEntries(
+        submissions.map((item) => [item.id, item.orientation ?? "auto"])
+      ));
       setAdminEmail(body.adminEmail ?? "");
     } catch {
       setError("Không thể kết nối tới máy chủ.");
@@ -138,6 +145,33 @@ export default function AdminPage() {
     }
   }
 
+  async function saveOrientation(item: AdminSubmission) {
+    const orientation = orientationDrafts[item.id] ?? item.orientation ?? "auto";
+    if (orientation === item.orientation) return;
+
+    setBusy(item.id + ":orientation");
+    setError("");
+    setNotice("");
+    try {
+      const response = await fetch("/api/admin/submissions/" + item.id, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "set_orientation", orientation })
+      });
+      const body = await response.json();
+      if (!response.ok) {
+        setError(body.error || "Không thể lưu hướng màn hình.");
+        return;
+      }
+      setNotice("Đã lưu thiết lập hướng màn hình cho game.");
+      await load();
+    } catch {
+      setError("Không thể kết nối để lưu hướng màn hình.");
+    } finally {
+      setBusy("");
+    }
+  }
+
   const pendingCount = items.filter((item) => item.status === "pending_review").length;
 
   return (
@@ -180,6 +214,34 @@ export default function AdminPage() {
                   <span>Quét: {item.scan_version}</span>
                   {item.kind === "html" && <span>Kích thước: {(item.file_size / 1024).toFixed(1)} KB</span>}
                   {item.content_sha256 && <span>SHA-256: <code>{item.content_sha256.slice(0, 16)}…</code></span>}
+                </div>
+                <div className="admin-orientation-settings">
+                  <label className="admin-orientation-field">
+                    <span>Hướng màn hình khi toàn màn hình</span>
+                    <select
+                      value={orientationDrafts[item.id] ?? item.orientation ?? "auto"}
+                      onChange={(event) => setOrientationDrafts((previous) => ({
+                        ...previous,
+                        [item.id]: event.target.value as GameOrientation
+                      }))}
+                    >
+                      <option value="auto">Tự động (mặc định)</option>
+                      <option value="landscape">Ngang</option>
+                      <option value="portrait">Dọc</option>
+                    </select>
+                  </label>
+                  <p className="admin-orientation-help">Chỉ yêu cầu xoay khi người chơi vào toàn màn hình. Tự động sẽ không khóa hướng; trình duyệt có thể từ chối yêu cầu xoay.</p>
+                  <button
+                    className="admin-button admin-button-primary"
+                    type="button"
+                    disabled={
+                      busy === item.id + ":orientation" ||
+                      (orientationDrafts[item.id] ?? item.orientation ?? "auto") === item.orientation
+                    }
+                    onClick={() => void saveOrientation(item)}
+                  >
+                    {busy === item.id + ":orientation" ? "Đang lưu…" : "Lưu hướng"}
+                  </button>
                 </div>
                 <div className="admin-scan-summary">
                   <div><strong>{item.scan_score}/100</strong><span>Điểm ưu tiên xem xét (cao hơn = đáng chú ý hơn)</span></div>

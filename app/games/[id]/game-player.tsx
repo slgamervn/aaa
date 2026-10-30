@@ -5,11 +5,13 @@ import { ArrowLeft, ExternalLink, Languages, ShieldCheck } from "lucide-react";
 import GameFrame from "./game-frame";
 
 type Language = "vi" | "en";
+type GameOrientation = "auto" | "landscape" | "portrait";
 
 type GamePlayerData = {
   title: string;
   description: string;
   kind: "html" | "url";
+  orientation: GameOrientation;
   externalUrl: string | null;
   embeddedUrl: string | null;
   sourceUrl: string | null;
@@ -131,6 +133,7 @@ export default function GamePlayer({ game }: { game: GamePlayerData }) {
       <GameFrame
         title={game.title}
         src={game.embeddedUrl}
+        orientation={game.orientation}
         sandbox={game.kind === "html" ? "allow-scripts allow-orientation-lock" : "allow-scripts allow-forms allow-pointer-lock allow-orientation-lock"}
         language={language}
         unavailableMessage={t.unavailable}

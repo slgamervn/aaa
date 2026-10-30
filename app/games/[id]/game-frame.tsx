@@ -1,20 +1,34 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { Maximize2, Minimize2, X } from "lucide-react";
+
+type GameOrientation = "auto" | "landscape" | "portrait";
+type LockableScreenOrientation = ScreenOrientation & {
+  lock?: (orientation: "landscape" | "portrait") => Promise<void>;
+};
 
 type GameFrameProps = {
   title: string;
   src: string | null;
   sandbox: string;
+  orientation: GameOrientation;
   language?: "vi" | "en";
   unavailableMessage?: string;
 };
 
-export default function GameFrame({ title, src, sandbox, language = "vi", unavailableMessage }: GameFrameProps) {
+export default function GameFrame({
+  title,
+  src,
+  sandbox,
+  orientation,
+  language = "vi",
+  unavailableMessage
+}: GameFrameProps) {
   const frameRef = useRef<HTMLElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fallbackFullscreen, setFallbackFullscreen] = useState(false);
+  const [orientationNoticeVisible, setOrientationNoticeVisible] = useState(false);
 
   const labels = language === "en"
     ? {
@@ -24,7 +38,8 @@ export default function GameFrame({ title, src, sandbox, language = "vi", unavai
         enterShort: "Fullscreen",
         exitShort: "Exit",
         unavailable: "This URL cannot be embedded",
-        fallback: "GameVault only embeds HTTPS URLs. You can still open the original site using the link above."
+        fallback: "GameVault only embeds HTTPS URLs. You can still open the original site using the link above.",
+        dismissOrientationNotice: "Dismiss orientation notice"
       }
     : {
         frame: "Khung trò chơi",
@@ -33,59 +48,100 @@ export default function GameFrame({ title, src, sandbox, language = "vi", unavai
         enterShort: "Toàn màn hình",
         exitShort: "Thoát",
         unavailable: "Không thể nhúng đường dẫn này",
-        fallback: "GameVault chỉ nhúng đường dẫn HTTPS. Bạn vẫn có thể mở trang gốc bằng nút phía trên."
+        fallback: "GameVault chỉ nhúng đường dẫn HTTPS. Bạn vẫn có thể mở trang gốc bằng nút phía trên.",
+        dismissOrientationNotice: "Đóng hướng dẫn xoay màn hình"
       };
 
-  const exitFallback = useCallback(() => setFallbackFullscreen(false), []);
-
-  const lockLandscape = useCallback(async () => {
-    try {
-      const orientation = screen.orientation as ScreenOrientation & {
-        lock?: (orientation: OrientationLockType) => Promise<void>;
-      };
-      if (typeof orientation.lock === "function") {
-        await orientation.lock("landscape");
-      }
-    } catch {
-      // Orientation locking is not supported in every browser, especially iOS Safari.
-    }
-  }, []);
+  const orientationNotice = language === "en"
+    ? orientation === "landscape"
+      ? "This game is set to landscape. If the browser cannot rotate automatically, enable auto-rotate and turn your phone sideways."
+      : "This game is set to portrait. If the browser cannot rotate automatically, enable auto-rotate and hold your phone upright."
+    : orientation === "landscape"
+      ? "Game này được đặt ở chế độ ngang. Nếu trình duyệt không tự xoay, hãy bật Tự động xoay rồi xoay điện thoại nằm ngang."
+      : "Game này được đặt ở chế độ dọc. Nếu trình duyệt không tự xoay, hãy bật Tự động xoay rồi giữ điện thoại thẳng đứng.";
 
   const unlockOrientation = useCallback(() => {
     try {
-      screen.orientation?.unlock();
+      const orientationApi = window.screen?.orientation as LockableScreenOrientation | undefined;
+      orientationApi?.unlock?.();
     } catch {
       // Ignore browsers that do not implement the Screen Orientation API.
     }
   }, []);
 
+  const applyOrientation = useCallback(async (): Promise<boolean> => {
+    if (orientation === "auto") {
+      unlockOrientation();
+      setOrientationNoticeVisible(false);
+      return true;
+    }
+
+    try {
+      const orientationApi = window.screen?.orientation as LockableScreenOrientation | undefined;
+      if (!orientationApi || typeof orientationApi.lock !== "function") {
+        setOrientationNoticeVisible(true);
+        return false;
+      }
+      await orientationApi.lock(orientation);
+      setOrientationNoticeVisible(false);
+      return true;
+    } catch {
+      // Orientation locking is restricted or unsupported in some browsers and fullscreen modes.
+      setOrientationNoticeVisible(true);
+      return false;
+    }
+  }, [orientation, unlockOrientation]);
+
   useEffect(() => {
     const syncFullscreen = () => {
       const nativeFullscreen = Boolean(document.fullscreenElement);
       setIsFullscreen(nativeFullscreen || fallbackFullscreen);
-      if (nativeFullscreen) {
-        void lockLandscape();
-      } else {
+      if (!nativeFullscreen) {
         unlockOrientation();
+        setOrientationNoticeVisible(false);
       }
     };
     document.addEventListener("fullscreenchange", syncFullscreen);
     return () => document.removeEventListener("fullscreenchange", syncFullscreen);
-  }, [fallbackFullscreen, lockLandscape, unlockOrientation]);
+  }, [fallbackFullscreen, unlockOrientation]);
+
+  useEffect(() => {
+    if (orientation === "auto") return;
+    const orientationApi = window.screen?.orientation as LockableScreenOrientation | undefined;
+    if (!orientationApi) return;
+
+    const syncOrientation = () => {
+      const matches = orientation === "landscape"
+        ? orientationApi.type.startsWith("landscape")
+        : orientationApi.type.startsWith("portrait");
+      setOrientationNoticeVisible(isFullscreen && !matches);
+    };
+
+    orientationApi.addEventListener("change", syncOrientation);
+    if (isFullscreen) syncOrientation();
+    return () => orientationApi.removeEventListener("change", syncOrientation);
+  }, [orientation, isFullscreen]);
 
   useEffect(() => {
     if (!fallbackFullscreen) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") exitFallback();
+      if (event.key === "Escape") {
+        setFallbackFullscreen(false);
+        setIsFullscreen(false);
+        unlockOrientation();
+        setOrientationNoticeVisible(false);
+      }
     };
     document.addEventListener("keydown", onKeyDown);
     return () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [fallbackFullscreen, exitFallback]);
+  }, [fallbackFullscreen, unlockOrientation]);
+
+  useEffect(() => () => unlockOrientation(), [unlockOrientation]);
 
   const toggleFullscreen = async () => {
     if (fallbackFullscreen || document.fullscreenElement) {
@@ -99,6 +155,7 @@ export default function GameFrame({ title, src, sandbox, language = "vi", unavai
       setFallbackFullscreen(false);
       setIsFullscreen(false);
       unlockOrientation();
+      setOrientationNoticeVisible(false);
       return;
     }
 
@@ -107,7 +164,7 @@ export default function GameFrame({ title, src, sandbox, language = "vi", unavai
       try {
         await element.requestFullscreen();
         setIsFullscreen(true);
-        await lockLandscape();
+        await applyOrientation();
         return;
       } catch {
         // Some mobile browsers do not support fullscreen for regular page elements.
@@ -116,6 +173,7 @@ export default function GameFrame({ title, src, sandbox, language = "vi", unavai
 
     setFallbackFullscreen(true);
     setIsFullscreen(true);
+    setOrientationNoticeVisible(orientation !== "auto");
   };
 
   return (
@@ -137,6 +195,18 @@ export default function GameFrame({ title, src, sandbox, language = "vi", unavai
           <span>{isFullscreen ? labels.exitShort : labels.enterShort}</span>
         </button>
       </div>
+      {orientationNoticeVisible && isFullscreen && orientation !== "auto" && (
+        <div className="play-orientation-notice" role="status">
+          <p>{orientationNotice}</p>
+          <button
+            type="button"
+            aria-label={labels.dismissOrientationNotice}
+            onClick={() => setOrientationNoticeVisible(false)}
+          >
+            <X size={17} />
+          </button>
+        </div>
+      )}
       {src ? (
         <iframe
           title={title}

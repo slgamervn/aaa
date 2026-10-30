@@ -22,11 +22,11 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   if (!UUID_PATTERN.test(id)) notFound();
 
-  let game: { id: string; title: string; description: string; kind: string; source_url: string | null; published_at: string | null } | null = null;
+  let game: { id: string; title: string; description: string; kind: string; source_url: string | null; orientation: "auto" | "landscape" | "portrait"; published_at: string | null } | null = null;
   try {
     const admin = createAdminClient();
     const { data } = await admin.from("gamevault_submissions")
-      .select("id,title,description,kind,source_url,published_at")
+      .select("id,title,description,kind,source_url,orientation,published_at")
       .eq("id", id)
       .eq("status", "published")
       .maybeSingle();
@@ -52,7 +52,8 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
         kind: isHtml ? "html" : "url",
         externalUrl: externalUrl?.toString() ?? null,
         embeddedUrl,
-        sourceUrl
+        sourceUrl,
+        orientation: game.orientation === "landscape" || game.orientation === "portrait" ? game.orientation : "auto"
       }}
     />
   );

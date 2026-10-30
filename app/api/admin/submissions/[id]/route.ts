@@ -94,7 +94,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
   }
   if (Buffer.byteLength(rawBody, "utf8") > 5000) return json({ error: "The request is too large." }, 413);
 
-  let body: { action?: unknown; note?: unknown };
+  let body: { action?: unknown; note?: unknown; orientation?: unknown };
   try {
     body = JSON.parse(rawBody) as { action?: unknown; note?: unknown };
     if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Invalid request body");
@@ -104,6 +104,39 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
   const action = typeof body.action === "string" ? body.action : "";
   const note = typeof body.note === "string" ? body.note.replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, 1000) : "";
+
+  if (action === "set_orientation") {
+    const orientation = body.orientation;
+    if (orientation !== "auto" && orientation !== "landscape" && orientation !== "portrait") {
+      return json({ error: "Choose auto, landscape, or portrait." }, 400);
+    }
+
+    const { data: updated, error: updateError } = await access.client
+      .from("gamevault_submissions")
+      .update({ orientation })
+      .eq("id", id)
+      .neq("status", "rejected")
+      .select("id,orientation")
+      .maybeSingle();
+
+    if (updateError) {
+      console.error("GameVault orientation update failed:", updateError.code);
+      return json({ error: "The game orientation could not be saved." }, 503);
+    }
+    if (!updated) {
+      return json({ error: "This game is unavailable or has been rejected." }, 409);
+    }
+
+    const { error: eventError } = await access.client.from("gamevault_submission_events").insert({
+      submission_id: id,
+      action: "orientation_updated",
+      actor_email: access.email,
+      details: { orientation }
+    });
+    if (eventError) console.error("GameVault orientation audit event failed:", eventError.code);
+
+    return json({ orientation: updated.orientation });
+  }
 
   if (action === "approve" || action === "reject") {
     const { data: item, error: readError } = await access.client

@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, KeyRound, LockKeyhole, UserRound } from "lucide-react";
+import { ArrowLeft, KeyRound, LockKeyhole } from "lucide-react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -49,38 +49,32 @@ export default function AdminLoginPage() {
         <p>Nhập tên đăng nhập và mật khẩu quản trị để tiếp tục. Không có chức năng tự đăng ký.</p>
         <form onSubmit={signIn} className="admin-auth-form">
           <label htmlFor="admin-username">Tên đăng nhập</label>
-          <div className="admin-auth-input-wrap">
-            <UserRound size={16} aria-hidden="true" />
-            <input
-              id="admin-username"
-              name="username"
-              type="text"
-              autoComplete="username"
-              autoCapitalize="none"
-              spellCheck={false}
-              required
-              minLength={3}
-              maxLength={32}
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-            />
-          </div>
+          <input
+            id="admin-username"
+            name="username"
+            type="text"
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+            required
+            minLength={3}
+            maxLength={32}
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+          />
 
           <label htmlFor="admin-password">Mật khẩu</label>
-          <div className="admin-auth-input-wrap">
-            <LockKeyhole size={16} aria-hidden="true" />
-            <input
-              id="admin-password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              minLength={8}
-              maxLength={256}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-            />
-          </div>
+          <input
+            id="admin-password"
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            required
+            minLength={8}
+            maxLength={256}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
 
           {error && <p className="admin-error" role="alert">{error}</p>}
           <button type="submit" disabled={loading}>

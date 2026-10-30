@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import {
   ArrowLeft,
   Download,
@@ -18,12 +18,15 @@ import {
   Activity,
   ChevronUp,
   ChevronDown,
-  CircleDot
+  CircleDot,
+  Crosshair
 } from "lucide-react";
 
 type Language = "vi" | "en";
 type Theme = "paper" | "night";
 type PreviewSize = "normal" | "large";
+type ToolbarPosition = { x: number; y: number };
+const DEFAULT_TOOLBAR_POSITION: ToolbarPosition = { x: 50, y: 9 };
 type ProjectOrientation = "auto" | "landscape" | "portrait";
 type LockableScreenOrientation = ScreenOrientation & {
   lock: (orientation: "landscape" | "portrait") => Promise<void>;
@@ -93,7 +96,9 @@ const copy = {
     customControls: "Tùy chỉnh trình xem",
     scrollPageUp: "Cuộn trang lên",
     scrollPageDown: "Cuộn trang xuống",
-    frameReloaded: "Đã tải lại dự án."
+    frameReloaded: "Đã tải lại dự án.",
+    moveControls: "Kéo để di chuyển, chạm để mở điều khiển",
+    resetPosition: "Đặt lại vị trí nút"
   },
   en: {
     htmlKicker: "PUBLISHED HTML PROJECT",
@@ -132,7 +137,9 @@ const copy = {
     customControls: "Viewer preferences",
     scrollPageUp: "Scroll page up",
     scrollPageDown: "Scroll page down",
-    frameReloaded: "Project reloaded."
+    frameReloaded: "Project reloaded.",
+    moveControls: "Drag to move; tap to show controls",
+    resetPosition: "Reset button position"
   }
 } as const;
 
@@ -160,11 +167,15 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fallbackFullscreen, setFallbackFullscreen] = useState(false);
   const [toolbarExpanded, setToolbarExpanded] = useState(true);
+  const [toolbarPosition, setToolbarPosition] = useState<ToolbarPosition>(DEFAULT_TOOLBAR_POSITION);
+  const [toolbarDragging, setToolbarDragging] = useState(false);
   const [orientationSupported, setOrientationSupported] = useState(false);
   const [orientationLocked, setOrientationLocked] = useState(false);
   const [frameKey, setFrameKey] = useState(0);
   const [notice, setNotice] = useState("");
   const previewRef = useRef<HTMLDivElement>(null);
+  const toolbarDragRef = useRef<{ pointerId: number; startX: number; startY: number; origin: ToolbarPosition } | null>(null);
+  const toolbarMovedRef = useRef(false);
   const t = copy[language];
   const fullscreenActive = isFullscreen || fallbackFullscreen;
 
@@ -182,6 +193,10 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
     }
     if (playerPrefs.previewSize === "normal" || playerPrefs.previewSize === "large") {
       setPreviewSize(playerPrefs.previewSize);
+    }
+    const savedPosition = playerPrefs.toolbarPosition as ToolbarPosition | undefined;
+    if (savedPosition && Number.isFinite(savedPosition.x) && Number.isFinite(savedPosition.y)) {
+      setToolbarPosition({ x: Math.min(91.5, Math.max(8.5, savedPosition.x)), y: Math.min(91.5, Math.max(8.5, savedPosition.y)) });
     }
 
     setOrientationSupported(Boolean(getLockableScreenOrientation()));
@@ -212,12 +227,13 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
       const playerPrefs = readStorageObject(PLAYER_PREFERENCES_KEY);
       window.localStorage.setItem(PLAYER_PREFERENCES_KEY, JSON.stringify({
         ...playerPrefs,
-        previewSize
+        previewSize,
+        toolbarPosition
       }));
     } catch {
       // Preferences remain active for this session if storage is blocked.
     }
-  }, [language, theme, largeText, motionReduced, previewSize, preferencesLoaded]);
+  }, [language, theme, largeText, motionReduced, previewSize, toolbarPosition, preferencesLoaded]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -365,6 +381,60 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
     setNotice(t.frameReloaded);
   }
 
+  function handleToolbarPointerDown(event: ReactPointerEvent<HTMLButtonElement>) {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    event.preventDefault();
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // Pointer capture may be unavailable in a few embedded browsers.
+    }
+    toolbarDragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      origin: toolbarPosition
+    };
+    toolbarMovedRef.current = false;
+    setToolbarDragging(true);
+  }
+
+  function handleToolbarPointerMove(event: ReactPointerEvent<HTMLButtonElement>) {
+    const drag = toolbarDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    const dx = event.clientX - drag.startX;
+    const dy = event.clientY - drag.startY;
+    if (!toolbarMovedRef.current && Math.hypot(dx, dy) < 4) return;
+    toolbarMovedRef.current = true;
+
+    const bounds = previewRef.current?.getBoundingClientRect();
+    if (!bounds || bounds.width <= 0 || bounds.height <= 0) return;
+
+    setToolbarPosition({
+      x: Math.min(91.5, Math.max(8.5, drag.origin.x + (dx / bounds.width) * 100)),
+      y: Math.min(91.5, Math.max(8.5, drag.origin.y + (dy / bounds.height) * 100))
+    });
+  }
+
+  function finishToolbarDrag(event: ReactPointerEvent<HTMLButtonElement>) {
+    if (toolbarDragRef.current?.pointerId !== event.pointerId) return;
+    toolbarDragRef.current = null;
+    setToolbarDragging(false);
+  }
+
+  function activateToolbarHandle() {
+    if (toolbarMovedRef.current) {
+      toolbarMovedRef.current = false;
+      return;
+    }
+    setToolbarExpanded(true);
+  }
+
+  function resetToolbarPosition() {
+    setToolbarPosition(DEFAULT_TOOLBAR_POSITION);
+  }
+
+
   function scrollPage(direction: "up" | "down") {
     const distance = Math.max(320, Math.round(window.innerHeight * 0.72));
     window.scrollBy({ top: direction === "up" ? -distance : distance, behavior: motionReduced ? "auto" : "smooth" });
@@ -419,11 +489,16 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
           {fullscreenActive && !toolbarExpanded ? (
             <button
               type="button"
-              className="fullscreen-toolbar-dot"
-              onClick={() => setToolbarExpanded(true)}
-              aria-label={t.showControls}
+              className={"fullscreen-toolbar-dot" + (toolbarDragging ? " is-dragging" : "")}
+              style={{ left: toolbarPosition.x + "%", top: toolbarPosition.y + "%" }}
+              onPointerDown={handleToolbarPointerDown}
+              onPointerMove={handleToolbarPointerMove}
+              onPointerUp={finishToolbarDrag}
+              onPointerCancel={finishToolbarDrag}
+              onClick={activateToolbarHandle}
+              aria-label={t.moveControls}
               aria-expanded={false}
-              title={t.showControls}
+              title={t.moveControls}
             >
               <CircleDot size={22} strokeWidth={2.1} />
             </button>
@@ -435,16 +510,27 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
                   <span>{t.previewLabel}</span>
                 </div>
                 {fullscreenActive && (
-                  <button
-                    type="button"
-                    className="fullscreen-toolbar-collapse"
-                    onClick={() => setToolbarExpanded(false)}
-                    aria-label={t.hideControls}
-                    aria-expanded={true}
-                    title={t.hideControls}
-                  >
-                    <ChevronUp size={19} />
-                  </button>
+                  <div className="fullscreen-toolbar-panel-actions">
+                    <button
+                      type="button"
+                      className="fullscreen-toolbar-reset"
+                      onClick={resetToolbarPosition}
+                      aria-label={t.resetPosition}
+                      title={t.resetPosition}
+                    >
+                      <Crosshair size={17} />
+                    </button>
+                    <button
+                      type="button"
+                      className="fullscreen-toolbar-collapse"
+                      onClick={() => setToolbarExpanded(false)}
+                      aria-label={t.hideControls}
+                      aria-expanded={true}
+                      title={t.hideControls}
+                    >
+                      <ChevronUp size={19} />
+                    </button>
+                  </div>
                 )}
               </div>
 

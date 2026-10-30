@@ -719,7 +719,7 @@ html[data-theme="night"] .admin-status-pending_review { color: var(--yellow); }
 .nav-links button { padding: .45rem 0; border: 0; border-bottom: 1px solid transparent; background: transparent; color: inherit; font: inherit; cursor: pointer; }
 .nav-links button:hover, .nav-links button.nav-active { color: var(--ink); border-color: var(--rust); }
 @media (max-width: 720px) {
-  .browser-tabbar { top: 0; min-height: 45px; padding-inline: .35rem; }
+  .browser-tabbar { top: 64px; min-height: 45px; padding-inline: .35rem; }
   .browser-tab { min-width: 108px; flex: 1 0 auto; max-width: 170px; padding: .5rem .65rem; font-size: .75rem; }
   .browser-tab svg { width: 14px; height: 14px; flex-shrink: 0; }
 }

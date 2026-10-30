@@ -518,7 +518,7 @@ export default function Home() {
               const color = project.genre === "strategy" ? "rust" : project.genre === "puzzle" || project.genre === "educational" ? "blue" : "mint";
               const coverSymbol = project.genre === "strategy" ? "♜" : project.genre === "puzzle" ? "◎" : project.kind === "url" ? "↗" : "✦";
               const genreLabel = project.genre === "arcade" ? t.arcade : project.genre === "strategy" ? t.strategy : project.genre === "puzzle" ? t.puzzle : project.genre === "action" ? t.action : project.genre === "simulation" ? t.simulation : project.genre === "educational" ? t.educational : t.other;
-              const projectHref = project.kind === "html" ? "/api/games/" + encodeURIComponent(project.id) + "/download" : project.sourceUrl;
+              const projectHref = "/games/" + encodeURIComponent(project.id);
               return (
                 <article className="game-card" key={project.id}>
                   <div className={"game-cover cover-" + color} role="img" aria-label={project.title}>
@@ -532,13 +532,9 @@ export default function Home() {
                     <div className="game-meta"><span>{genreLabel}</span><span className="demo-dot" /><span>{t.publishedOnly}</span></div>
                     <h3>{project.title}</h3>
                     <p>{project.description || (project.kind === "html" ? t.htmlProjectFallback : t.urlProjectFallback)}</p>
-                    {projectHref ? (
-                      <a className="card-link" href={projectHref} target={project.kind === "url" ? "_blank" : undefined} rel={project.kind === "url" ? "noopener noreferrer nofollow" : undefined} download={project.kind === "html" ? true : undefined}>
-                        {project.kind === "html" ? t.downloadProject : t.openProject}{project.kind === "html" ? <Download size={15} /> : <ExternalLink size={15} />}
-                      </a>
-                    ) : (
-                      <span className="card-link card-link-disabled" aria-disabled="true">{t.sourceUnavailable}</span>
-                    )}
+                    <a className="card-link" href={projectHref}>
+                      {t.openProject}<ArrowDownRight size={15} />
+                    </a>
                   </div>
                 </article>
               );

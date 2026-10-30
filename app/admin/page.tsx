@@ -47,7 +47,7 @@ const STATUS_LABEL: Record<string, string> = {
 export default function AdminPage() {
   const router = useRouter();
   const [items, setItems] = useState<AdminSubmission[]>([]);
-  const [adminEmail, setAdminEmail] = useState("");
+  const [adminUsername, setAdminUsername] = useState("admin");
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [sources, setSources] = useState<Record<string, string>>({});
   const [orientationDrafts, setOrientationDrafts] = useState<Record<string, GameOrientation>>({});
@@ -76,7 +76,7 @@ export default function AdminPage() {
       setOrientationDrafts(Object.fromEntries(
         submissions.map((item) => [item.id, item.orientation ?? "auto"])
       ));
-      setAdminEmail(body.adminEmail ?? "");
+      setAdminUsername(body.adminUsername ?? "admin");
     } catch {
       setError("Không thể kết nối tới máy chủ.");
     } finally {
@@ -178,7 +178,7 @@ export default function AdminPage() {
     <main className="admin-page">
       <header className="admin-topbar">
         <a href="/" className="brand"><span className="brand-mark"><ShieldCheck size={18} /></span><span>gamevault<span className="brand-dot">.</span></span></a>
-        <div className="admin-user"><span>{adminEmail}</span><button onClick={logout}><LogOut size={15} /> Đăng xuất</button></div>
+        <div className="admin-user"><span>{adminUsername}</span><button onClick={logout}><LogOut size={15} /> Đăng xuất</button></div>
       </header>
 
       <section className="admin-content">

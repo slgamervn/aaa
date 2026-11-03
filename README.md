@@ -66,6 +66,19 @@ Open http://localhost:3000.
 
 \`npm run build\` performs a production build and TypeScript checks. \`npm run lint\` runs ESLint.
 
+### Browser end-to-end checks
+
+Install the Chromium browser once, then run the desktop and mobile-emulation scenarios:
+
+```bash
+npx playwright install chromium
+npm run test:e2e
+```
+
+Set `PLAYWRIGHT_BASE_URL` to a deployed Preview URL when testing a different deployment. The suite covers library search/filtering, saved appearance preferences, explicit preview loading, fullscreen behavior, and a mocked rejected admin login. It never calls the real admin login endpoint or performs a publish/unpublish action.
+
+GitHub Actions runs the browser suite against the feature-branch Vercel Preview after the deployment reports success. Failed runs upload Playwright traces and screenshots as short-lived artifacts.
+
 ## Continuous integration
 
 GitHub Actions runs `.github/workflows/quality.yml` on changes to the feature branch and on pull requests targeting `main`. It uses Node.js 24, installs from the committed lockfile with `npm ci`, runs ESLint, and performs a production build. The job has read-only repository permissions and does not receive production secrets.

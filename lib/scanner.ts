@@ -249,7 +249,6 @@ function requestPinnedAddress(url: URL, address: ResolvedAddress, maxBytes: numb
     const useHttps = url.protocol === "https:";
     const originalHostname = url.hostname.replace(/^\[|\]$/g, "");
     let settled = false;
-    let timer: ReturnType<typeof setTimeout> | undefined;
     const finish = (error?: Error, value?: RemoteResponse) => {
       if (settled) return;
       settled = true;
@@ -286,7 +285,7 @@ function requestPinnedAddress(url: URL, address: ResolvedAddress, maxBytes: numb
         })
       : httpRequest(options);
 
-    timer = setTimeout(() => request.destroy(new Error("The remote server timed out.")), timeoutMs);
+    const timer = setTimeout(() => request.destroy(new Error("The remote server timed out.")), timeoutMs);
     request.on("error", (error) => finish(error instanceof Error ? error : new Error("The remote request failed.")));
     request.on("response", (response) => {
       const status = response.statusCode ?? 0;

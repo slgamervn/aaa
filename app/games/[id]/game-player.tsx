@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type PointerEvent as ReactPointerEvent } from "react";
+import { useLocalStorageState } from "@/lib/local-storage-state";
 import {
   ArrowLeft,
   Download,
@@ -9,18 +10,7 @@ import {
   Languages,
   Maximize2,
   Minimize2,
-  Moon,
-  RefreshCw,
-  RotateCw,
   ShieldCheck,
-  Sun,
-  Type,
-  MoveVertical,
-  Activity,
-  ChevronUp,
-  ChevronDown,
-  CircleDot,
-  Crosshair,
   FileCode2,
   Globe2,
   Play
@@ -58,9 +48,23 @@ type SavedPreferences = {
   largeText?: boolean;
   motionReduced?: boolean;
 };
+type SavedPlayerPreferences = {
+  previewSize?: PreviewSize;
+  toolbarPosition?: ToolbarPosition;
+};
 
 const PREFERENCES_KEY = "gamevault-preferences-v1";
 const PLAYER_PREFERENCES_KEY = "gamevault-player-preferences-v1";
+const DEFAULT_PREFERENCES: SavedPreferences = { language: "vi", theme: "paper", largeText: false };
+const DEFAULT_PLAYER_PREFERENCES: SavedPlayerPreferences = {};
+
+const subscribeToReducedMotion = (callback: () => void) => {
+  const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+  media.addEventListener("change", callback);
+  return () => media.removeEventListener("change", callback);
+};
+const getReducedMotionSnapshot = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const getReducedMotionServerSnapshot = () => false;
 
 const copy = {
   vi: {
@@ -157,69 +161,44 @@ const copy = {
   }
 } as const;
 
-function readStorageObject(key: string): Record<string, unknown> {
-  try {
-    const raw = window.localStorage.getItem(key);
-    if (!raw) return {};
-    const parsed: unknown = JSON.parse(raw);
-    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-      return parsed as Record<string, unknown>;
-    }
-  } catch {
-    // Continue with defaults when storage is unavailable or malformed.
-  }
-  return {};
-}
-
 export default function ProjectDetails({ project }: { project: ProjectDetailsData }) {
-  const [language, setLanguage] = useState<Language>("vi");
-  const [theme, setTheme] = useState<Theme>("paper");
-  const [largeText, setLargeText] = useState(false);
-  const [motionReduced, setMotionReduced] = useState(false);
-  const [previewSize, setPreviewSize] = useState<PreviewSize>("normal");
-  const [preferencesLoaded, setPreferencesLoaded] = useState(false);
+  const [savedPreferences, setSavedPreferences] = useLocalStorageState(PREFERENCES_KEY, DEFAULT_PREFERENCES);
+  const [playerPreferences, setPlayerPreferences] = useLocalStorageState(PLAYER_PREFERENCES_KEY, DEFAULT_PLAYER_PREFERENCES);
+  const systemMotionReduced = useSyncExternalStore(
+    subscribeToReducedMotion,
+    getReducedMotionSnapshot,
+    getReducedMotionServerSnapshot
+  );
+  const language: Language = savedPreferences.language === "en" ? "en" : "vi";
+  const theme: Theme = savedPreferences.theme === "night" ? "night" : "paper";
+  const largeText = savedPreferences.largeText === true;
+  const motionReduced = typeof savedPreferences.motionReduced === "boolean"
+    ? savedPreferences.motionReduced
+    : systemMotionReduced;
+  const previewSize: PreviewSize = playerPreferences.previewSize === "large" ? "large" : "normal";
+  const storedPosition = playerPreferences.toolbarPosition;
+  const persistedToolbarPosition = storedPosition &&
+    Number.isFinite(storedPosition.x) && Number.isFinite(storedPosition.y)
+    ? {
+        x: Math.min(91.5, Math.max(8.5, storedPosition.x)),
+        y: Math.min(91.5, Math.max(8.5, storedPosition.y))
+      }
+    : DEFAULT_TOOLBAR_POSITION;
+  const [temporaryToolbarPosition, setTemporaryToolbarPosition] = useState<ToolbarPosition | null>(null);
+  const toolbarPosition = temporaryToolbarPosition ?? persistedToolbarPosition;
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fallbackFullscreen, setFallbackFullscreen] = useState(false);
-  const [toolbarPosition, setToolbarPosition] = useState<ToolbarPosition>(DEFAULT_TOOLBAR_POSITION);
   const [toolbarDragging, setToolbarDragging] = useState(false);
-  const [orientationSupported, setOrientationSupported] = useState(false);
-  const [orientationLocked, setOrientationLocked] = useState(false);
-  const [frameKey, setFrameKey] = useState(0);
   const [previewStarted, setPreviewStarted] = useState(false);
   const [notice, setNotice] = useState("");
   const previewRef = useRef<HTMLDivElement>(null);
   const toolbarDragRef = useRef<{ pointerId: number; startX: number; startY: number; origin: ToolbarPosition } | null>(null);
+  const pendingToolbarPositionRef = useRef<ToolbarPosition | null>(null);
   const toolbarMovedRef = useRef(false);
   const t = copy[language];
   const fullscreenActive = isFullscreen || fallbackFullscreen;
 
   useEffect(() => {
-    const saved = readStorageObject(PREFERENCES_KEY) as SavedPreferences;
-    const playerPrefs = readStorageObject(PLAYER_PREFERENCES_KEY);
-
-    if (saved.language === "vi" || saved.language === "en") setLanguage(saved.language);
-    if (saved.theme === "paper" || saved.theme === "night") setTheme(saved.theme);
-    if (typeof saved.largeText === "boolean") setLargeText(saved.largeText);
-    if (typeof saved.motionReduced === "boolean") {
-      setMotionReduced(saved.motionReduced);
-    } else {
-      setMotionReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-    }
-    if (playerPrefs.previewSize === "normal" || playerPrefs.previewSize === "large") {
-      setPreviewSize(playerPrefs.previewSize);
-    }
-    const savedPosition = playerPrefs.toolbarPosition as ToolbarPosition | undefined;
-    if (savedPosition && Number.isFinite(savedPosition.x) && Number.isFinite(savedPosition.y)) {
-      setToolbarPosition({ x: Math.min(91.5, Math.max(8.5, savedPosition.x)), y: Math.min(91.5, Math.max(8.5, savedPosition.y)) });
-    }
-
-    setOrientationSupported(Boolean(getLockableScreenOrientation()));
-    setPreferencesLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    if (!preferencesLoaded) return;
-
     document.documentElement.lang = language;
     document.documentElement.dataset.theme = theme;
     document.documentElement.dataset.scale = largeText ? "large" : "normal";
@@ -228,26 +207,7 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
       "content",
       theme === "paper" ? "#edf2f1" : "#17242a"
     );
-
-    try {
-      const shared = readStorageObject(PREFERENCES_KEY);
-      window.localStorage.setItem(PREFERENCES_KEY, JSON.stringify({
-        ...shared,
-        language,
-        theme,
-        largeText,
-        motionReduced
-      }));
-      const playerPrefs = readStorageObject(PLAYER_PREFERENCES_KEY);
-      window.localStorage.setItem(PLAYER_PREFERENCES_KEY, JSON.stringify({
-        ...playerPrefs,
-        previewSize,
-        toolbarPosition
-      }));
-    } catch {
-      // Preferences remain active for this session if storage is blocked.
-    }
-  }, [language, theme, largeText, motionReduced, previewSize, toolbarPosition, preferencesLoaded]);
+  }, [language, theme, largeText, motionReduced]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -259,7 +219,6 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
       setIsFullscreen(active);
 
       if (!active) {
-        setOrientationLocked(false);
         try {
           window.screen?.orientation?.unlock?.();
         } catch {
@@ -294,7 +253,8 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
 
   useEffect(() => {
     return () => {
-      if (document.fullscreenElement === previewRef.current) {
+      const activeElement = document.fullscreenElement;
+      if (activeElement instanceof HTMLElement && activeElement.classList.contains("project-preview-shell")) {
         void document.exitFullscreen().catch(() => undefined);
       }
       try {
@@ -306,7 +266,10 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
   }, []);
 
   function toggleLanguage() {
-    setLanguage(current => current === "vi" ? "en" : "vi");
+    setSavedPreferences((current) => ({
+      ...current,
+      language: current.language === "en" ? "vi" : "en"
+    }));
   }
 
   async function applyProjectOrientation() {
@@ -317,41 +280,12 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
 
     try {
       await orientation.lock(project.orientation);
-      setOrientationLocked(true);
-      setNotice("");
-    } catch {
-      setOrientationLocked(false);
-      setNotice(t.orientationUnavailable);
-    }
-  }
-
-  async function toggleOrientationLock() {
-    if (!document.fullscreenElement) {
-      setNotice(t.orientationNeedsFullscreen);
-      return;
-    }
-
-    const orientation = getLockableScreenOrientation();
-    if (!orientation) {
-      setNotice(t.orientationUnavailable);
-      return;
-    }
-
-    try {
-      if (orientationLocked) {
-        window.screen.orientation.unlock();
-        setOrientationLocked(false);
-      } else if (project.orientation !== "auto") {
-        await orientation.lock(project.orientation);
-        setOrientationLocked(true);
-      } else {
-        setNotice(t.orientationUnavailable);
-      }
       setNotice("");
     } catch {
       setNotice(t.orientationUnavailable);
     }
   }
+
 
   async function toggleFullscreen() {
     const container = previewRef.current;
@@ -386,12 +320,6 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
     setNotice(t.fullscreenFallback);
   }
 
-  function reloadProject() {
-    setPreviewStarted(true);
-    setFrameKey(current => current + 1);
-    setNotice(t.frameReloaded);
-  }
-
   function handleToolbarPointerDown(event: ReactPointerEvent<HTMLButtonElement>) {
     if (event.pointerType === "mouse" && event.button !== 0) return;
     try {
@@ -405,6 +333,8 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
       startY: event.clientY,
       origin: toolbarPosition
     };
+    pendingToolbarPositionRef.current = null;
+    setTemporaryToolbarPosition(null);
     toolbarMovedRef.current = false;
     setToolbarDragging(true);
   }
@@ -420,15 +350,23 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
     const bounds = previewRef.current?.getBoundingClientRect();
     if (!bounds || bounds.width <= 0 || bounds.height <= 0) return;
 
-    setToolbarPosition({
+    const nextPosition = {
       x: Math.min(91.5, Math.max(8.5, drag.origin.x + (dx / bounds.width) * 100)),
       y: Math.min(91.5, Math.max(8.5, drag.origin.y + (dy / bounds.height) * 100))
-    });
+    };
+    pendingToolbarPositionRef.current = nextPosition;
+    setTemporaryToolbarPosition(nextPosition);
   }
 
   function finishToolbarDrag(event: ReactPointerEvent<HTMLButtonElement>) {
     if (toolbarDragRef.current?.pointerId !== event.pointerId) return;
     toolbarDragRef.current = null;
+    const finalPosition = pendingToolbarPositionRef.current;
+    if (finalPosition) {
+      setPlayerPreferences((current) => ({ ...current, toolbarPosition: finalPosition }));
+    }
+    pendingToolbarPositionRef.current = null;
+    setTemporaryToolbarPosition(null);
     setToolbarDragging(false);
   }
 
@@ -438,16 +376,6 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
       return;
     }
     void toggleFullscreen();
-  }
-
-  function resetToolbarPosition() {
-    setToolbarPosition(DEFAULT_TOOLBAR_POSITION);
-  }
-
-
-  function scrollPage(direction: "up" | "down") {
-    const distance = Math.max(320, Math.round(window.innerHeight * 0.72));
-    window.scrollBy({ top: direction === "up" ? -distance : distance, behavior: motionReduced ? "auto" : "smooth" });
   }
 
   const pageClassName = "play-page project-detail-page";
@@ -542,7 +470,7 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
               </div>
             )}
           </div>
-          <iframe key={frameKey} className="project-preview-frame" title={project.title}
+          <iframe className="project-preview-frame" title={project.title}
             src={project.embeddedUrl}
             sandbox={project.kind === "html"
               ? "allow-scripts allow-pointer-lock allow-orientation-lock"

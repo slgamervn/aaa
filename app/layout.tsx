@@ -2,14 +2,14 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "GameVault — Thư viện game trên web",
+  title: "PJVault — Thư viện game trên web",
   description: "Khám phá và chơi các game trên web đã được kiểm duyệt. Gửi game HTML hoặc đường dẫn để đề nghị xét duyệt.",
-  applicationName: "GameVault",
+  applicationName: "PJVault",
   metadataBase: new URL("https://gamevault-slg-7f71.vercel.app"),
   openGraph: {
-    title: "GameVault — Game library",
+    title: "PJVault — Game library",
     description: "Explore reviewed web games, play HTML games, or visit their original websites.",
-    siteName: "GameVault",
+    siteName: "PJVault",
     type: "website"
   },
   robots: { index: false, follow: true }

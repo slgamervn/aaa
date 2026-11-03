@@ -177,7 +177,7 @@ export default function AdminPage() {
   return (
     <main className="admin-page">
       <header className="admin-topbar">
-        <a href="/" className="brand"><span className="brand-mark"><ShieldCheck size={18} /></span><span>gamevault<span className="brand-dot">.</span></span></a>
+        <a href="/" className="brand"><span className="brand-mark"><ShieldCheck size={18} /></span><span>pjvault<span className="brand-dot">.</span></span></a>
         <div className="admin-user"><span>{adminUsername}</span><button onClick={logout}><LogOut size={15} /> Đăng xuất</button></div>
       </header>
 

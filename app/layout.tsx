@@ -2,13 +2,13 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "GameVault — Web game project downloads",
-  description: "Discover reviewed web-game projects, download published HTML files, or visit their original websites.",
+  title: "GameVault — Thư viện game trên web",
+  description: "Khám phá và chơi các game trên web đã được kiểm duyệt. Gửi game HTML hoặc đường dẫn để đề nghị xét duyệt.",
   applicationName: "GameVault",
   metadataBase: new URL("https://gamevault-slg-7f71.vercel.app"),
   openGraph: {
-    title: "GameVault — Project collection",
-    description: "Browse approved web-game projects and download available HTML files.",
+    title: "GameVault — Game library",
+    description: "Explore reviewed web games, play HTML games, or visit their original websites.",
     siteName: "GameVault",
     type: "website"
   },
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f3f0e7",
+  themeColor: "#f3f6f3",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover"

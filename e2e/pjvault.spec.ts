@@ -34,6 +34,8 @@ async function openProjectDetail(page: Page, project: PublishedProject) {
 
   await expect(page).toHaveURL(new RegExp(`/projects/${project.id}$`));
   await expect(page.getByRole("heading", { name: project.title, exact: true })).toBeVisible();
+  // The detail page is server-rendered; wait for its client effect before testing click handlers.
+  await expect(page.locator("html")).toHaveAttribute("data-theme", /^(paper|night)$/);
 }
 
 test.describe("PJVault library", () => {
@@ -147,7 +149,7 @@ test.describe("PJVault project preview", () => {
     await page.getByRole("button", { name: "Toàn màn hình" }).click();
     await expect.poll(() => page.evaluate(() => Boolean(document.fullscreenElement))).toBe(true);
 
-    await page.keyboard.press("Escape");
+    await page.getByRole("button", { name: "Thoát toàn màn hình" }).click();
     await expect.poll(() => page.evaluate(() => Boolean(document.fullscreenElement))).toBe(false);
   });
 });
@@ -166,7 +168,7 @@ test.describe("PJVault admin access", () => {
     await page.getByLabel("Mật khẩu").fill("NotARealPassword123");
     await page.getByRole("button", { name: "Đăng nhập an toàn" }).click();
 
-    await expect(page.getByRole("alert")).toContainText("Tên đăng nhập hoặc mật khẩu không đúng.");
+    await expect(page.getByText("Tên đăng nhập hoặc mật khẩu không đúng.", { exact: true })).toBeVisible();
     await expect(page).toHaveURL(/\/admin\/login$/);
   });
 });

@@ -1,0 +1,39 @@
+name: Quality checks
+
+on:
+  push:
+    branches:
+      - design/humanized-library
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: ESLint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # There is no committed lockfile yet, so npm ci is not available.
+      # Direct dependencies are pinned exactly in package.json.
+      - name: Install dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+
+      - name: Run ESLint
+        run: npm run lint

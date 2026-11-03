@@ -41,10 +41,10 @@ export default function AdminLoginPage() {
 
   return (
     <main className="admin-auth-page">
-      <a href="/" className="admin-back"><ArrowLeft size={15} /> Quay lại GameVault</a>
+      <a href="/" className="admin-back"><ArrowLeft size={15} /> Quay lại PJVault</a>
       <section className="admin-auth-card">
         <div className="admin-auth-mark"><KeyRound size={22} /></div>
-        <div className="section-kicker">GAMEVAULT / TRUY CẬP QUẢN TRỊ</div>
+        <div className="section-kicker">PJVAULT / TRUY CẬP QUẢN TRỊ</div>
         <h1>Đăng nhập quản trị</h1>
         <p>Nhập tên đăng nhập và mật khẩu quản trị để tiếp tục. Không có chức năng tự đăng ký.</p>
         <form onSubmit={signIn} className="admin-auth-form">

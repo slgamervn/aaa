@@ -1,6 +1,6 @@
-# GameVault
+# PJVault
 
-GameVault is a Vietnamese-first directory for browser games. Contributors can submit a single HTML game or an external URL. Submissions are stored privately, scanned without executing the HTML, and kept pending until an administrator reviews them. Publishing is a separate, explicit action.
+PJVault is a Vietnamese-first directory for browser games. Contributors can submit a single HTML game or an external URL. Submissions are stored privately, scanned without executing the HTML, and kept pending until an administrator reviews them. Publishing is a separate, explicit action.
 
 ## Current implementation
 

@@ -17,10 +17,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
-    name: ESLint
+  quality:
+    name: Lint and production build
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - name: Check out source
         uses: actions/checkout@v6
@@ -31,10 +31,23 @@ jobs:
           node-version: 24
           package-manager-cache: false
 
-      # There is no committed lockfile yet, so npm ci is not available.
-      # Direct dependencies are pinned exactly in package.json.
-      - name: Install dependencies
-        run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      # Generate a lockfile once, validate it with npm ci, then keep it as a reviewable artifact.
+      - name: Generate npm lockfile
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Install exact locked dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: Run ESLint
         run: npm run lint
+
+      - name: Build production application
+        run: npm run build
+
+      - name: Upload generated lockfile for review
+        uses: actions/upload-artifact@v7
+        with:
+          name: pjvault-package-lock-${{ github.sha }}
+          path: package-lock.json
+          if-no-files-found: error
+          retention-days: 7

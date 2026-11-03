@@ -1,4 +1,4 @@
-/* GameVault — editorial field-notes design. Flat colour, tactile grain, purposeful motion. */
+/* PJVault — editorial field-notes design. Flat colour, tactile grain, purposeful motion. */
 :root {
   color-scheme: light;
   --paper: #f3f0e7;
@@ -643,7 +643,7 @@ html[data-theme="night"] .admin-status-pending_review { color: var(--yellow); }
 }
 
 
-/* Keep the project playable within GameVault rather than navigating away. */
+/* Keep the project playable within PJVault rather than navigating away. */
 .project-preview-shell { width: min(1180px, calc(100% - 2rem)); margin: 1.5rem auto 3rem; overflow: hidden; border: 1px solid var(--line); background: var(--surface); }
 .project-preview-toolbar { display: flex; align-items: center; gap: .65rem; min-height: 42px; padding: .55rem .85rem; border-bottom: 1px solid var(--line); color: var(--muted); font: .72rem var(--mono); }
 .project-preview-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex: 0 0 auto; }
@@ -1162,7 +1162,7 @@ html[data-motion="reduced"] .fullscreen-toolbar-dot { transition: none; }
   .settings-panel { width: min(250px, calc(100vw - 1rem)); }
 }
 
-/* GameVault public experience refresh: quiet surfaces, clear type, real content first. */
+/* PJVault public experience refresh: quiet surfaces, clear type, real content first. */
 body::before { display: none; }
 body:has(.app-shell) { background: #f3f6f3; }
 html[data-theme="night"] body:has(.app-shell) { background: #19221c; }

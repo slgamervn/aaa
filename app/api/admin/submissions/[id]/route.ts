@@ -370,7 +370,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
         genre: item.genre,
         kind: "url",
         sourceUrl: item.source_url,
-        note: "Submitted as an external link. PJVault did not fetch, execute, or copy the external page."
+        note: "The external URL is kept as a reference. Any server-side fetch is limited to bounded static scanning; the page is never executed or republished as source content."
       };
       content = Buffer.from(JSON.stringify(metadata, null, 2) + "\n", "utf8");
       outputPath = "gamevault-submissions/" + id + "/submission.json";

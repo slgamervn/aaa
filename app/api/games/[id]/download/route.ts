@@ -60,7 +60,7 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
       .maybeSingle();
 
     if (queryError) {
-      console.error("GameVault project download query failed:", queryError.code);
+      console.error("PJVault project download query failed:", queryError.code);
       return textResponse("The project is temporarily unavailable.", 503);
     }
 
@@ -73,7 +73,7 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
       .download(project.storage_path);
 
     if (downloadError || !file) {
-      console.error("GameVault project file download failed:", downloadError?.message);
+      console.error("PJVault project file download failed:", downloadError?.message);
       return textResponse("The project file is temporarily unavailable.", 503);
     }
 

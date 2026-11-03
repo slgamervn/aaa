@@ -28,12 +28,12 @@ export async function requireAdminAccess(): Promise<AdminAccess> {
     const { data, error } = await authClient.auth.getUser();
 
     if (error || !data.user?.email) {
-      return { ok: false, status: 401, error: "Please sign in as a GameVault administrator." };
+      return { ok: false, status: 401, error: "Please sign in as a PJVault administrator." };
     }
 
     const email = data.user.email.trim().toLowerCase();
     if (!allowlist.includes(email)) {
-      return { ok: false, status: 403, error: "This account is not authorized to manage GameVault." };
+      return { ok: false, status: 403, error: "This account is not authorized to manage PJVault." };
     }
 
     return { ok: true, client: createAdminClient(), email };

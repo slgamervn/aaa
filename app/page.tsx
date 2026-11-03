@@ -257,6 +257,7 @@ export default function Home() {
   const t = copy[language];
 
   useEffect(() => {
+    setMotionReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
     try {
       const savedQueue = localStorage.getItem("gamevault-submissions-v1");
       if (savedQueue) setSubmissions(JSON.parse(savedQueue) as Submission[]);
@@ -267,9 +268,6 @@ export default function Home() {
         if (preferences.theme === "paper" || preferences.theme === "night") setTheme(preferences.theme);
         if (typeof preferences.largeText === "boolean") setLargeText(preferences.largeText);
         if (typeof preferences.motionReduced === "boolean") setMotionReduced(preferences.motionReduced);
-        else setMotionReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-      } else {
-        setMotionReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
       }
     } catch { /* Ignore damaged local preferences or demo data. */ }
     setPreferencesLoaded(true);

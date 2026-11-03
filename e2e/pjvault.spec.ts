@@ -1,5 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 
+const BASE_URL = (process.env.PLAYWRIGHT_BASE_URL
+  ?? "https://pjvault-git-design-humanized-library-slg-7f71.vercel.app").replace(/\\/$/, "");
+
 type PublishedProject = {
   id: string;
   title: string;
@@ -9,7 +12,7 @@ type PublishedProject = {
 };
 
 async function getPublishedUrlProject(page: Page): Promise<PublishedProject> {
-  const response = await page.request.get("/api/games");
+  const response = await page.request.get(`${BASE_URL}/api/games`);
   expect(response.ok(), "The published catalogue API should be available").toBeTruthy();
 
   const body = await response.json() as { games?: PublishedProject[] };
@@ -44,7 +47,7 @@ test.describe("PJVault library", () => {
     const search = page.getByRole("textbox", { name: "Tìm dự án" });
     await search.fill("pjvault-e2e-no-such-project");
     await expect(cards).toHaveCount(0);
-    await expect(page.getByText(/Không tìm thấy kết quả/)).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Không tìm thấy kết quả/ })).toBeVisible();
 
     await search.clear();
     const actionGroup = page.getByRole("group", { name: "Lọc thể loại" });

@@ -271,7 +271,7 @@ function requestPinnedAddress(url: URL, address: ResolvedAddress, maxBytes: numb
       agent: false as const,
       headers: {
         "Host": url.host,
-        "User-Agent": "GameVault-Static-Scanner/1.0 (+https://github.com/slgamervn/aaa)",
+        "User-Agent": "PJVault-Static-Scanner/1.0 (+https://github.com/slgamervn/aaa)",
         "Accept": "text/html,application/xhtml+xml,application/javascript,text/javascript,*/*;q=0.1",
         "Accept-Encoding": "identity",
         "Connection": "close"
@@ -490,7 +490,7 @@ export async function scanRemoteUrl(value: string): Promise<ScanResult> {
     } else if (failure.includes("scan-size limit")) {
       reason = "Trang đích vượt giới hạn dung lượng quét. Nội dung chưa được quét.";
     }
-    console.warn("[GameVault URL scan] fetch failed", { host: validated.host, code: code || "UNCLASSIFIED", category: reason.split(".")[0] });
+    console.warn("[PJVault URL scan] fetch failed", { host: validated.host, code: code || "UNCLASSIFIED", category: reason.split(".")[0] });
     return failedRemoteScan(reason);
   }
 }

@@ -257,7 +257,6 @@ export default function Home() {
   const t = copy[language];
 
   useEffect(() => {
-    setMotionReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
     try {
       const savedQueue = localStorage.getItem("gamevault-submissions-v1");
       if (savedQueue) setSubmissions(JSON.parse(savedQueue) as Submission[]);

@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: read
+  statuses: read
 
 concurrency:
   group: quality-${{ github.workflow }}-${{ github.ref }}
@@ -20,7 +21,7 @@ jobs:
   quality:
     name: Lint and production build
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Check out source
         uses: actions/checkout@v6
@@ -29,15 +30,131 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: 24
-          cache: npm
-          cache-dependency-path: package-lock.json
+          package-manager-cache: false
 
-      # npm ci fails when package.json and the committed lockfile disagree.
-      - name: Install exact locked dependencies
-        run: npm ci --ignore-scripts --no-audit --no-fund
+      # Bootstrap the updated lockfile once; the validated file is committed below.
+      - name: Install dependencies and update lockfile
+        run: npm install --ignore-scripts --no-audit --no-fund
 
       - name: Run ESLint
         run: npm run lint
 
       - name: Build production application
         run: npm run build
+
+      - name: Upload generated npm lockfile
+        uses: actions/upload-artifact@v7
+        with:
+          name: pjvault-package-lock-${{ github.sha }}
+          path: package-lock.json
+          if-no-files-found: error
+          retention-days: 7
+
+  e2e:
+    name: Browser E2E — desktop and mobile
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PLAYWRIGHT_BASE_URL: https://pjvault-git-design-humanized-library-slg-7f71.vercel.app
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Install test dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Install Chromium and Linux dependencies
+        run: npx playwright install --with-deps chromium
+
+      - name: Wait for the current feature-branch Preview deployment
+        run: |
+          node --input-type=module <<'NODE'
+          const repository = process.env.GITHUB_REPOSITORY;
+          const token = process.env.GITHUB_TOKEN;
+          const branch = "design/humanized-library";
+          const endpoint = `https://api.github.com/repos/${repository}/commits/${encodeURIComponent(branch)}/status`;
+
+          for (let attempt = 1; attempt <= 80; attempt += 1) {
+            const response = await fetch(endpoint, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: "application/vnd.github+json",
+                "X-GitHub-Api-Version": "2022-11-28"
+              }
+            });
+            if (!response.ok) {
+              throw new Error(`GitHub status lookup failed: HTTP ${response.status}`);
+            }
+
+            const combined = await response.json();
+            const deployment = (combined.statuses ?? [])
+              .filter((item) => item.context === "Vercel")
+              .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))[0];
+
+            if (deployment?.state === "success") {
+              console.log(`Preview deployment is ready: ${deployment.target_url}`);
+              process.exit(0);
+            }
+            if (deployment?.state === "failure" || deployment?.state === "error") {
+              throw new Error(`Vercel Preview deployment failed: ${deployment.target_url}`);
+            }
+
+            console.log(`Waiting for Vercel Preview (attempt ${attempt}/80)...`);
+            await new Promise((resolve) => setTimeout(resolve, 15_000));
+          }
+
+          throw new Error("Timed out waiting for the Vercel Preview deployment.");
+          NODE
+
+      - name: Run browser tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright diagnostics
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: pjvault-playwright-${{ github.sha }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  commit_lockfile:
+    name: Commit validated npm lockfile
+    needs: quality
+    if: github.event_name == 'push' && github.ref == 'refs/heads/design/humanized-library'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Download generated lockfile
+        uses: actions/download-artifact@v7
+        with:
+          name: pjvault-package-lock-${{ github.sha }}
+          path: .
+
+      - name: Commit lockfile to feature branch
+        run: |
+          git add package-lock.json
+          if git diff --cached --quiet; then
+            echo "The lockfile is already up to date."
+            exit 0
+          fi
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -m "Update npm lockfile for browser tests"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

@@ -58,8 +58,6 @@ export default function AdminPage() {
   const [notice, setNotice] = useState("");
 
   const load = useCallback(async () => {
-    setLoading(true);
-    setError("");
     try {
       const response = await fetch("/api/admin/submissions", { cache: "no-store" });
       const body = await response.json();
@@ -85,6 +83,12 @@ export default function AdminPage() {
   }, [router]);
 
   useEffect(() => { void load(); }, [load]);
+
+  function refreshQueue() {
+    setLoading(true);
+    setError("");
+    void load();
+  }
 
   async function logout() {
     try {
@@ -184,7 +188,7 @@ export default function AdminPage() {
       <section className="admin-content">
         <div className="admin-heading">
           <div><div className="section-kicker">BẢNG QUẢN TRỊ / HÀNG CHỜ KIỂM DUYỆT</div><h1>Kiểm duyệt nội dung</h1><p>Đọc nguồn, kiểm tra giấy phép, rồi quyết định. Quét tĩnh chỉ hỗ trợ việc xem xét.</p></div>
-          <button className="admin-refresh" onClick={() => void load()} disabled={loading}><RefreshCw size={15} /> Làm mới</button>
+          <button className="admin-refresh" onClick={refreshQueue} disabled={loading}><RefreshCw size={15} /> Làm mới</button>
         </div>
 
         <div className="admin-stats">

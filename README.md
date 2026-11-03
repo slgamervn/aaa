@@ -6,7 +6,7 @@ GameVault is a Vietnamese-first directory for browser games. Contributors can su
 
 - Published catalogue loaded from Supabase. Only records with status \`published\` are listed.
 - File upload: \`.html\` / \`.htm\`, maximum 1 MB, placed in the private \`gamevault-quarantine\` bucket.
-- URL submission: validates URL structure and rejects credentials and literal private/local hosts. **It does not fetch or execute the URL.**
+- URL submission: validates URL structure and rejects credentials and private/local hosts. It temporarily fetches public HTML and up to four linked scripts for static scanning with DNS pinning, redirect revalidation, and strict size/time limits. Submitted code is never executed or stored as published page content.
 - Static pattern scanner: records findings and a risk-priority signal. It is not a malware detector, legal opinion, or proof that a submission follows GitHub policy.
 - Persistent submissions, metadata, status changes, review notes, and audit events stored in Supabase.
 - Rate limit: up to 6 submission attempts per IP fingerprint per hour. The address itself is not stored; a keyed HMAC is used for the fingerprint.
@@ -73,7 +73,7 @@ Open http://localhost:3000.
 5. An approved submission is **not public yet**. The administrator must separately select **Publish to GitHub** and confirm.
 6. The server verifies the current database status again, writes the item to \`gamevault-submissions/<uuid>/\` in the configured GitHub repository, and records the commit SHA and publication event.
 
-External URL submissions remain references: GameVault does not crawl them or copy their content. The browser opens a published external URL directly in a new tab with \`noopener noreferrer\`.
+External URL submissions remain references. The scanner temporarily reads public HTML and up to four linked scripts for static analysis, but does not execute or publish a copy of the source. The game page embeds the original URL when the source permits it and provides a link to open the original website.
 
 ## Security boundaries and limitations
 

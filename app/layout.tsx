@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: "PJVault — Thư viện game trên web",
   description: "Khám phá và chơi các game trên web đã được kiểm duyệt. Gửi game HTML hoặc đường dẫn để đề nghị xét duyệt.",
   applicationName: "PJVault",
-  metadataBase: new URL("https://pjvault-slg-7f71.vercel.app"),
+  metadataBase: new URL("https://pjvault-git-design-humanized-library-slg-7f71.vercel.app"),
   openGraph: {
     title: "PJVault — Game library",
     description: "Explore reviewed web games, play HTML games, or visit their original websites.",

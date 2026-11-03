@@ -34,10 +34,10 @@ const copy = {
     statTwo: "QUÉT TĨNH", statTwoDesc: "Không thực thi file tải lên",
     statThree: "DUYỆT TAY", statThreeDesc: "Không tự động xuất bản",
     statFour: "CHỈ DỰ ÁN ĐÃ DUYỆT", statFourDesc: "Dự án chỉ hiện sau khi được công khai",
-    libraryKicker: "THƯ VIỆN GAME", libraryTitle: "Chọn game để chơi", librarySubtitle: "Game đã được duyệt, sẵn sàng để bạn chơi.",
-    searchPlaceholder: "Tìm tên hoặc thể loại…", searchLabel: "Tìm dự án",
+    libraryKicker: "THƯ VIỆN GAME", libraryTitle: "Chọn game để chơi", librarySubtitle: "Chỉ những game đã được kiểm duyệt mới xuất hiện ở đây.",
+    searchPlaceholder: "Tìm tên game hoặc thể loại…", searchLabel: "Tìm game",
     all: "Tất cả", arcade: "Arcade", strategy: "Chiến thuật", puzzle: "Giải đố", action: "Hành động", simulation: "Mô phỏng", educational: "Giáo dục", other: "Khác",
-    genreLabel: "Thể loại", descriptionLabel: "Mô tả game", descriptionPlaceholder: "Game của bạn có gì thú vị? (tối đa 240 ký tự)", publishedOnly: "Đã được duyệt và xuất bản", loadingProjects: "Đang tải danh sách dự án…", catalogLoadFailed: "Chưa thể tải danh sách dự án. Hãy thử tải lại trang.", emptyLibraryTitle: "Chưa có game nào được duyệt", emptyLibraryText: "Game mới sẽ xuất hiện ở đây sau khi được kiểm tra và duyệt. Bạn có thể gửi một game để đề nghị xem xét.", downloadProject: "Tải file HTML", openProject: "Mở game", sourceUnavailable: "Nguồn hiện không khả dụng", riskScore: "TÍN HIỆU KIỂM TRA", htmlProjectFallback: "Game này được chia sẻ dưới dạng file HTML.", urlProjectFallback: "Game này mở từ website gốc.",
+    genreLabel: "Thể loại", descriptionLabel: "Mô tả game", descriptionPlaceholder: "Game của bạn có gì thú vị? (tối đa 240 ký tự)", publishedOnly: "Đã được duyệt và xuất bản", loadingProjects: "Đang tải danh sách dự án…", catalogLoadFailed: "Chưa thể tải danh sách dự án. Hãy thử tải lại trang.", emptyLibraryTitle: "Chưa có game nào được duyệt", emptyLibraryText: "Khi có game được duyệt, chúng sẽ xuất hiện tại đây. Bạn cũng có thể gửi game của mình để xét duyệt.", downloadProject: "Tải file HTML", openProject: "Chơi game", sourceUnavailable: "Nguồn hiện không khả dụng", riskScore: "TÍN HIỆU KIỂM TRA", htmlProjectFallback: "Game này được chia sẻ dưới dạng file HTML.", urlProjectFallback: "Game này mở từ website gốc.",
     sample: "MẪU", unlisted: "Chưa xuất bản", sampleArtwork: "ARTWORK MẪU",
     neonCategory: "Arcade · Nhịp độ", neonDescription: "Một đường đua nhỏ, vài khúc cua và cảm giác vừa đủ nhanh.",
     kingdomCategory: "Chiến thuật · Xây dựng", kingdomDescription: "Xếp từng mảnh đất và chăm chút cho một vương quốc tí hon.",
@@ -55,9 +55,9 @@ const copy = {
     fileLabel: "File game", fileHint: ".html / .htm · tối đa 1 MB",
     dropTitle: "Thả file HTML vào đây", dropOr: "hoặc nhấn để chọn từ thiết bị",
     browse: "Chọn file", changeFile: "Nhấn để đổi tệp",
-    urlLabel: "Đường dẫn dự án", urlPlaceholder: "https://example.com/project",
+    urlLabel: "Đường dẫn game", urlPlaceholder: "https://example.com/project",
     urlNote: "GameVault tải trang công khai và quét tĩnh HTML cùng tối đa 4 script ngoài. Mã không được thực thi. Một số website có thể chặn việc quét.",
-    consent: "Tôi có quyền chia sẻ dự án này hoặc đã kiểm tra giấy phép phù hợp.",
+    consent: "Tôi có quyền chia sẻ game này hoặc đã kiểm tra giấy phép phù hợp.",
     consentError: "Vui lòng xác nhận bạn có quyền chia sẻ dự án này.",
     fileError: "Vui lòng chọn tệp .html hoặc .htm.",
     invalidFile: "Chỉ chấp nhận tệp .html hoặc .htm.",
@@ -116,10 +116,10 @@ const copy = {
     statTwo: "STATIC CHECK", statTwoDesc: "Uploaded files are not executed",
     statThree: "HUMAN REVIEW", statThreeDesc: "Nothing is published automatically",
     statFour: "REVIEWED PROJECTS", statFourDesc: "Projects appear after approval",
-    libraryKicker: "GAME LIBRARY", libraryTitle: "Choose a game", librarySubtitle: "Reviewed games, ready to play.",
-    searchPlaceholder: "Search titles or genres…", searchLabel: "Search projects",
+    libraryKicker: "GAME LIBRARY", libraryTitle: "Choose a game", librarySubtitle: "Only reviewed games appear here.",
+    searchPlaceholder: "Search game titles or genres…", searchLabel: "Search games",
     all: "All", arcade: "Arcade", strategy: "Strategy", puzzle: "Puzzle", action: "Action", simulation: "Simulation", educational: "Educational", other: "Other",
-    genreLabel: "Genre", descriptionLabel: "Game description", descriptionPlaceholder: "What makes your game interesting? (up to 240 characters)", publishedOnly: "Reviewed and published", loadingProjects: "Loading the library…", catalogLoadFailed: "The library could not be loaded. Try refreshing the page.", emptyLibraryTitle: "No games have been approved yet", emptyLibraryText: "New games will show up here after review. You can submit a game to be considered.", downloadProject: "Download HTML file", openProject: "Play game", sourceUnavailable: "Source unavailable", riskScore: "REVIEW SIGNAL", htmlProjectFallback: "This game is shared as an HTML file.", urlProjectFallback: "This game opens from its original website.",
+    genreLabel: "Genre", descriptionLabel: "Game description", descriptionPlaceholder: "What makes your game interesting? (up to 240 characters)", publishedOnly: "Reviewed and published", loadingProjects: "Loading the library…", catalogLoadFailed: "The library could not be loaded. Try refreshing the page.", emptyLibraryTitle: "No games have been approved yet", emptyLibraryText: "Approved games will appear here. You can also submit one for review.", downloadProject: "Download HTML file", openProject: "Play game", sourceUnavailable: "Source unavailable", riskScore: "REVIEW SIGNAL", htmlProjectFallback: "This game is shared as an HTML file.", urlProjectFallback: "This game opens from its original website.",
     sample: "SAMPLE", unlisted: "Not published", sampleArtwork: "SAMPLE ARTWORK",
     neonCategory: "Arcade · Action", neonDescription: "A small track, a few turns, and just enough speed.",
     kingdomCategory: "Strategy · Building", kingdomDescription: "Place each patch of land and tend to a tiny kingdom.",
@@ -137,9 +137,9 @@ const copy = {
     fileLabel: "Game file", fileHint: ".html / .htm · up to 1 MB",
     dropTitle: "Drop an HTML file here", dropOr: "or choose one from your device",
     browse: "Choose file", changeFile: "Select a different file",
-    urlLabel: "Project URL", urlPlaceholder: "https://example.com/project",
+    urlLabel: "Game URL", urlPlaceholder: "https://example.com/project",
     urlNote: "GameVault fetches a public page and statically scans its HTML and up to four external scripts. Nothing is executed. Some websites may block scanning.",
-    consent: "I have permission to share this project or have checked its licence.",
+    consent: "I have permission to share this game or have checked its licence.",
     consentError: "Please confirm that you have permission to share this content.",
     fileError: "Choose an .html or .htm file first.",
     invalidFile: "Only .html and .htm files are accepted.",
@@ -267,6 +267,9 @@ export default function Home() {
         if (preferences.theme === "paper" || preferences.theme === "night") setTheme(preferences.theme);
         if (typeof preferences.largeText === "boolean") setLargeText(preferences.largeText);
         if (typeof preferences.motionReduced === "boolean") setMotionReduced(preferences.motionReduced);
+        else setMotionReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+      } else {
+        setMotionReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
       }
     } catch { /* Ignore damaged local preferences or demo data. */ }
     setPreferencesLoaded(true);
@@ -281,7 +284,7 @@ export default function Home() {
     document.documentElement.dataset.theme = theme;
     document.documentElement.dataset.scale = largeText ? "large" : "normal";
     document.documentElement.dataset.motion = motionReduced ? "reduced" : "normal";
-    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "paper" ? "#f3f0e7" : "#171c18");
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "paper" ? "#f3f6f3" : "#19221c");
   }, [language, theme, largeText, motionReduced, preferencesLoaded]);
 
   useEffect(() => {
@@ -457,13 +460,15 @@ export default function Home() {
             </div>
             <label className="library-search"><Search size={17} aria-hidden="true" /><input ref={searchRef} aria-label={t.searchLabel} placeholder={t.searchPlaceholder} value={query} onChange={(event) => setQuery(event.target.value)} /><kbd>/</kbd></label>
           </div>
-          <div className="filter-row" role="group" aria-label={language === "vi" ? "Lọc thể loại" : "Filter by genre"}>
-            {(["all", "arcade", "strategy", "puzzle", "action", "simulation", "educational", "other"] as Genre[]).map((value) => (
-              <button key={value} className={activeGenre === value ? "filter-active" : ""} aria-pressed={activeGenre === value} onClick={() => setActiveGenre(value)}>
-                {value === "all" ? t.all : value === "arcade" ? t.arcade : value === "strategy" ? t.strategy : value === "puzzle" ? t.puzzle : value === "action" ? t.action : value === "simulation" ? t.simulation : value === "educational" ? t.educational : t.other}
-              </button>
-            ))}
-          </div>
+          {publishedProjects.length > 0 && !catalogLoadError && (
+            <div className="filter-row" role="group" aria-label={language === "vi" ? "Lọc thể loại" : "Filter by genre"}>
+              {(["all", "arcade", "strategy", "puzzle", "action", "simulation", "educational", "other"] as Genre[]).map((value) => (
+                <button key={value} className={activeGenre === value ? "filter-active" : ""} aria-pressed={activeGenre === value} onClick={() => setActiveGenre(value)}>
+                  {value === "all" ? t.all : value === "arcade" ? t.arcade : value === "strategy" ? t.strategy : value === "puzzle" ? t.puzzle : value === "action" ? t.action : value === "simulation" ? t.simulation : value === "educational" ? t.educational : t.other}
+                </button>
+              ))}
+            </div>
+          )}
           {catalogLoading && <p className="catalog-loading" role="status">{t.loadingProjects}</p>}
           {catalogLoadError && <p className="catalog-load-error" role="alert">{t.catalogLoadFailed}</p>}
           <div className="game-grid">

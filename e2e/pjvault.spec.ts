@@ -53,7 +53,7 @@ test.describe("PJVault library", () => {
     const actionGroup = page.getByRole("group", { name: "Lọc thể loại" });
     await actionGroup.getByRole("button", { name: "Hành động" }).click();
 
-    const response = await page.request.get("/api/games");
+    const response = await page.request.get(`${BASE_URL}/api/games`);
     const body = await response.json() as { games?: PublishedProject[] };
     const actionProject = (body.games ?? []).find((item) => item.genre === "action");
 

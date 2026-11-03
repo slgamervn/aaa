@@ -1161,3 +1161,468 @@ html[data-motion="reduced"] .fullscreen-toolbar-dot { transition: none; }
   .library-heading .library-search { width: 100%; }
   .settings-panel { width: min(250px, calc(100vw - 1rem)); }
 }
+
+/* GameVault public experience refresh: quiet surfaces, clear type, real content first. */
+body::before { display: none; }
+
+.app-shell {
+  --paper: #f3f6f3;
+  --paper-alt: #edf1ee;
+  --surface: #ffffff;
+  --surface-strong: #eaf0eb;
+  --ink: #202b24;
+  --muted: #68756d;
+  --faint: #87928a;
+  --line: #e0e7e1;
+  --line-strong: #cbd5cc;
+  --green: #477457;
+  --green-soft: #e8f1e9;
+  --green-ink: #ffffff;
+  --rust: #967b4d;
+  --rust-soft: #f2eddf;
+  --yellow: #c09a51;
+  --violet: #788293;
+  --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --display: var(--sans);
+  --mono: var(--sans);
+  --container: 1200px;
+  width: min(100%, 1200px);
+  max-width: 1200px;
+  overflow: visible;
+  border: 0;
+  border-inline: 0;
+}
+
+.app-shell[data-theme="night"] {
+  --paper: #19221c;
+  --paper-alt: #202b23;
+  --surface: #253129;
+  --surface-strong: #303d33;
+  --ink: #eef3ee;
+  --muted: #b5c0b7;
+  --faint: #89968c;
+  --line: #39483d;
+  --line-strong: #536356;
+  --green: #a4c7ac;
+  --green-soft: #304738;
+  --green-ink: #18251c;
+  --rust: #d4b579;
+  --rust-soft: #493e2c;
+  --yellow: #dfc47e;
+  --violet: #b9bfd0;
+}
+
+.app-shell .topbar {
+  min-height: 64px;
+  padding-inline: clamp(1rem, 3vw, 2rem);
+  background: var(--surface);
+}
+
+.app-shell .brand {
+  font-family: var(--sans);
+  font-size: 1.15rem;
+  letter-spacing: -0.045em;
+}
+
+.app-shell .brand-mark {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 9px;
+}
+
+.app-shell .browser-tabbar {
+  top: 64px;
+  min-height: 48px;
+  padding-inline: clamp(1rem, 3vw, 2rem);
+  background: var(--surface);
+}
+
+.app-shell .browser-tab {
+  min-height: 39px;
+  border-radius: 9px 9px 0 0;
+  font-family: var(--sans);
+  font-size: .84rem;
+}
+
+.app-shell .browser-tab-active {
+  background: var(--paper);
+}
+
+.app-shell .browser-tab-active::before {
+  top: auto;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+}
+
+.app-shell .section {
+  padding: 1.8rem clamp(1rem, 3vw, 2rem) 2.5rem;
+}
+
+.app-shell .library-heading {
+  align-items: flex-end;
+  gap: 1.5rem;
+}
+
+.app-shell .library-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.app-shell .library-title {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: clamp(1.7rem, 3vw, 2.2rem);
+  font-weight: 720;
+  line-height: 1.15;
+  letter-spacing: -0.045em;
+}
+
+.app-shell .library-description {
+  margin: .45rem 0 0;
+  color: var(--muted);
+  font-size: .9rem;
+  line-height: 1.55;
+}
+
+.app-shell .library-search {
+  width: min(100%, 350px);
+  min-height: 44px;
+  border-color: var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.app-shell .filter-row {
+  gap: .45rem;
+  margin-top: 1.25rem;
+  padding-bottom: 0;
+  border: 0;
+}
+
+.app-shell .filter-row button {
+  min-height: 36px;
+  padding: .42rem .85rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: .8rem;
+}
+
+.app-shell .filter-row button:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-strong);
+  color: var(--ink);
+}
+
+.app-shell .filter-row button.filter-active {
+  border-color: var(--green);
+  background: var(--green-soft);
+  color: var(--ink);
+}
+
+.app-shell .game-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .85rem;
+  margin-top: 1.15rem;
+}
+
+.app-shell .game-card {
+  display: flex;
+  min-height: 190px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  transition: border-color 140ms ease-out;
+}
+
+.app-shell .game-card:hover {
+  transform: none;
+  border-color: var(--green);
+}
+
+.app-shell .game-info {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  padding: 1rem 1.05rem;
+}
+
+.app-shell .game-meta {
+  align-items: center;
+  gap: .55rem;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: .76rem;
+}
+
+.app-shell .game-meta > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+}
+
+.app-shell .game-meta > span:first-child::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  content: "";
+}
+
+.app-shell .game-type {
+  padding: .2rem .45rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: .7rem;
+}
+
+.app-shell .game-info h3 {
+  margin: .7rem 0 .4rem;
+  font-family: var(--sans);
+  font-size: 1.08rem;
+  font-weight: 680;
+  line-height: 1.35;
+  letter-spacing: -.02em;
+}
+
+.app-shell .game-info p {
+  min-height: 2.7rem;
+  color: var(--muted);
+  font-size: .84rem;
+  line-height: 1.6;
+}
+
+.app-shell .card-link {
+  min-height: 40px;
+  justify-content: flex-start;
+  margin-top: auto;
+  padding-top: .7rem;
+  border-top-color: var(--line);
+  color: var(--green);
+  font-size: .82rem;
+  font-weight: 650;
+}
+
+.app-shell .empty-search {
+  padding: 2rem;
+  border: 1px dashed var(--line-strong);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--muted);
+  text-align: left;
+}
+
+.app-shell .empty-search h3 {
+  margin: 0 0 .5rem;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+
+.app-shell .empty-search p {
+  max-width: 52ch;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.app-shell .reset-button {
+  min-height: 40px;
+  border-radius: 8px;
+  background: var(--green-soft);
+  color: var(--ink);
+}
+
+.app-shell .section-kicker,
+.app-shell .card-kicker {
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: .76rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.app-shell .card-kicker {
+  display: none;
+}
+
+.app-shell .submit-card {
+  border-color: var(--line);
+  border-radius: 12px;
+}
+
+.app-shell .submit-card-header h3,
+.app-shell .section-heading h2,
+.app-shell .submission-intro h2,
+.app-shell .workflow-card h3,
+.app-shell .safety-section h2 {
+  font-family: var(--sans);
+  letter-spacing: -.035em;
+}
+
+.app-shell .secure-badge {
+  border-radius: 7px;
+  font-family: var(--sans);
+  font-size: .7rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.app-shell .text-field,
+.app-shell .url-field,
+.app-shell .dropzone,
+.app-shell .submit-card input:not([type="checkbox"]) {
+  border-radius: 9px;
+}
+
+.app-shell .scan-button,
+.app-shell .browse-button,
+.app-shell .reset-button,
+.app-shell .clear-queue,
+.app-shell .tab-switch,
+.app-shell .tab-switch button {
+  border-radius: 8px;
+}
+
+.app-shell .workflow-card,
+.app-shell .safety-section,
+.app-shell .queue-list {
+  border-color: var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.app-shell .workflow-tag {
+  display: none;
+}
+
+.app-shell .settings-panel {
+  border-color: var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.app-shell .settings-option {
+  border-radius: 7px;
+}
+
+.app-shell button:active,
+.app-shell .card-link:active,
+.app-shell .game-card:active {
+  transform: scale(.985);
+}
+
+.app-shell .game-card:active {
+  border-color: var(--green);
+}
+
+.play-page {
+  --paper: #f3f6f3;
+  --paper-alt: #edf1ee;
+  --surface: #ffffff;
+  --surface-strong: #eaf0eb;
+  --ink: #202b24;
+  --muted: #68756d;
+  --faint: #87928a;
+  --line: #e0e7e1;
+  --line-strong: #cbd5cc;
+  --green: #477457;
+  --green-soft: #e8f1e9;
+  --green-ink: #ffffff;
+  --rust: #967b4d;
+  --rust-soft: #f2eddf;
+  --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --display: var(--sans);
+  --mono: var(--sans);
+  background: var(--paper);
+  font-family: var(--sans);
+}
+
+html[data-theme="night"] .play-page {
+  --paper: #19221c;
+  --paper-alt: #202b23;
+  --surface: #253129;
+  --surface-strong: #303d33;
+  --ink: #eef3ee;
+  --muted: #b5c0b7;
+  --faint: #89968c;
+  --line: #39483d;
+  --line-strong: #536356;
+  --green: #a4c7ac;
+  --green-soft: #304738;
+  --green-ink: #18251c;
+  --rust: #d4b579;
+  --rust-soft: #493e2c;
+}
+
+.play-page .play-header {
+  background: var(--surface);
+}
+
+.play-page .play-intro h1 {
+  font-family: var(--sans);
+  letter-spacing: -.04em;
+}
+
+.play-page .section-kicker {
+  font-family: var(--sans);
+  font-size: .76rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.play-page .project-preview-shell {
+  border-color: var(--line);
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.play-page .project-preview-toolbar {
+  background: var(--surface);
+  font-family: var(--sans);
+}
+
+.play-page .play-fullscreen-button,
+.play-page .play-language-button,
+.play-page .project-download-button,
+.play-page .project-preview-fallback {
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-weight: 650;
+}
+
+@media (max-width: 900px) {
+  .app-shell .game-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 700px) {
+  .app-shell .topbar { min-height: 60px; }
+  .app-shell .browser-tabbar { top: 60px; }
+  .app-shell .section { padding: 1.25rem 1rem 2rem; }
+  .app-shell .library-heading { align-items: stretch; gap: .8rem; }
+  .app-shell .library-search { width: 100%; max-width: none; }
+  .app-shell .game-grid { grid-template-columns: 1fr; gap: .7rem; }
+  .app-shell .game-card { min-height: 0; }
+  .app-shell .game-info { padding: .95rem; }
+  .app-shell .submission-section { padding: 1.4rem 1rem 1.8rem; }
+  .app-shell .workflow-section { padding: 2.2rem 1rem; }
+  .app-shell .safety-section { margin: 0 1rem 2.5rem; padding: 1rem; }
+  .app-shell .queue-section { padding: 0 1rem 2.5rem; }
+  .app-shell .footer { padding: 1.1rem 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell .game-card,
+  .app-shell .card-link,
+  .app-shell .filter-row button {
+    transition: none;
+  }
+}

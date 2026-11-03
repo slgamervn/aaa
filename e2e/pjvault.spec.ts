@@ -1,8 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const BASE_URL = new URL(process.env.PLAYWRIGHT_BASE_URL ?? "https://pjvault-git-design-humanized-library-slg-7f71.vercel.app").origin;
-  ?? "https://pjvault-git-design-humanized-library-slg-7f71.vercel.app").replace(/\\/$/, "");
-
+const BASE_URL = new URL(
+  process.env.PLAYWRIGHT_BASE_URL ?? "https://pjvault-git-design-humanized-library-slg-7f71.vercel.app"
+).origin;
 type PublishedProject = {
   id: string;
   title: string;

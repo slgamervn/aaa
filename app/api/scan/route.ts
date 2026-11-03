@@ -46,7 +46,7 @@ async function logEvent(
     details,
     note: note?.slice(0, 1000) ?? null
   });
-  if (error) console.error("GameVault audit event write failed:", error.code);
+  if (error) console.error("PJVault audit event write failed:", error.code);
 }
 
 export async function POST(request: NextRequest) {
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
     p_window_seconds: 3600
   });
   if (limitError) {
-    console.error("GameVault rate-limit check failed:", limitError.code);
+    console.error("PJVault rate-limit check failed:", limitError.code);
     return json({ error: "Submissions are temporarily unavailable. Please try again later." }, 503);
   }
   if (allowed !== true) {
@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
 
   const { error: insertError } = await admin.from("gamevault_submissions").insert(row);
   if (insertError) {
-    console.error("GameVault submission insert failed:", insertError.code);
+    console.error("PJVault submission insert failed:", insertError.code);
     return json({ error: "The submission could not be saved. Please try again later." }, 503);
   }
 
@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
     if (uploadError) {
       await admin.from("gamevault_submissions").update({ status: "scan_failed", updated_at: new Date().toISOString() }).eq("id", id);
       await logEvent(admin, id, "scan_failed", { reason: "quarantine_upload_failed" });
-      console.error("GameVault quarantine upload failed:", uploadError.message);
+      console.error("PJVault quarantine upload failed:", uploadError.message);
       return json({ error: "The file could not be placed in private quarantine. No publication occurred." }, 503);
     }
   }

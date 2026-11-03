@@ -1164,6 +1164,8 @@ html[data-motion="reduced"] .fullscreen-toolbar-dot { transition: none; }
 
 /* GameVault public experience refresh: quiet surfaces, clear type, real content first. */
 body::before { display: none; }
+body:has(.app-shell) { background: #f3f6f3; }
+html[data-theme="night"] body:has(.app-shell) { background: #19221c; }
 
 .app-shell {
   --paper: #f3f6f3;

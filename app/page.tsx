@@ -45,7 +45,7 @@ const copy = {
     submitSimilar: "Gửi dự án tương tự", noResults: "Không tìm thấy kết quả. Hãy thử từ khóa hoặc thể loại khác.",
     demoNotice: "Ảnh bìa và tên hiển thị là hình minh họa. Dự án chỉ xuất hiện trong danh sách sau khi được duyệt công khai.",
     submitKicker: "ĐÓNG GÓP DỰ ÁN · 02", submitTitle: "Có game muốn chia sẻ?",
-    submitLede: "Gửi file HTML hoặc đường dẫn đến game. GameVault sẽ kiểm tra sơ bộ, sau đó quản trị viên xem lại trước khi đăng.",
+    submitLede: "Gửi file HTML hoặc đường dẫn đến game. PJVault sẽ kiểm tra sơ bộ, sau đó quản trị viên xem lại trước khi đăng.",
     stepOne: "Gửi dự án", stepOneDesc: "Tệp .html / .htm hoặc đường dẫn",
     stepTwo: "Kiểm tra sơ bộ", stepTwoDesc: "Tìm một số mẫu code cần xem lại",
     stepThree: "Chờ phê duyệt", stepThreeDesc: "Chỉ công khai sau khi được duyệt",
@@ -56,7 +56,7 @@ const copy = {
     dropTitle: "Thả file HTML vào đây", dropOr: "hoặc nhấn để chọn từ thiết bị",
     browse: "Chọn file", changeFile: "Nhấn để đổi tệp",
     urlLabel: "Đường dẫn game", urlPlaceholder: "https://example.com/project",
-    urlNote: "GameVault tải trang công khai và quét tĩnh HTML cùng tối đa 4 script ngoài. Mã không được thực thi. Một số website có thể chặn việc quét.",
+    urlNote: "PJVault tải trang công khai và quét tĩnh HTML cùng tối đa 4 script ngoài. Mã không được thực thi. Một số website có thể chặn việc quét.",
     consent: "Tôi có quyền chia sẻ game này hoặc đã kiểm tra giấy phép phù hợp.",
     consentError: "Vui lòng xác nhận bạn có quyền chia sẻ dự án này.",
     fileError: "Vui lòng chọn tệp .html hoặc .htm.",
@@ -138,7 +138,7 @@ const copy = {
     dropTitle: "Drop an HTML file here", dropOr: "or choose one from your device",
     browse: "Choose file", changeFile: "Select a different file",
     urlLabel: "Game URL", urlPlaceholder: "https://example.com/project",
-    urlNote: "GameVault fetches a public page and statically scans its HTML and up to four external scripts. Nothing is executed. Some websites may block scanning.",
+    urlNote: "PJVault fetches a public page and statically scans its HTML and up to four external scripts. Nothing is executed. Some websites may block scanning.",
     consent: "I have permission to share this game or have checked its licence.",
     consentError: "Please confirm that you have permission to share this content.",
     fileError: "Choose an .html or .htm file first.",
@@ -413,9 +413,9 @@ export default function Home() {
     <div className="app-shell" data-theme={theme} data-scale={largeText ? "large" : "normal"} data-motion={motionReduced ? "reduced" : "normal"}>
       <a className="skip-link" href="#main-content">{language === "vi" ? "Bỏ qua điều hướng" : "Skip to content"}</a>
       <header className="topbar">
-        <a className="brand" href="#" onClick={(event) => { event.preventDefault(); setActivePageTab("library"); }} aria-label="GameVault home">
+        <a className="brand" href="#" onClick={(event) => { event.preventDefault(); setActivePageTab("library"); }} aria-label="PJVault home">
           <span className="brand-mark"><Layers3 size={19} strokeWidth={2.2} /></span>
-          <span>gamevault<span className="brand-dot">.</span></span>
+          <span>pjvault<span className="brand-dot">.</span></span>
         </a>
         <div className="header-controls" aria-label={language === "vi" ? "Tuỳ chỉnh" : "Preferences"}>
           <button className="utility-button language-button" onClick={() => setLanguage(language === "vi" ? "en" : "vi")} aria-label={t.switchLanguage} title={t.switchLanguage}>
@@ -442,7 +442,7 @@ export default function Home() {
         </div>
       </header>
 
-      <nav className="browser-tabbar" role="tablist" aria-orientation="horizontal" aria-label={language === "vi" ? "Các mục GameVault" : "GameVault sections"} onKeyDown={(event) => { if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return; const tabs = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>(".browser-tab")); const currentIndex = tabs.indexOf(event.target as HTMLButtonElement); if (currentIndex < 0) return; event.preventDefault(); const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : (currentIndex + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length; tabs[nextIndex].focus(); tabs[nextIndex].click(); }}>
+      <nav className="browser-tabbar" role="tablist" aria-orientation="horizontal" aria-label={language === "vi" ? "Các mục PJVault" : "PJVault sections"} onKeyDown={(event) => { if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return; const tabs = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>(".browser-tab")); const currentIndex = tabs.indexOf(event.target as HTMLButtonElement); if (currentIndex < 0) return; event.preventDefault(); const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : (currentIndex + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length; tabs[nextIndex].focus(); tabs[nextIndex].click(); }}>
         <button id="gv-tab-library" className={"browser-tab " + (activePageTab === "library" ? "browser-tab-active" : "")} type="button" role="tab" aria-selected={activePageTab === "library"} aria-controls="gv-panel-library" tabIndex={activePageTab === "library" ? 0 : -1} onClick={() => setActivePageTab("library")}><BookOpen size={15} /><span>{t.navLibrary}</span></button>
         <button id="gv-tab-submit" className={"browser-tab " + (activePageTab === "submit" ? "browser-tab-active" : "")} type="button" role="tab" aria-selected={activePageTab === "submit"} aria-controls="gv-panel-submit" tabIndex={activePageTab === "submit" ? 0 : -1} onClick={() => setActivePageTab("submit")}><FileCode2 size={15} /><span>{t.submit}</span></button>
         <button id="gv-tab-info" className={"browser-tab " + (activePageTab === "info" ? "browser-tab-active" : "")} type="button" role="tab" aria-selected={activePageTab === "info"} aria-controls="gv-panel-info" tabIndex={activePageTab === "info" ? 0 : -1} onClick={() => setActivePageTab("info")}><ShieldCheck size={15} /><span>{t.navProcess}</span></button>
@@ -583,10 +583,10 @@ export default function Home() {
         </main>
 
         <footer className="footer">
-          <a className="brand footer-brand" href="#" onClick={(event) => { event.preventDefault(); setActivePageTab("library"); }}><span className="brand-mark"><Layers3 size={17} /></span><span>gamevault<span className="brand-dot">.</span></span></a>
+          <a className="brand footer-brand" href="#" onClick={(event) => { event.preventDefault(); setActivePageTab("library"); }}><span className="brand-mark"><Layers3 size={17} /></span><span>pjvault<span className="brand-dot">.</span></span></a>
           <span>{t.footerLine}</span>
           <div><a href="#safety" onClick={(event) => { event.preventDefault(); setActivePageTab("info"); }}>{t.footerPolicy}</a><a href="#how-it-works" onClick={(event) => { event.preventDefault(); setActivePageTab("info"); }}>{t.footerProcess}</a><a href="https://github.com/slgamervn/aaa" target="_blank" rel="noreferrer"><Github size={15} />{t.source}</a></div>
-          <small>© 2026 GameVault · {t.footerStatus}</small>
+          <small>© 2026 PJVault · {t.footerStatus}</small>
         </footer>
 
     </div>

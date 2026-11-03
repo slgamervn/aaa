@@ -287,7 +287,6 @@ export default function Home() {
   useEffect(() => {
     let active = true;
     async function loadPublishedProjects() {
-      setCatalogLoading(true);
       try {
         const response = await fetch("/api/games", { cache: "no-store" });
         const body = await response.json();

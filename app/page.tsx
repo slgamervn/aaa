@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocalStorageState } from "@/lib/local-storage-state";
 import {
   ArrowDownRight, ArrowRight, BadgeCheck, BookOpen, Check,
   Clock3, FileCode2, FileUp, Github, Globe2, Languages, Layers3,
@@ -14,7 +15,13 @@ type Genre = "all" | "arcade" | "strategy" | "puzzle" | "action" | "simulation" 
 type Finding = { label: string; severity: "high" | "medium" | "low"; detail: string };
 type ScanResult = { mode: string; verdict: string; score: number; findings: Finding[]; message: string; bytes?: number; contentScanned?: boolean; scannedResources?: number; submitted?: boolean; submissionId?: string };
 type Submission = { id: string; title: string; source: string; kind: "HTML" | "URL"; status: "pending"; createdAt: string; result: ScanResult };
+type SavedPreferences = { language?: Language; theme?: Theme; largeText?: boolean; motionReduced?: boolean };
 type PublishedProject = { id: string; title: string; description: string; genre: string; kind: "html" | "url"; sourceUrl: string | null; originalFilename: string | null; publishedAt: string | null };
+
+const PREFERENCES_KEY = "gamevault-preferences-v1";
+const SUBMISSIONS_KEY = "gamevault-submissions-v1";
+const DEFAULT_PREFERENCES: SavedPreferences = { language: "vi", theme: "paper", largeText: false, motionReduced: false };
+const EMPTY_SUBMISSIONS: Submission[] = [];
 
 const copy = {
   vi: {
@@ -230,11 +237,15 @@ function localizeErrorMessage(message: string, language: Language): string {
 }
 
 export default function Home() {
-  const [language, setLanguage] = useState<Language>("vi");
-  const [theme, setTheme] = useState<Theme>("paper");
-  const [largeText, setLargeText] = useState(false);
-  const [motionReduced, setMotionReduced] = useState(false);
-  const [preferencesLoaded, setPreferencesLoaded] = useState(false);
+  const [preferences, setPreferences] = useLocalStorageState(PREFERENCES_KEY, DEFAULT_PREFERENCES);
+  const language: Language = preferences.language === "en" ? "en" : "vi";
+  const theme: Theme = preferences.theme === "night" ? "night" : "paper";
+  const largeText = preferences.largeText === true;
+  const motionReduced = preferences.motionReduced === true;
+  const setLanguage = (value: Language) => setPreferences((current) => ({ ...current, language: value }));
+  const setTheme = (value: Theme) => setPreferences((current) => ({ ...current, theme: value }));
+  const setLargeText = (value: boolean) => setPreferences((current) => ({ ...current, largeText: value }));
+  const setMotionReduced = (value: boolean) => setPreferences((current) => ({ ...current, motionReduced: value }));
   const [activePageTab, setActivePageTab] = useState<"library" | "submit" | "info">("library");
   const [activeTab, setActiveTab] = useState<"html" | "url">("html");
   const [activeGenre, setActiveGenre] = useState<Genre>("all");
@@ -249,7 +260,7 @@ export default function Home() {
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState("");
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [submissions, setSubmissions] = useLocalStorageState(SUBMISSIONS_KEY, EMPTY_SUBMISSIONS);
   const [query, setQuery] = useState("");
   const [consent, setConsent] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -257,32 +268,12 @@ export default function Home() {
   const t = copy[language];
 
   useEffect(() => {
-    try {
-      const savedQueue = localStorage.getItem("gamevault-submissions-v1");
-      if (savedQueue) setSubmissions(JSON.parse(savedQueue) as Submission[]);
-      const saved = localStorage.getItem("gamevault-preferences-v1");
-      if (saved) {
-        const preferences = JSON.parse(saved) as { language?: Language; theme?: Theme; largeText?: boolean; motionReduced?: boolean };
-        if (preferences.language === "vi" || preferences.language === "en") setLanguage(preferences.language);
-        if (preferences.theme === "paper" || preferences.theme === "night") setTheme(preferences.theme);
-        if (typeof preferences.largeText === "boolean") setLargeText(preferences.largeText);
-        if (typeof preferences.motionReduced === "boolean") setMotionReduced(preferences.motionReduced);
-      }
-    } catch { /* Ignore damaged local preferences or demo data. */ }
-    setPreferencesLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    if (!preferencesLoaded) return;
-    try {
-      localStorage.setItem("gamevault-preferences-v1", JSON.stringify({ language, theme, largeText, motionReduced }));
-    } catch { /* Preferences can remain in component state if storage is unavailable. */ }
     document.documentElement.lang = language;
     document.documentElement.dataset.theme = theme;
     document.documentElement.dataset.scale = largeText ? "large" : "normal";
     document.documentElement.dataset.motion = motionReduced ? "reduced" : "normal";
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "paper" ? "#edf2f1" : "#17242a");
-  }, [language, theme, largeText, motionReduced, preferencesLoaded]);
+  }, [language, theme, largeText, motionReduced]);
 
   useEffect(() => {
     let active = true;
@@ -372,11 +363,7 @@ export default function Home() {
         createdAt: typeof data.submission?.submittedAt === "string" ? data.submission.submittedAt : new Date().toISOString(),
         result: acceptedResult
       };
-      setSubmissions((previous) => {
-        const updated = [newItem, ...previous].slice(0, 20);
-        try { localStorage.setItem("gamevault-submissions-v1", JSON.stringify(updated)); } catch { /* The local queue is best-effort only. */ }
-        return updated;
-      });
+      setSubmissions((previous) => [newItem, ...previous].slice(0, 20));
     } catch (caught) {
       setError(caught instanceof Error ? localizeErrorMessage(caught.message, language) : t.scanFailed);
     } finally {
@@ -403,7 +390,6 @@ export default function Home() {
 
   function clearQueue() {
     setSubmissions([]);
-    try { localStorage.removeItem("gamevault-submissions-v1"); } catch { /* Ignore unavailable browser storage. */ }
   }
 
   const displayResult = result ? localizeScan(result, language) : null;

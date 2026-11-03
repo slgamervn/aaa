@@ -18,8 +18,8 @@ type PublishedProject = { id: string; title: string; description: string; genre:
 
 const copy = {
   vi: {
-    navLibrary: "Dự án", navProcess: "Quy trình", navSafety: "An toàn & chính sách",
-    submit: "Đóng góp", settings: "Cài đặt", switchLanguage: "Switch to English", darkMode: "Giao diện tối",
+    navLibrary: "Thư viện", navProcess: "Cách hoạt động", navSafety: "An toàn & chính sách",
+    submit: "Gửi game", settings: "Cài đặt", switchLanguage: "Switch to English", darkMode: "Giao diện tối",
     lightMode: "Giao diện sáng", largerText: "Tăng cỡ chữ", smallerText: "Cỡ chữ mặc định",
     reduceMotion: "Giảm chuyển động", restoreMotion: "Bật chuyển động",
     openMenu: "Mở điều hướng", closeMenu: "Đóng điều hướng",
@@ -34,36 +34,36 @@ const copy = {
     statTwo: "QUÉT TĨNH", statTwoDesc: "Không thực thi file tải lên",
     statThree: "DUYỆT TAY", statThreeDesc: "Không tự động xuất bản",
     statFour: "CHỈ DỰ ÁN ĐÃ DUYỆT", statFourDesc: "Dự án chỉ hiện sau khi được công khai",
-    libraryKicker: "KHO DỰ ÁN · 01", libraryTitle: "Dự án", librarySubtitle: "Các dự án đã được kiểm duyệt.",
+    libraryKicker: "THƯ VIỆN GAME", libraryTitle: "Chọn game để chơi", librarySubtitle: "Game đã được duyệt, sẵn sàng để bạn chơi.",
     searchPlaceholder: "Tìm tên hoặc thể loại…", searchLabel: "Tìm dự án",
     all: "Tất cả", arcade: "Arcade", strategy: "Chiến thuật", puzzle: "Giải đố", action: "Hành động", simulation: "Mô phỏng", educational: "Giáo dục", other: "Khác",
-    genreLabel: "Thể loại", descriptionLabel: "Mô tả dự án", descriptionPlaceholder: "Giới thiệu ngắn về dự án (tối đa 240 ký tự)", publishedOnly: "Đã được duyệt và xuất bản", loadingProjects: "Đang tải danh sách dự án…", catalogLoadFailed: "Chưa thể tải danh sách dự án. Hãy thử tải lại trang.", emptyLibraryTitle: "Chưa có dự án nào được công khai.", emptyLibraryText: "Các dự án sẽ xuất hiện tại đây sau khi được kiểm tra và phê duyệt. Bạn cũng có thể gửi một dự án để đề nghị xem xét.", downloadProject: "Tải tệp HTML", openProject: "Mở trong GameVault", sourceUnavailable: "Nguồn hiện không khả dụng", riskScore: "TÍN HIỆU KIỂM TRA", htmlProjectFallback: "Tệp HTML đã được kiểm tra và công khai.", urlProjectFallback: "Dự án này được chia sẻ qua trang web gốc.",
+    genreLabel: "Thể loại", descriptionLabel: "Mô tả game", descriptionPlaceholder: "Game của bạn có gì thú vị? (tối đa 240 ký tự)", publishedOnly: "Đã được duyệt và xuất bản", loadingProjects: "Đang tải danh sách dự án…", catalogLoadFailed: "Chưa thể tải danh sách dự án. Hãy thử tải lại trang.", emptyLibraryTitle: "Chưa có game nào được duyệt", emptyLibraryText: "Game mới sẽ xuất hiện ở đây sau khi được kiểm tra và duyệt. Bạn có thể gửi một game để đề nghị xem xét.", downloadProject: "Tải file HTML", openProject: "Mở game", sourceUnavailable: "Nguồn hiện không khả dụng", riskScore: "TÍN HIỆU KIỂM TRA", htmlProjectFallback: "Game này được chia sẻ dưới dạng file HTML.", urlProjectFallback: "Game này mở từ website gốc.",
     sample: "MẪU", unlisted: "Chưa xuất bản", sampleArtwork: "ARTWORK MẪU",
     neonCategory: "Arcade · Nhịp độ", neonDescription: "Một đường đua nhỏ, vài khúc cua và cảm giác vừa đủ nhanh.",
     kingdomCategory: "Chiến thuật · Xây dựng", kingdomDescription: "Xếp từng mảnh đất và chăm chút cho một vương quốc tí hon.",
     orbitCategory: "Giải đố · Vật lý", orbitDescription: "Những quỹ đạo đơn giản dẫn đến các câu đố khó đoán.",
     submitSimilar: "Gửi dự án tương tự", noResults: "Không tìm thấy kết quả. Hãy thử từ khóa hoặc thể loại khác.",
     demoNotice: "Ảnh bìa và tên hiển thị là hình minh họa. Dự án chỉ xuất hiện trong danh sách sau khi được duyệt công khai.",
-    submitKicker: "ĐÓNG GÓP DỰ ÁN · 02", submitTitle: "Bạn có dự án muốn chia sẻ?",
-    submitLede: "Gửi tệp HTML hoặc đường dẫn đến dự án. Hệ thống sẽ quét tĩnh sơ bộ, sau đó người quản lý kiểm tra trước khi quyết định công khai.",
+    submitKicker: "ĐÓNG GÓP DỰ ÁN · 02", submitTitle: "Có game muốn chia sẻ?",
+    submitLede: "Gửi file HTML hoặc đường dẫn đến game. GameVault sẽ kiểm tra sơ bộ, sau đó quản trị viên xem lại trước khi đăng.",
     stepOne: "Gửi dự án", stepOneDesc: "Tệp .html / .htm hoặc đường dẫn",
     stepTwo: "Kiểm tra sơ bộ", stepTwoDesc: "Tìm một số mẫu code cần xem lại",
     stepThree: "Chờ phê duyệt", stepThreeDesc: "Chỉ công khai sau khi được duyệt",
-    formKicker: "BIỂU MẪU GỬI DỰ ÁN", formTitle: "Gửi dự án mới", safeFlow: "QUY TRÌNH RÕ RÀNG",
-    htmlTab: "Tệp HTML", urlTab: "Liên kết", titleLabel: "Tên dự án",
+    formKicker: "GỬI GAME", formTitle: "Thông tin game", safeFlow: "Có người kiểm duyệt",
+    htmlTab: "Tệp HTML", urlTab: "Liên kết", titleLabel: "Tên game",
     optional: "(không bắt buộc)", titlePlaceholder: "Ví dụ: Pixel Adventure",
-    fileLabel: "Tệp dự án", fileHint: ".html / .htm · tối đa 1 MB",
+    fileLabel: "File game", fileHint: ".html / .htm · tối đa 1 MB",
     dropTitle: "Thả file HTML vào đây", dropOr: "hoặc nhấn để chọn từ thiết bị",
     browse: "Chọn file", changeFile: "Nhấn để đổi tệp",
     urlLabel: "Đường dẫn dự án", urlPlaceholder: "https://example.com/project",
-    urlNote: "Máy quét tải trang công khai trong giới hạn an toàn, sau đó kiểm tra tĩnh HTML và tối đa 4 script bên ngoài. Mã dự án không được thực thi. Một số website có thể chặn máy quét.",
+    urlNote: "GameVault tải trang công khai và quét tĩnh HTML cùng tối đa 4 script ngoài. Mã không được thực thi. Một số website có thể chặn việc quét.",
     consent: "Tôi có quyền chia sẻ dự án này hoặc đã kiểm tra giấy phép phù hợp.",
     consentError: "Vui lòng xác nhận bạn có quyền chia sẻ dự án này.",
     fileError: "Vui lòng chọn tệp .html hoặc .htm.",
     invalidFile: "Chỉ chấp nhận tệp .html hoặc .htm.",
     tooLarge: "Tệp quá lớn. Giới hạn hiện tại là 1 MB.",
     urlError: "Nhập đường dẫn dự án cần kiểm tra.", scanFailed: "Không thể quét nội dung.",
-    scanButton: "Kiểm tra và gửi duyệt", submittedButton: "Đã gửi chờ duyệt", submittedNotice: "Đã nhận dự án và đưa vào hàng chờ kiểm duyệt. Dự án chưa được công khai.", submittedNeedsReview: "Đã nhận đường dẫn và đưa vào hàng chờ kiểm duyệt, nhưng hệ thống chưa tải được nội dung để quét. Người quản lý cần kiểm tra thủ công trước khi công khai.", scanIncompleteStatus: "Chưa thể kiểm tra nội dung", scanning: "Đang quét…",
+    scanButton: "Gửi để duyệt", submittedButton: "Đã gửi chờ duyệt", submittedNotice: "Đã nhận dự án và đưa vào hàng chờ kiểm duyệt. Dự án chưa được công khai.", submittedNeedsReview: "Đã nhận đường dẫn và đưa vào hàng chờ kiểm duyệt, nhưng hệ thống chưa tải được nội dung để quét. Người quản lý cần kiểm tra thủ công trước khi công khai.", scanIncompleteStatus: "Chưa thể kiểm tra nội dung", scanning: "Đang quét…",
     scanResult: "Kết quả quét sơ bộ", manualReview: "Cần xem xét thủ công",
     noFindings: "Không phát hiện mẫu trùng khớp trong nội dung đã quét. Điều này không chứng minh dự án an toàn.",
     scanDisclaimer: "Quét tĩnh không chứng minh file vô hại hoặc tuân thủ chính sách.",
@@ -100,8 +100,8 @@ const copy = {
     scanMessageHtml: "Đây là quét tĩnh theo mẫu, không phải chứng nhận không có mã độc hoặc xác nhận tuân thủ điều khoản GitHub."
   },
   en: {
-    navLibrary: "Projects", navProcess: "How it works", navSafety: "Safety & policy",
-    submit: "Contribute", settings: "Settings", switchLanguage: "Chuyển sang tiếng Việt", darkMode: "Dark appearance",
+    navLibrary: "Library", navProcess: "How it works", navSafety: "Safety & policy",
+    submit: "Submit", settings: "Settings", switchLanguage: "Chuyển sang tiếng Việt", darkMode: "Dark appearance",
     lightMode: "Light appearance", largerText: "Increase text size", smallerText: "Default text size",
     reduceMotion: "Reduce motion", restoreMotion: "Enable motion",
     openMenu: "Open navigation", closeMenu: "Close navigation",
@@ -116,36 +116,36 @@ const copy = {
     statTwo: "STATIC CHECK", statTwoDesc: "Uploaded files are not executed",
     statThree: "HUMAN REVIEW", statThreeDesc: "Nothing is published automatically",
     statFour: "REVIEWED PROJECTS", statFourDesc: "Projects appear after approval",
-    libraryKicker: "PROJECT COLLECTION · 01", libraryTitle: "Projects", librarySubtitle: "Reviewed projects, ready to explore.",
+    libraryKicker: "GAME LIBRARY", libraryTitle: "Choose a game", librarySubtitle: "Reviewed games, ready to play.",
     searchPlaceholder: "Search titles or genres…", searchLabel: "Search projects",
     all: "All", arcade: "Arcade", strategy: "Strategy", puzzle: "Puzzle", action: "Action", simulation: "Simulation", educational: "Educational", other: "Other",
-    genreLabel: "Genre", descriptionLabel: "Project description", descriptionPlaceholder: "Briefly describe the project (up to 240 characters)", publishedOnly: "Reviewed and published", loadingProjects: "Loading the library…", catalogLoadFailed: "The library could not be loaded. Try refreshing the page.", emptyLibraryTitle: "No projects published yet.", emptyLibraryText: "Projects will appear here after review and approval. You can also submit a project for consideration.", downloadProject: "Download HTML file", openProject: "Open in GameVault", sourceUnavailable: "Source unavailable", riskScore: "REVIEW SIGNAL", htmlProjectFallback: "This HTML project has been reviewed and published.", urlProjectFallback: "This project is provided through its original website.",
+    genreLabel: "Genre", descriptionLabel: "Game description", descriptionPlaceholder: "What makes your game interesting? (up to 240 characters)", publishedOnly: "Reviewed and published", loadingProjects: "Loading the library…", catalogLoadFailed: "The library could not be loaded. Try refreshing the page.", emptyLibraryTitle: "No games have been approved yet", emptyLibraryText: "New games will show up here after review. You can submit a game to be considered.", downloadProject: "Download HTML file", openProject: "Play game", sourceUnavailable: "Source unavailable", riskScore: "REVIEW SIGNAL", htmlProjectFallback: "This game is shared as an HTML file.", urlProjectFallback: "This game opens from its original website.",
     sample: "SAMPLE", unlisted: "Not published", sampleArtwork: "SAMPLE ARTWORK",
     neonCategory: "Arcade · Action", neonDescription: "A small track, a few turns, and just enough speed.",
     kingdomCategory: "Strategy · Building", kingdomDescription: "Place each patch of land and tend to a tiny kingdom.",
     orbitCategory: "Puzzle · Physics", orbitDescription: "Simple orbits lead to surprisingly tricky puzzles.",
     submitSimilar: "Submit a similar project", noResults: "No results found. Try another search term or genre.",
     demoNotice: "Cover artwork and names are illustrative. A project only appears in the collection after approval and publication.",
-    submitKicker: "PROJECT CONTRIBUTIONS · 02", submitTitle: "Have a project to share?",
-    submitLede: "Submit an HTML file or a link to the project. The system performs a preliminary static scan, then a person reviews it before publication.",
+    submitKicker: "PROJECT CONTRIBUTIONS · 02", submitTitle: "Have a game to share?",
+    submitLede: "Send an HTML file or a link to a game. We check the submission first, then a person reviews it before publication.",
     stepOne: "Submit a project", stepOneDesc: ".html / .htm file or URL",
     stepTwo: "Preliminary scan", stepTwoDesc: "Look for patterns worth reviewing",
     stepThree: "Await approval", stepThreeDesc: "Projects are published only after review",
-    formKicker: "PROJECT SUBMISSION", formTitle: "Submit a project", safeFlow: "CLEAR PROCESS",
-    htmlTab: "HTML file", urlTab: "Project link", titleLabel: "Project name",
+    formKicker: "GAME SUBMISSION", formTitle: "Game details", safeFlow: "Human review",
+    htmlTab: "HTML file", urlTab: "Project link", titleLabel: "Game title",
     optional: "(optional)", titlePlaceholder: "For example: Pixel Adventure",
-    fileLabel: "Project file", fileHint: ".html / .htm · up to 1 MB",
+    fileLabel: "Game file", fileHint: ".html / .htm · up to 1 MB",
     dropTitle: "Drop an HTML file here", dropOr: "or choose one from your device",
     browse: "Choose file", changeFile: "Select a different file",
     urlLabel: "Project URL", urlPlaceholder: "https://example.com/project",
-    urlNote: "The scanner fetches a public page within safety limits, then statically checks its HTML and up to 4 external scripts. Project code is never executed. Some websites may block scanners.",
+    urlNote: "GameVault fetches a public page and statically scans its HTML and up to four external scripts. Nothing is executed. Some websites may block scanning.",
     consent: "I have permission to share this project or have checked its licence.",
     consentError: "Please confirm that you have permission to share this content.",
     fileError: "Choose an .html or .htm file first.",
     invalidFile: "Only .html and .htm files are accepted.",
     tooLarge: "The file is too large. The prototype limit is 1 MB.",
     urlError: "Enter the project URL to check.", scanFailed: "The content could not be scanned.",
-    scanButton: "Scan and submit for review", submittedButton: "Submitted for review", submittedNotice: "Your submission has been received and queued for human review. It has not been published automatically.", submittedNeedsReview: "The URL was received and queued for review, but its content could not be fetched for scanning. A person must review it before publication.", scanIncompleteStatus: "Content scan incomplete", scanning: "Scanning…",
+    scanButton: "Send for review", submittedButton: "Submitted for review", submittedNotice: "Your submission has been received and queued for human review. It has not been published automatically.", submittedNeedsReview: "The URL was received and queued for review, but its content could not be fetched for scanning. A person must review it before publication.", scanIncompleteStatus: "Content scan incomplete", scanning: "Scanning…",
     scanResult: "Preliminary scan result", manualReview: "Manual review needed",
     noFindings: "No defined patterns matched in the scanned content. This does not prove the project is safe.",
     scanDisclaimer: "A static scan cannot prove a file is harmless or policy-compliant.",
@@ -451,7 +451,10 @@ export default function Home() {
       <main id="main-content">
         <section className="section library-section" id="gv-panel-library" role="tabpanel" aria-labelledby="gv-tab-library" tabIndex={0} style={{ display: activePageTab === "library" ? undefined : "none" }}>
           <div className="section-heading library-heading">
-            <h1 className="library-title">{t.libraryTitle}</h1>
+            <div className="library-copy">
+              <h1 className="library-title">{t.libraryTitle}</h1>
+              <p className="library-description">{t.librarySubtitle}</p>
+            </div>
             <label className="library-search"><Search size={17} aria-hidden="true" /><input ref={searchRef} aria-label={t.searchLabel} placeholder={t.searchPlaceholder} value={query} onChange={(event) => setQuery(event.target.value)} /><kbd>/</kbd></label>
           </div>
           <div className="filter-row" role="group" aria-label={language === "vi" ? "Lọc thể loại" : "Filter by genre"}>
@@ -465,23 +468,15 @@ export default function Home() {
           {catalogLoadError && <p className="catalog-load-error" role="alert">{t.catalogLoadFailed}</p>}
           <div className="game-grid">
             {filteredProjects.map((project) => {
-              const color = project.genre === "strategy" ? "rust" : project.genre === "puzzle" || project.genre === "educational" ? "blue" : "mint";
-              const coverSymbol = project.genre === "strategy" ? "♜" : project.genre === "puzzle" ? "◎" : project.kind === "url" ? "↗" : "✦";
               const genreLabel = project.genre === "arcade" ? t.arcade : project.genre === "strategy" ? t.strategy : project.genre === "puzzle" ? t.puzzle : project.genre === "action" ? t.action : project.genre === "simulation" ? t.simulation : project.genre === "educational" ? t.educational : t.other;
               const projectHref = "/games/" + encodeURIComponent(project.id);
               return (
                 <article className="game-card" key={project.id}>
-                  <div className={"game-cover cover-" + color} aria-hidden="true">
-                    <div className="cover-symbol">{coverSymbol}</div>
-                    <span className="demo-pill">{project.kind === "html" ? "HTML" : "URL"}</span>
-                  </div>
                   <div className="game-info">
-                    <div className="game-meta"><span>{genreLabel}</span><span className="game-type">{project.kind === "html" ? "HTML" : "URL"}</span></div>
+                    <div className="game-meta"><span>{genreLabel}</span><span className="game-type">{project.kind === "html" ? (language === "vi" ? "File HTML" : "HTML file") : "Website"}</span></div>
                     <h3>{project.title}</h3>
                     <p>{project.description || (project.kind === "html" ? t.htmlProjectFallback : t.urlProjectFallback)}</p>
-                    <a className="card-link" href={projectHref}>
-                      {t.openProject}<ArrowRight size={15} />
-                    </a>
+                    <a className="card-link" href={projectHref}>{t.openProject}</a>
                   </div>
                 </article>
               );

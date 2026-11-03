@@ -211,7 +211,7 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
     document.documentElement.dataset.motion = motionReduced ? "reduced" : "normal";
     document.querySelector('meta[name="theme-color"]')?.setAttribute(
       "content",
-      theme === "paper" ? "#f3f0e7" : "#171c18"
+      theme === "paper" ? "#f3f6f3" : "#19221c"
     );
 
     try {

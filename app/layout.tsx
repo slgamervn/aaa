@@ -2,13 +2,13 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "PJVault — Thư viện game trên web",
-  description: "Khám phá và chơi các game trên web đã được kiểm duyệt. Gửi game HTML hoặc đường dẫn để đề nghị xét duyệt.",
+  title: "PJVault — Thư viện dự án web",
+  description: "Khám phá các dự án web đã được kiểm duyệt. Mở trang dự án để xem thông tin, nguồn và bản xem trước.",
   applicationName: "PJVault",
   metadataBase: new URL("https://pjvault-git-design-humanized-library-slg-7f71.vercel.app"),
   openGraph: {
-    title: "PJVault — Game library",
-    description: "Explore reviewed web games, play HTML games, or visit their original websites.",
+    title: "PJVault — Web project library",
+    description: "Explore reviewed web projects, read project details, view previews, and visit original sources.",
     siteName: "PJVault",
     type: "website"
   },
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f3f6f3",
+  themeColor: "#edf2f1",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover"

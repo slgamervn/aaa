@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import {
   ArrowLeft,
@@ -19,7 +20,10 @@ import {
   ChevronUp,
   ChevronDown,
   CircleDot,
-  Crosshair
+  Crosshair,
+  FileCode2,
+  Globe2,
+  Play
 } from "lucide-react";
 
 type Language = "vi" | "en";
@@ -69,7 +73,12 @@ const copy = {
     reviewed: "Đã qua kiểm duyệt",
     backHome: "Quay lại danh sách dự án",
     switchLanguage: "Chuyển sang tiếng Anh",
-    previewLabel: "Đang chạy trong PJVault",
+    previewLabel: "Bản xem trước dự án",
+    previewHeading: "Xem trước dự án",
+    previewIntro: "Nội dung chỉ được tải khi bạn chủ động mở bản xem trước.",
+    previewButton: "Xem trước dự án",
+    htmlType: "Tệp HTML",
+    urlType: "Website liên kết",
     showControls: "Hiện thanh công cụ",
     hideControls: "Thu gọn thanh công cụ",
     previewUnavailable: "Dự án này hiện không có bản xem trước để chạy trong PJVault.",
@@ -110,7 +119,12 @@ const copy = {
     reviewed: "Reviewed",
     backHome: "Back to project library",
     switchLanguage: "Switch to Vietnamese",
-    previewLabel: "Running inside PJVault",
+    previewLabel: "Project preview",
+    previewHeading: "Preview this project",
+    previewIntro: "The project only loads when you choose to open its preview.",
+    previewButton: "Preview project",
+    htmlType: "HTML file",
+    urlType: "Linked website",
     showControls: "Show controls",
     hideControls: "Collapse controls",
     previewUnavailable: "This project does not currently have an in-app preview.",
@@ -171,6 +185,7 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
   const [orientationSupported, setOrientationSupported] = useState(false);
   const [orientationLocked, setOrientationLocked] = useState(false);
   const [frameKey, setFrameKey] = useState(0);
+  const [previewStarted, setPreviewStarted] = useState(false);
   const [notice, setNotice] = useState("");
   const previewRef = useRef<HTMLDivElement>(null);
   const toolbarDragRef = useRef<{ pointerId: number; startX: number; startY: number; origin: ToolbarPosition } | null>(null);
@@ -211,7 +226,7 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
     document.documentElement.dataset.motion = motionReduced ? "reduced" : "normal";
     document.querySelector('meta[name="theme-color"]')?.setAttribute(
       "content",
-      theme === "paper" ? "#f3f6f3" : "#19221c"
+      theme === "paper" ? "#edf2f1" : "#17242a"
     );
 
     try {
@@ -372,6 +387,7 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
   }
 
   function reloadProject() {
+    setPreviewStarted(true);
     setFrameKey(current => current + 1);
     setNotice(t.frameReloaded);
   }
@@ -444,7 +460,7 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
       data-motion={motionReduced ? "reduced" : "normal"}
     >
       <header className="play-header">
-        <a href="/" className="play-back"><ArrowLeft size={16} /> {t.backHome}</a>
+        <Link href="/" className="play-back"><ArrowLeft size={16} /> {t.backHome}</Link>
         <div className="play-header-actions">
           <button
             type="button"
@@ -461,99 +477,83 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
       </header>
 
       <section className="play-intro project-detail-intro">
-        <div className="section-kicker">{project.kind === "html" ? t.htmlKicker : t.urlKicker}</div>
+        <div className="project-detail-topline">
+          <span className="project-detail-type">{project.kind === "html" ? t.htmlType : t.urlType}</span>
+          <span className="project-detail-reviewed"><ShieldCheck size={15} /> {t.reviewed}</span>
+        </div>
         <h1>{project.title}</h1>
         <p>{project.description || (project.kind === "html" ? t.htmlFallback : t.urlFallback)}</p>
-        {project.downloadUrl && (
-          <div className="project-detail-actions">
+        <div className="project-detail-actions">
+          {project.downloadUrl && (
             <a className="project-download-button" href={project.downloadUrl} download>
               <Download size={17} /> {t.downloadProject}
             </a>
-          </div>
-        )}
-      </section>
-
-      <section
-        ref={previewRef}
-        className={previewClassName}
-        data-preview-size={previewSize}
-        aria-label={t.previewLabel}
-      >
-        <div className={"project-preview-toolbar" + (fullscreenActive ? " is-fullscreen-toolbar" : "")}>
-          {fullscreenActive ? (
-            <button
-              type="button"
-              className={"fullscreen-toolbar-dot" + (toolbarDragging ? " is-dragging" : "")}
-              style={{ left: toolbarPosition.x + "%", top: toolbarPosition.y + "%" }}
-              onPointerDown={handleToolbarPointerDown}
-              onPointerMove={handleToolbarPointerMove}
-              onPointerUp={finishToolbarDrag}
-              onPointerCancel={finishToolbarDrag}
-              onClick={activateToolbarHandle}
-              aria-label={t.exitFullscreen}
-              title={t.exitFullscreen}
-            >
-              <Minimize2 size={21} strokeWidth={2.2} />
-            </button>
-          ) : (
-            <div className="project-preview-toolbar-inner">
-              <button
-                type="button"
-                className="preview-control-btn preview-fullscreen-btn"
-                onClick={() => void toggleFullscreen()}
-                aria-pressed={false}
-                aria-label={t.fullscreen}
-                title={t.fullscreen}
-              >
-                <Maximize2 size={17} />
-                <span>{t.fullscreen}</span>
-              </button>
-            </div>
+          )}
+          {project.externalUrl && (
+            <a className="project-source-link" href={project.externalUrl} target="_blank" rel="noopener noreferrer nofollow">
+              <ExternalLink size={15} /> {t.originalSite}
+            </a>
+          )}
+          {project.sourceUrl && (
+            <a className="project-source-link" href={project.sourceUrl} target="_blank" rel="noopener noreferrer">
+              <ExternalLink size={15} /> {t.publishedSource}
+            </a>
           )}
         </div>
+      </section>
 
-        {project.embeddedUrl ? (
-          <iframe
-            key={frameKey}
-            className="project-preview-frame"
-            title={project.title}
+      {!previewStarted && (
+        <section className="project-preview-gate" aria-label={t.previewLabel}>
+          <div className="project-preview-gate-icon" aria-hidden="true">
+            {project.kind === "html" ? <FileCode2 size={24} /> : <Globe2 size={24} />}
+          </div>
+          <div className="project-preview-gate-copy">
+            <h2>{t.previewHeading}</h2>
+            <p>{t.previewIntro}</p>
+          </div>
+          {project.embeddedUrl ? (
+            <button type="button" className="project-preview-start" onClick={() => setPreviewStarted(true)}>
+              <Play size={16} fill="currentColor" /> {t.previewButton}
+            </button>
+          ) : (
+            <p className="project-preview-gate-unavailable">{t.previewUnavailable}</p>
+          )}
+        </section>
+      )}
+
+      {previewStarted && project.embeddedUrl && (
+        <section ref={previewRef} className={previewClassName} data-preview-size={previewSize} aria-label={t.previewLabel}>
+          <div className={"project-preview-toolbar" + (fullscreenActive ? " is-fullscreen-toolbar" : "")}>
+            {fullscreenActive ? (
+              <button type="button" className={"fullscreen-toolbar-dot" + (toolbarDragging ? " is-dragging" : "")}
+                style={{ left: toolbarPosition.x + "%", top: toolbarPosition.y + "%" }}
+                onPointerDown={handleToolbarPointerDown} onPointerMove={handleToolbarPointerMove}
+                onPointerUp={finishToolbarDrag} onPointerCancel={finishToolbarDrag}
+                onClick={activateToolbarHandle} aria-label={t.exitFullscreen} title={t.exitFullscreen}>
+                <Minimize2 size={21} strokeWidth={2.2} />
+              </button>
+            ) : (
+              <div className="project-preview-toolbar-inner">
+                <button type="button" className="preview-control-btn preview-fullscreen-btn"
+                  onClick={() => void toggleFullscreen()} aria-pressed={false}
+                  aria-label={t.fullscreen} title={t.fullscreen}>
+                  <Maximize2 size={17} /><span>{t.fullscreen}</span>
+                </button>
+              </div>
+            )}
+          </div>
+          <iframe key={frameKey} className="project-preview-frame" title={project.title}
             src={project.embeddedUrl}
             sandbox={project.kind === "html"
               ? "allow-scripts allow-pointer-lock allow-orientation-lock"
               : "allow-scripts allow-forms allow-same-origin allow-pointer-lock allow-orientation-lock"}
             referrerPolicy="strict-origin-when-cross-origin"
-            allow="fullscreen; autoplay; gamepad; accelerometer; gyroscope"
-            allowFullScreen
-            loading="eager"
-          />
-        ) : (
-          <div className="project-preview-blocked">
-            <h2>{t.previewUnavailable}</h2>
-            <p>{t.sourceUnavailable}</p>
-          </div>
-        )}
-
-        {notice && <p className="project-preview-notice" role="status">{notice}</p>}
-        <p className="project-preview-help">{t.previewHelp}</p>
-      </section>
-
-      {(project.externalUrl || project.sourceUrl) && (
-        <details className="project-source-details">
-          <summary>{t.sourceDisclosure}</summary>
-          <div>
-            {project.externalUrl && (
-              <a href={project.externalUrl} target="_blank" rel="noopener noreferrer nofollow">
-                <ExternalLink size={14} /> {t.originalSite}
-              </a>
-            )}
-            {project.sourceUrl && (
-              <a href={project.sourceUrl} target="_blank" rel="noopener noreferrer">
-                <ExternalLink size={14} /> {t.publishedSource}
-              </a>
-            )}
-          </div>
-        </details>
+            allow="fullscreen; autoplay; gamepad; accelerometer; gyroscope" allowFullScreen loading="eager" />
+          {notice && <p className="project-preview-notice" role="status">{notice}</p>}
+          <p className="project-preview-help">{t.previewHelp}</p>
+        </section>
       )}
+
     </main>
   );
 }

@@ -17,7 +17,7 @@ export function createAdminClient() {
       detectSessionInUrl: false
     },
     global: {
-      headers: { "X-Client-Info": "gamevault-server/0.2.0" }
+      headers: { "X-Client-Info": "pjvault-server/0.2.0" }
     }
   });
 }

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { AlertCircle, BadgeCheck, Clock3, ExternalLink, EyeOff, FileCode2, Globe2, LogOut, RefreshCw, ShieldCheck, XCircle } from "lucide-react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
@@ -56,39 +57,75 @@ export default function AdminPage() {
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [currentTime, setCurrentTime] = useState<number | null>(null);
+
+  const requestQueue = useCallback(async (): Promise<{
+    submissions?: AdminSubmission[];
+    adminUsername?: string;
+    error?: string;
+  } | null> => {
+    const response = await fetch("/api/admin/submissions", { cache: "no-store" });
+    const body = await response.json().catch(() => ({}));
+    if (response.status === 401) {
+      router.replace("/admin/login");
+      return null;
+    }
+    if (!response.ok) {
+      throw new Error(typeof body.error === "string" ? body.error : "Không thể tải hàng đợi duyệt.");
+    }
+    return body as { submissions?: AdminSubmission[]; adminUsername?: string; error?: string };
+  }, [router]);
+
+  const applyQueue = useCallback((body: { submissions?: AdminSubmission[]; adminUsername?: string }) => {
+    const submissions = Array.isArray(body.submissions) ? body.submissions : [];
+    setItems(submissions);
+    setOrientationDrafts(Object.fromEntries(
+      submissions.map((item) => [item.id, item.orientation ?? "auto"])
+    ));
+    setAdminUsername(body.adminUsername ?? "admin");
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    requestQueue()
+      .then((body) => {
+        if (active && body) applyQueue(body);
+      })
+      .catch((caught: unknown) => {
+        if (active) setError(caught instanceof Error ? caught.message : "Không thể kết nối tới máy chủ.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => { active = false; };
+  }, [applyQueue, requestQueue]);
 
   const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
     try {
-      const response = await fetch("/api/admin/submissions", { cache: "no-store" });
-      const body = await response.json();
-      if (response.status === 401) {
-        router.replace("/admin/login");
-        return;
-      }
-      if (!response.ok) {
-        setError(body.error || "Không thể tải hàng đợi duyệt.");
-        return;
-      }
-      const submissions = (body.submissions ?? []) as AdminSubmission[];
-      setItems(submissions);
-      setOrientationDrafts(Object.fromEntries(
-        submissions.map((item) => [item.id, item.orientation ?? "auto"])
-      ));
-      setAdminUsername(body.adminUsername ?? "admin");
-    } catch {
-      setError("Không thể kết nối tới máy chủ.");
+      const body = await requestQueue();
+      if (body) applyQueue(body);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Không thể kết nối tới máy chủ.");
     } finally {
       setLoading(false);
     }
-  }, [router]);
-
-  useEffect(() => { void load(); }, [load]);
+  }, [applyQueue, requestQueue]);
 
   function refreshQueue() {
-    setLoading(true);
-    setError("");
     void load();
   }
+
+  useEffect(() => {
+    const updateClock = () => setCurrentTime(Date.now());
+    const initialTimer = window.setTimeout(updateClock, 0);
+    const interval = window.setInterval(updateClock, 60_000);
+    return () => {
+      window.clearTimeout(initialTimer);
+      window.clearInterval(interval);
+    };
+  }, []);
 
   async function logout() {
     try {
@@ -181,7 +218,7 @@ export default function AdminPage() {
   return (
     <main className="admin-page">
       <header className="admin-topbar">
-        <a href="/" className="brand"><span className="brand-mark"><ShieldCheck size={18} /></span><span>pjvault<span className="brand-dot">.</span></span></a>
+        <Link href="/" className="brand"><span className="brand-mark"><ShieldCheck size={18} /></span><span>pjvault<span className="brand-dot">.</span></span></Link>
         <div className="admin-user"><span>{adminUsername}</span><button onClick={logout}><LogOut size={15} /> Đăng xuất</button></div>
       </header>
 
@@ -290,7 +327,7 @@ export default function AdminPage() {
                 {item.status === "unpublishing" && (
                   <div className="admin-actions">
                     <p className="admin-publish-warning">Đang gỡ game khỏi GitHub. Nếu trạng thái này kéo dài hơn 10 phút, hãy làm mới rồi thử tiếp tục.</p>
-                    {Date.now() - Date.parse(item.updated_at) > 10 * 60 * 1000 && (
+                    {currentTime !== null && currentTime - Date.parse(item.updated_at) > 10 * 60 * 1000 && (
                       <div className="admin-action-buttons">
                         <button className="admin-button admin-button-danger" disabled={busy === item.id + ":unpublish"} onClick={() => void act(item, "unpublish")}><EyeOff size={15} /> Thử gỡ lại</button>
                       </div>

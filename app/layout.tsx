@@ -5,14 +5,14 @@ export const metadata: Metadata = {
   title: "PJVault — Thư viện dự án web",
   description: "Khám phá các dự án web đã được kiểm duyệt. Mở trang dự án để xem thông tin, nguồn và bản xem trước.",
   applicationName: "PJVault",
-  metadataBase: new URL("https://pjvault-git-design-humanized-library-slg-7f71.vercel.app"),
+  metadataBase: new URL(`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL ?? "pjvault-slg-7f71.vercel.app"}`),
   openGraph: {
     title: "PJVault — Web project library",
     description: "Explore reviewed web projects, read project details, view previews, and visit original sources.",
     siteName: "PJVault",
     type: "website"
   },
-  robots: { index: false, follow: true }
+  robots: { index: process.env.VERCEL_ENV === "production", follow: true }
 };
 
 export const viewport: Viewport = {

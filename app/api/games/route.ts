@@ -15,7 +15,7 @@ export async function GET() {
       .limit(60);
 
     if (error) {
-      console.error("GameVault public catalog query failed:", error.code);
+      console.error("PJVault public catalog query failed:", error.code);
       return NextResponse.json({ error: "The public catalog is temporarily unavailable." }, { status: 503 });
     }
 

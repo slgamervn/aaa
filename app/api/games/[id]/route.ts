@@ -45,7 +45,7 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
       .download(game.storage_path);
 
     if (downloadError || !file) {
-      console.error("GameVault published source download failed:", downloadError?.message);
+      console.error("PJVault published source download failed:", downloadError?.message);
       return new Response("Game content is temporarily unavailable", {
         status: 503,
         headers: { "Cache-Control": "no-store" }

@@ -81,7 +81,7 @@ External URL submissions remain references. The scanner temporarily reads public
 - Human review must check licence, copyright, privacy, content, and the current GitHub policies. Approval is a human judgement, not a guarantee.
 - HTML playback uses an opaque sandbox origin and a restrictive CSP. This reduces risk but is not a substitute for reviewing submitted content; self-contained games that require remote assets or network APIs may not work.
 - Publication writes public repository contents. The publish confirmation is intentional and must not be bypassed or invoked automatically.
-- External URLs are never fetched server-side, avoiding SSRF, redirects, and DNS-rebinding exposure in this workflow.
+- External URLs are fetched server-side only for bounded static scanning. The source page is never executed or republished as project content; outbound-fetch limits and redirect/DNS revalidation remain security-critical.
 - Submissions and audit records remain in the server database until an administrator or a future retention policy removes them. Rate-limit fingerprints older than seven days are cleaned opportunistically when a rate-limit check runs.
 - The catalogue starts empty. Do not seed the public list with fictitious games.
 

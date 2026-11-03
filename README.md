@@ -55,14 +55,20 @@ All application tables have RLS enabled, explicit access revocation for \`anon\`
 Requirements: Node.js 22+ and npm.
 
 \`\`\`bash
-npm install
+npm ci
 cp .env.example .env.local
 npm run dev
 \`\`\`
 
 Open http://localhost:3000.
 
+`npm ci` installs the exact dependency tree recorded in `package-lock.json`. Use `npm install` only when intentionally changing dependencies, then review and commit both manifest and lockfile changes.
+
 \`npm run build\` performs a production build and TypeScript checks. \`npm run lint\` runs ESLint.
+
+## Continuous integration
+
+GitHub Actions runs `.github/workflows/quality.yml` on changes to the feature branch and on pull requests targeting `main`. It uses Node.js 24, installs from the committed lockfile with `npm ci`, runs ESLint, and performs a production build. The job has read-only repository permissions and does not receive production secrets.
 
 ## Publication flow
 

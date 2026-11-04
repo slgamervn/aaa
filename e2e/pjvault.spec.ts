@@ -233,7 +233,7 @@ test.describe("PJVault project preview", () => {
 
     const frame = page.locator("iframe.project-preview-frame");
     await expect(frame).toBeVisible();
-    const sandbox = (await frame.getAttribute("sandbox") ?? "").split(/\\s+/);
+    const sandbox = (await frame.getAttribute("sandbox") ?? "").split(/\s+/);
     expect(sandbox).toContain("allow-scripts");
     expect(sandbox).not.toContain("allow-same-origin");
 

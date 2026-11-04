@@ -94,6 +94,15 @@ button:focus-visible, a:focus-visible, input:focus-visible, label:focus-within, 
 .brand-mark { width: 32px; height: 32px; display: grid; place-items: center; background: var(--green); color: var(--green-ink); border: 1px solid var(--ink); border-radius: 3px; }
 .brand-dot, .heading-period { color: var(--rust); }
 .header-controls { display: flex; align-items: center; gap: .3rem; }
+.pjvault-switch {
+  display: inline-flex; align-items: center; justify-content: center; gap: .35rem;
+  min-height: 38px; padding: .42rem .7rem; border: 1px solid var(--line);
+  border-radius: 3px; background: var(--surface-strong); color: var(--ink);
+  font-size: .76rem; font-weight: 650; text-decoration: none; white-space: nowrap;
+  transition: background .16s, border-color .16s, color .16s;
+}
+.pjvault-switch:hover { background: var(--green); border-color: var(--ink); color: var(--green-ink); }
+.pjvault-switch:focus-visible { outline: 2px solid var(--rust); outline-offset: 3px; }
 .utility-button {
   display: inline-flex;
   align-items: center;

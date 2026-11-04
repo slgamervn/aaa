@@ -94,63 +94,18 @@ jobs:
               .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))[0];
 
             if (deployment?.state === "success") {
-              console.log(`Preview deployment is ready: ${deployment.target_url}`);
+              console.log(`Current commit Preview is ready: ${deployment.target_url}`);
               process.exit(0);
             }
             if (deployment?.state === "failure" || deployment?.state === "error") {
-              if (!deployment.target_url?.includes("upgradeToPro=build-rate-limit")) {
-                throw new Error(`Vercel Preview deployment failed: ${deployment.target_url}`);
-              }
-
-              // Vercel's build quota is temporarily exhausted. Reuse the last READY
-              // Preview only when every change since it is limited to test/docs/CI files.
-              const lastReadyPreviewSha = "7814754f96088c8f490acd9cdbea8da3bb26d0e0";
-              const compareUrl = `https://api.github.com/repos/${repository}/compare/${lastReadyPreviewSha}...${encodeURIComponent(branch)}`;
-              const compareResponse = await fetch(compareUrl, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  Accept: "application/vnd.github+json",
-                  "X-GitHub-Api-Version": "2022-11-28"
-                }
-              });
-              if (!compareResponse.ok) {
-                throw new Error(`Cannot verify Preview fallback source: HTTP ${compareResponse.status}`);
-              }
-
-              const comparison = await compareResponse.json();
-              const allowedFiles = new Set([
-                ".github/workflows/quality.yml",
-                "README.md",
-                "e2e/pjvault.spec.ts"
-              ]);
-              const unexpectedFiles = (comparison.files ?? [])
-                .map((file) => file.filename)
-                .filter((filename) => !allowedFiles.has(filename));
-              if (unexpectedFiles.length > 0) {
-                throw new Error(`Refusing stale Preview fallback; application files changed: ${unexpectedFiles.join(", ")}`);
-              }
-
-              const [homeResponse, catalogResponse] = await Promise.all([
-                fetch(process.env.PLAYWRIGHT_BASE_URL),
-                fetch(new URL("/api/games", process.env.PLAYWRIGHT_BASE_URL))
-              ]);
-              if (!homeResponse.ok || !catalogResponse.ok) {
-                throw new Error("The last READY Preview failed its HTTP smoke check.");
-              }
-              const catalog = await catalogResponse.json();
-              if (!Array.isArray(catalog.games) || catalog.games.length === 0) {
-                throw new Error("The last READY Preview returned an empty published catalogue.");
-              }
-
-              console.log("Vercel build quota is exhausted; using the last READY Preview because only the CI workflow, README and E2E test file changed.");
-              process.exit(0);
+              throw new Error(`Current commit Vercel Preview failed: ${deployment.target_url}`);
             }
 
-            console.log(`Waiting for Vercel Preview (attempt ${attempt}/80)...`);
+            console.log(`Waiting for the current commit's Vercel Preview (attempt ${attempt}/80)...`);
             await new Promise((resolve) => setTimeout(resolve, 15_000));
           }
 
-          throw new Error("Timed out waiting for the Vercel Preview deployment.");
+          throw new Error("Timed out waiting for the current commit's Vercel Preview.");
           NODE
 
       - name: Run browser tests

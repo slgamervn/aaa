@@ -1,7 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const baseURL = process.env.PLAYWRIGHT_BASE_URL
-  ?? "https://pjvault-git-design-humanized-library-slg-7f71.vercel.app";
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3000";
+
+if (process.env.CI && !process.env.PLAYWRIGHT_BASE_URL) {
+  throw new Error("PLAYWRIGHT_BASE_URL must point to the Preview for the exact tested commit.");
+}
 
 export default defineConfig({
   testDir: "./e2e",

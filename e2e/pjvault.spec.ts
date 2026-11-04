@@ -24,6 +24,17 @@ async function getPublishedUrlProject(page: Page): Promise<PublishedProject> {
   return project!;
 }
 
+async function getPublishedHtmlProject(page: Page): Promise<PublishedProject> {
+  const response = await page.request.get(`${BASE_URL}/api/games`);
+  expect(response.ok(), "The published catalogue API should be available").toBeTruthy();
+
+  const body = await response.json() as { games?: PublishedProject[] };
+  const project = (body.games ?? []).find((item) => item.kind === "html");
+
+  expect(project, "At least one published HTML project is needed for sandbox tests").toBeTruthy();
+  return project!;
+}
+
 async function openProjectDetail(page: Page, project: PublishedProject) {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Thư viện dự án" })).toBeVisible();
@@ -78,6 +89,88 @@ test.describe("PJVault library", () => {
     await page.reload();
     await expect(page.getByRole("heading", { name: "Project library" })).toBeVisible();
     await expect(page.locator(".app-shell")).toHaveAttribute("data-theme", "night");
+  });
+});
+
+test.describe("PJVault HTML isolation", () => {
+  test("published HTML and download endpoints return their own restrictive headers", async ({ page }) => {
+    const project = await getPublishedHtmlProject(page);
+
+    // Inspect stored user HTML over HTTP only; never execute the uploaded source in this test.
+    const previewResponse = await page.request.get(`${BASE_URL}/api/games/${project.id}`);
+    expect(previewResponse.status()).toBe(200);
+    const previewHeaders = await previewResponse.headersArray();
+    const previewCsp = previewHeaders.filter((header) => header.name.toLowerCase() === "content-security-policy");
+    expect(previewCsp).toHaveLength(1);
+    expect(previewCsp[0].value).toContain("sandbox allow-scripts");
+    expect(previewCsp[0].value).toContain("frame-ancestors 'self'");
+    expect(previewCsp[0].value).not.toContain("frame-ancestors 'none'");
+    expect(previewHeaders.find((header) => header.name.toLowerCase() === "x-frame-options")?.value).toBe("SAMEORIGIN");
+    expect(previewHeaders.find((header) => header.name.toLowerCase() === "content-type")?.value).toContain("text/html");
+    expect(previewHeaders.find((header) => header.name.toLowerCase() === "cache-control")?.value).toContain("no-store");
+
+    const downloadResponse = await page.request.get(`${BASE_URL}/api/games/${project.id}/download`);
+    expect(downloadResponse.status()).toBe(200);
+    const downloadHeaders = await downloadResponse.headersArray();
+    expect(downloadHeaders.find((header) => header.name.toLowerCase() === "content-disposition")?.value).toContain("attachment;");
+    expect(downloadHeaders.find((header) => header.name.toLowerCase() === "content-type")?.value).toContain("application/octet-stream");
+    const downloadCsp = downloadHeaders.filter((header) => header.name.toLowerCase() === "content-security-policy");
+    expect(downloadCsp).toHaveLength(1);
+    expect(downloadCsp[0].value).toContain("default-src 'none'");
+    expect(downloadCsp[0].value).toContain("sandbox");
+  });
+
+  test("HTML preview runs only in an opaque-origin sandbox", async ({ page }) => {
+    const project = await getPublishedHtmlProject(page);
+    await page.addInitScript(() => {
+      window.addEventListener("message", (event) => {
+        if (event.data?.type === "pjvault-sandbox-proof") {
+          (window as Window & { __pjvaultSandboxProof?: unknown }).__pjvaultSandboxProof = {
+            ...event.data,
+            eventOrigin: event.origin
+          };
+        }
+      });
+    });
+
+    await page.route(`${BASE_URL}/api/games/${project.id}`, (route) => route.fulfill({
+      status: 200,
+      contentType: "text/html; charset=utf-8",
+      headers: {
+        "Content-Security-Policy": "default-src 'none'; sandbox allow-scripts; script-src 'unsafe-inline'; frame-ancestors 'self'",
+        "X-Frame-Options": "SAMEORIGIN",
+        "X-Content-Type-Options": "nosniff"
+      },
+      body: `<!doctype html><html><body><script>
+        let parentDocumentBlocked = false;
+        try { void window.parent.document.documentElement; } catch { parentDocumentBlocked = true; }
+        window.parent.postMessage({
+          type: "pjvault-sandbox-proof",
+          parentDocumentBlocked,
+          childOrigin: window.location.origin
+        }, "*");
+      <\/script></body></html>`
+    }));
+
+    await openProjectDetail(page, project);
+    await expect(page.locator("iframe.project-preview-frame")).toHaveCount(0);
+    await page.getByRole("button", { name: "Xem trước dự án" }).click();
+
+    const frame = page.locator("iframe.project-preview-frame");
+    await expect(frame).toBeVisible();
+    const sandbox = (await frame.getAttribute("sandbox") ?? "").split(/\\s+/);
+    expect(sandbox).toContain("allow-scripts");
+    expect(sandbox).not.toContain("allow-same-origin");
+    expect(sandbox).not.toContain("allow-forms");
+
+    await expect.poll(() => page.evaluate(
+      () => (window as Window & { __pjvaultSandboxProof?: { type?: string; parentDocumentBlocked?: boolean; childOrigin?: string; eventOrigin?: string } }).__pjvaultSandboxProof ?? null
+    )).toEqual({
+      type: "pjvault-sandbox-proof",
+      parentDocumentBlocked: true,
+      childOrigin: "null",
+      eventOrigin: "null"
+    });
   });
 });
 
@@ -190,7 +283,64 @@ test.describe("PJVault project preview", () => {
   });
 });
 
+test.describe("PJVault admin API protection", () => {
+  test("admin APIs reject requests without an authenticated session", async ({ page }) => {
+    const id = "00000000-0000-4000-8000-000000000001";
+    const endpoints = [
+      `${BASE_URL}/api/admin/submissions`,
+      `${BASE_URL}/api/admin/submissions/${id}/source`,
+      `${BASE_URL}/api/admin/submissions/${id}/review-history`
+    ];
+
+    for (const endpoint of endpoints) {
+      const response = await page.request.get(endpoint);
+      expect([401, 503], `Unauthenticated access must not succeed: ${endpoint}`).toContain(response.status());
+      expect(response.status()).not.toBe(200);
+      expect(response.headers()["cache-control"] ?? "").toContain("no-store");
+    }
+  });
+
+  test("login and submission mutations reject cross-origin requests before authentication", async ({ page }) => {
+    const loginResponse = await page.request.post(`${BASE_URL}/api/admin/login`, {
+      headers: {
+        "Origin": "https://attacker.invalid",
+        "Content-Type": "application/json"
+      },
+      data: { username: "e2e-review-user", password: "NotARealPassword123" }
+    });
+    expect(loginResponse.status()).toBe(403);
+
+    const patchResponse = await page.request.patch(
+      `${BASE_URL}/api/admin/submissions/00000000-0000-4000-8000-000000000001`,
+      {
+        headers: {
+          "Origin": "https://attacker.invalid",
+          "Content-Type": "application/json"
+        },
+        data: { action: "approve" }
+      }
+    );
+    expect(patchResponse.status()).toBe(403);
+  });
+});
+
 test.describe("PJVault admin access", () => {
+  test("login form explains a rate-limited sign-in", async ({ page }) => {
+    await page.route("**/api/admin/login", (route) => route.fulfill({
+      status: 429,
+      headers: { "Retry-After": "900" },
+      contentType: "application/json",
+      body: JSON.stringify({ error: "Bạn đã thử đăng nhập quá nhiều lần. Vui lòng đợi 15 phút rồi thử lại." })
+    }));
+
+    await page.goto("/admin/login");
+    await page.getByLabel("Tên đăng nhập").fill("e2e-review-user");
+    await page.getByLabel("Mật khẩu").fill("NotARealPassword123");
+    await page.getByRole("button", { name: "Đăng nhập an toàn" }).click();
+
+    await expect(page.getByRole("alert")).toContainText("đợi 15 phút");
+  });
+
   test("login form reports a rejected sign-in without contacting the real auth service", async ({ page }) => {
     await page.route("**/api/admin/login", (route) => route.fulfill({
       status: 401,

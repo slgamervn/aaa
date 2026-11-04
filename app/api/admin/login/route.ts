@@ -20,8 +20,9 @@ function json(body: unknown, status = 200, extraHeaders: Record<string, string> 
 }
 
 function getClientIp(request: NextRequest): string | null {
+  // Vercel overwrites X-Forwarded-For at the edge; prefer its namespaced
+  // variant when available and do not trust a caller-supplied X-Real-IP header.
   const candidates = [
-    request.headers.get("x-real-ip"),
     request.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim(),
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
   ];

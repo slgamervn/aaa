@@ -102,7 +102,7 @@ jobs:
                 throw new Error("Vercel returned an unexpected Preview URL.");
               }
               console.log(`Preview for ${sha} is ready: ${previewUrl.href}`);
-              appendFileSync(process.env.GITHUB_OUTPUT, `base_url=${previewUrl.href}\\n`);
+              appendFileSync(process.env.GITHUB_OUTPUT, `base_url=${previewUrl.href}\n`);
               process.exit(0);
             }
             if (deployment?.state === "failure" || deployment?.state === "error") {

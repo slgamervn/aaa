@@ -99,7 +99,8 @@ test.describe("PJVault project preview", () => {
     await expect(frame).toHaveAttribute("src", project.sourceUrl!);
   });
 
-  test("fullscreen fallback is full-bleed and Escape exits it", async ({ page }) => {
+  test("fullscreen fallback fills portrait and landscape viewports and exits cleanly", async ({ page }) => {
+    await page.setViewportSize({ width: 393, height: 852 });
     await page.addInitScript(() => {
       Object.defineProperty(HTMLElement.prototype, "requestFullscreen", {
         configurable: true,
@@ -124,9 +125,44 @@ test.describe("PJVault project preview", () => {
     await expect(shell).toHaveCSS("position", "fixed");
     await expect(shell).toHaveCSS("padding", "0px");
 
+    const assertViewportCoverage = async (width: number, height: number) => {
+      await expect.poll(() => shell.evaluate((element) => {
+        const rect = element.getBoundingClientRect();
+        return {
+          top: Math.round(rect.top),
+          left: Math.round(rect.left),
+          width: Math.round(rect.width),
+          height: Math.round(rect.height),
+          viewportWidth: window.innerWidth,
+          viewportHeight: window.innerHeight,
+          documentWidth: document.documentElement.scrollWidth
+        };
+      })).toEqual({
+        top: 0,
+        left: 0,
+        width,
+        height,
+        viewportWidth: width,
+        viewportHeight: height,
+        documentWidth: width
+      });
+    };
+
+    await assertViewportCoverage(393, 852);
+    await expect(page.evaluate(() => matchMedia("(orientation: portrait)").matches)).resolves.toBe(true);
+
+    // Simulate rotating the phone while the fallback fullscreen is active.
+    await page.setViewportSize({ width: 852, height: 393 });
+    await assertViewportCoverage(852, 393);
+    await expect(page.evaluate(() => matchMedia("(orientation: landscape)").matches)).resolves.toBe(true);
+    await expect(shell).toHaveCSS("padding", "0px");
+
     await page.keyboard.press("Escape");
     await expect(shell).not.toHaveClass(/is-fallback-fullscreen/);
     await expect(frame).toBeVisible();
+    await expect.poll(() => page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth
+    )).toBe(true);
   });
 
   test("native fullscreen enters and exits when supported", async ({ page }, testInfo) => {

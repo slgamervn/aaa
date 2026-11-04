@@ -47,8 +47,6 @@ jobs:
     needs: quality
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      PLAYWRIGHT_BASE_URL: https://pjvault-git-design-humanized-library-slg-7f71.vercel.app
     steps:
       - name: Check out source
         uses: actions/checkout@v6
@@ -66,16 +64,21 @@ jobs:
       - name: Install Chromium and Linux dependencies
         run: npx playwright install --with-deps chromium
 
-      - name: Wait for the current feature-branch Preview deployment
+      - name: Wait for the Preview of the exact triggering commit
+        id: preview
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PREVIEW_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           node --input-type=module <<'NODE'
+          import { appendFileSync } from "node:fs";
+
           const repository = process.env.GITHUB_REPOSITORY;
           const token = process.env.GITHUB_TOKEN;
-          const branch = "design/humanized-library";
-          const endpoint = `https://api.github.com/repos/${repository}/commits/${encodeURIComponent(branch)}/status`;
+          const sha = process.env.PREVIEW_COMMIT_SHA;
+          if (!token || !sha) throw new Error("Missing GitHub token or triggering commit SHA.");
 
+          const endpoint = `https://api.github.com/repos/${repository}/commits/${sha}/status`;
           for (let attempt = 1; attempt <= 80; attempt += 1) {
             const response = await fetch(endpoint, {
               headers: {
@@ -90,25 +93,32 @@ jobs:
 
             const combined = await response.json();
             const deployment = (combined.statuses ?? [])
-              .filter((item) => item.context === "Vercel")
+              .filter((item) => String(item.context ?? "").toLowerCase().startsWith("vercel"))
               .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))[0];
 
             if (deployment?.state === "success") {
-              console.log(`Current commit Preview is ready: ${deployment.target_url}`);
+              const previewUrl = new URL(deployment.target_url ?? "");
+              if (previewUrl.protocol !== "https:" || !previewUrl.hostname.endsWith(".vercel.app")) {
+                throw new Error("Vercel returned an unexpected Preview URL.");
+              }
+              console.log(`Preview for ${sha} is ready: ${previewUrl.href}`);
+              appendFileSync(process.env.GITHUB_OUTPUT, `base_url=${previewUrl.href}\\n`);
               process.exit(0);
             }
             if (deployment?.state === "failure" || deployment?.state === "error") {
-              throw new Error(`Current commit Vercel Preview failed: ${deployment.target_url}`);
+              throw new Error(`Vercel Preview for ${sha} failed: ${deployment.target_url ?? "no URL"}`);
             }
 
-            console.log(`Waiting for the current commit's Vercel Preview (attempt ${attempt}/80)...`);
+            console.log(`Waiting for Vercel Preview on ${sha} (attempt ${attempt}/80)...`);
             await new Promise((resolve) => setTimeout(resolve, 15_000));
           }
 
-          throw new Error("Timed out waiting for the current commit's Vercel Preview.");
+          throw new Error(`Timed out waiting for Vercel Preview on ${sha}.`);
           NODE
 
       - name: Run browser tests
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ steps.preview.outputs.base_url }}
         run: npm run test:e2e
 
       - name: Upload Playwright diagnostics

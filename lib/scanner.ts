@@ -141,11 +141,13 @@ function isPublicIPv6(host: string): boolean {
     return isPublicIPv4(mapped);
   }
 
-  // Accept only global-unicast 2000::/3; block documentation, 6to4 and Teredo.
+  // Accept only global-unicast 2000::/3. Block special-purpose ranges
+  // that are not globally reachable, including IANA's 2001::/23 reservation.
+  // Fail closed on the whole /23 rather than relying on its narrower exceptions.
   if ((bytes[0] & 0xe0) !== 0x20) return false;
-  if (bytes[0] === 0x20 && bytes[1] === 0x01 && bytes[2] === 0x0d && bytes[3] === 0xb8) return false;
+  if (bytes[0] === 0x20 && bytes[1] === 0x01 && (bytes[2] & 0xfe) === 0x00) return false;
+  if (bytes[0] === 0x20 && bytes[1] === 0x0d && bytes[2] === 0xb8) return false;
   if (bytes[0] === 0x20 && bytes[1] === 0x02) return false;
-  if (bytes[0] === 0x20 && bytes[1] === 0x01 && bytes[2] === 0x00 && bytes[3] === 0x00) return false;
   return true;
 }
 

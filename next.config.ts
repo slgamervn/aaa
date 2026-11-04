@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // Keep global document policies away from the dedicated HTML preview/download routes.
+        // Those routes return their own restrictive CSP and frame policies.
         source: "/((?!api/games/).*)",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
@@ -14,9 +16,7 @@ const nextConfig: NextConfig = {
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
           { key: "Content-Security-Policy", value: "default-src 'self'; frame-src 'self' https:; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self' 'unsafe-inline'; connect-src 'self' https://jrusnyrmufwhnqwpqssc.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" }
         ]
-      },
-      {
-
+      }
     ];
   }
 };

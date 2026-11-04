@@ -149,7 +149,7 @@ test.describe("PJVault HTML isolation", () => {
           parentDocumentBlocked,
           childOrigin: window.location.origin
         }, "*");
-      <\/script></body></html>`
+      </script></body></html>`
     }));
 
     await openProjectDetail(page, project);
@@ -158,7 +158,7 @@ test.describe("PJVault HTML isolation", () => {
 
     const frame = page.locator("iframe.project-preview-frame");
     await expect(frame).toBeVisible();
-    const sandbox = (await frame.getAttribute("sandbox") ?? "").split(/\\s+/);
+    const sandbox = (await frame.getAttribute("sandbox") ?? "").split(/\s+/);
     expect(sandbox).toContain("allow-scripts");
     expect(sandbox).not.toContain("allow-same-origin");
     expect(sandbox).not.toContain("allow-forms");

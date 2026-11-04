@@ -1,8 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const BASE_URL = new URL(
-  process.env.PLAYWRIGHT_BASE_URL ?? "https://pjvault-git-design-humanized-library-slg-7f71.vercel.app"
-).origin;
+const configuredBaseUrl = process.env.PLAYWRIGHT_BASE_URL;
+if (process.env.CI && !configuredBaseUrl) {
+  throw new Error("PLAYWRIGHT_BASE_URL must point to the Preview for the exact tested commit.");
+}
+const BASE_URL = new URL(configuredBaseUrl ?? "http://127.0.0.1:3000").origin;
 type PublishedProject = {
   id: string;
   title: string;
@@ -126,7 +128,8 @@ test.describe("PJVault HTML isolation", () => {
       window.addEventListener("message", (event) => {
         if (event.data?.type === "pjvault-sandbox-proof") {
           (window as Window & { __pjvaultSandboxProof?: unknown }).__pjvaultSandboxProof = {
-            ...event.data,
+            type: event.data.type,
+            parentDocumentBlocked: event.data.parentDocumentBlocked,
             eventOrigin: event.origin
           };
         }
@@ -146,8 +149,7 @@ test.describe("PJVault HTML isolation", () => {
         try { void window.parent.document.documentElement; } catch { parentDocumentBlocked = true; }
         window.parent.postMessage({
           type: "pjvault-sandbox-proof",
-          parentDocumentBlocked,
-          childOrigin: window.location.origin
+          parentDocumentBlocked
         }, "*");
       </script></body></html>`
     }));
@@ -164,11 +166,10 @@ test.describe("PJVault HTML isolation", () => {
     expect(sandbox).not.toContain("allow-forms");
 
     await expect.poll(() => page.evaluate(
-      () => (window as Window & { __pjvaultSandboxProof?: { type?: string; parentDocumentBlocked?: boolean; childOrigin?: string; eventOrigin?: string } }).__pjvaultSandboxProof ?? null
+      () => (window as Window & { __pjvaultSandboxProof?: { type?: string; parentDocumentBlocked?: boolean; eventOrigin?: string } }).__pjvaultSandboxProof ?? null
     )).toEqual({
       type: "pjvault-sandbox-proof",
       parentDocumentBlocked: true,
-      childOrigin: "null",
       eventOrigin: "null"
     });
   });
@@ -190,6 +191,59 @@ test.describe("PJVault project preview", () => {
     const frame = page.locator("iframe.project-preview-frame");
     await expect(frame).toBeVisible();
     await expect(frame).toHaveAttribute("src", project.sourceUrl!);
+  });
+
+  test("URL preview remains opaque after redirecting to the PJVault origin", async ({ page }) => {
+    const project = await getPublishedUrlProject(page);
+    const sourceUrl = new URL(project.sourceUrl!);
+    test.skip(sourceUrl.protocol !== "https:", "The site CSP permits HTTPS frames only.");
+    const destinationUrl = new URL("/__e2e/iframe-origin-proof", BASE_URL);
+
+    await page.addInitScript(() => {
+      window.addEventListener("message", (event) => {
+        if (event.data?.type === "pjvault-url-sandbox-proof") {
+          (window as Window & { __pjvaultUrlSandboxProof?: unknown }).__pjvaultUrlSandboxProof = {
+            type: event.data.type,
+            parentDocumentBlocked: event.data.parentDocumentBlocked,
+            eventOrigin: event.origin
+          };
+        }
+      });
+    });
+
+    await page.route((url) => url.href === sourceUrl.href, (route) => route.fulfill({
+      status: 302,
+      headers: { location: destinationUrl.href }
+    }));
+    await page.route((url) => url.href === destinationUrl.href, (route) => route.fulfill({
+      status: 200,
+      contentType: "text/html; charset=utf-8",
+      body: `<!doctype html><html><body><script>
+        let parentDocumentBlocked = false;
+        try { void window.parent.document.documentElement; } catch { parentDocumentBlocked = true; }
+        window.parent.postMessage({
+          type: "pjvault-url-sandbox-proof",
+          parentDocumentBlocked
+        }, "*");
+      </script></body></html>`
+    }));
+
+    await openProjectDetail(page, project);
+    await page.getByRole("button", { name: "Xem trước dự án" }).click();
+
+    const frame = page.locator("iframe.project-preview-frame");
+    await expect(frame).toBeVisible();
+    const sandbox = (await frame.getAttribute("sandbox") ?? "").split(/\\s+/);
+    expect(sandbox).toContain("allow-scripts");
+    expect(sandbox).not.toContain("allow-same-origin");
+
+    await expect.poll(() => page.evaluate(
+      () => (window as Window & { __pjvaultUrlSandboxProof?: unknown }).__pjvaultUrlSandboxProof ?? null
+    )).toEqual({
+      type: "pjvault-url-sandbox-proof",
+      parentDocumentBlocked: true,
+      eventOrigin: "null"
+    });
   });
 
   test("fullscreen fallback fills portrait and landscape viewports and exits cleanly", async ({ page }) => {
@@ -338,7 +392,7 @@ test.describe("PJVault admin access", () => {
     await page.getByLabel("Mật khẩu").fill("NotARealPassword123");
     await page.getByRole("button", { name: "Đăng nhập an toàn" }).click();
 
-    await expect(page.getByRole("alert")).toContainText("đợi 15 phút");
+    await expect(page.locator(".admin-error")).toContainText("đợi 15 phút");
   });
 
   test("login form reports a rejected sign-in without contacting the real auth service", async ({ page }) => {

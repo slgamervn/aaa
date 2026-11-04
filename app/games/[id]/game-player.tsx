@@ -474,7 +474,7 @@ export default function ProjectDetails({ project }: { project: ProjectDetailsDat
             src={project.embeddedUrl}
             sandbox={project.kind === "html"
               ? "allow-scripts allow-pointer-lock allow-orientation-lock"
-              : "allow-scripts allow-forms allow-same-origin allow-pointer-lock allow-orientation-lock"}
+              : "allow-scripts allow-forms allow-pointer-lock allow-orientation-lock"}
             referrerPolicy="strict-origin-when-cross-origin"
             allow="fullscreen; autoplay; gamepad; accelerometer; gyroscope" allowFullScreen loading="eager" />
           {notice && <p className="project-preview-notice" role="status">{notice}</p>}

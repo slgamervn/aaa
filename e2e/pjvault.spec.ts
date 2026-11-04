@@ -149,12 +149,12 @@ test.describe("PJVault project preview", () => {
     };
 
     await assertViewportCoverage(393, 852);
-    await expect(page.evaluate(() => matchMedia("(orientation: portrait)").matches)).resolves.toBe(true);
+    expect(await page.evaluate(() => matchMedia("(orientation: portrait)").matches)).toBe(true);
 
     // Simulate rotating the phone while the fallback fullscreen is active.
     await page.setViewportSize({ width: 852, height: 393 });
     await assertViewportCoverage(852, 393);
-    await expect(page.evaluate(() => matchMedia("(orientation: landscape)").matches)).resolves.toBe(true);
+    expect(await page.evaluate(() => matchMedia("(orientation: landscape)").matches)).toBe(true);
     await expect(shell).toHaveCSS("padding", "0px");
 
     await page.keyboard.press("Escape");

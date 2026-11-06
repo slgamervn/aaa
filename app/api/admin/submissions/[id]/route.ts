@@ -179,7 +179,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
   if (action === "unpublish") {
     const token = process.env.GITHUB_TOKEN;
-    const repo = process.env.GITHUB_PUBLISH_REPO || "slgamervn/aaa";
+    const repo = process.env.GITHUB_PUBLISH_REPO || "snowgemm/aaa";
     const branch = process.env.GITHUB_PUBLISH_BRANCH || "main";
     if (!token) return json({ error: "GitHub removal is not configured. Add GITHUB_TOKEN in Vercel before removing a published game." }, 503);
     if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo)) {
@@ -305,7 +305,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
   if (action !== "publish") return json({ error: "Unknown submission action." }, 400);
 
   const token = process.env.GITHUB_TOKEN;
-  const repo = process.env.GITHUB_PUBLISH_REPO || "slgamervn/aaa";
+  const repo = process.env.GITHUB_PUBLISH_REPO || "snowgemm/aaa";
   const branch = process.env.GITHUB_PUBLISH_BRANCH || "main";
   if (!token) return json({ error: "GitHub publishing is not configured. Add GITHUB_TOKEN in Vercel before publishing." }, 503);
   if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo)) {

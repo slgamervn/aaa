@@ -1,12 +1,12 @@
-# GameVault
+# PJVault
 
-GameVault is a Vietnamese-first directory for browser games. Contributors can submit a single HTML game or an external URL. Submissions are stored privately, scanned without executing the HTML, and kept pending until an administrator reviews them. Publishing is a separate, explicit action.
+PJVault is a Vietnamese-first directory for browser games. Contributors can submit a single HTML game or an external URL. Submissions are stored privately, scanned without executing the HTML, and kept pending until an administrator reviews them. Publishing is a separate, explicit action.
 
 ## Current implementation
 
 - Published catalogue loaded from Supabase. Only records with status \`published\` are listed.
 - File upload: \`.html\` / \`.htm\`, maximum 1 MB, placed in the private \`gamevault-quarantine\` bucket.
-- URL submission: validates URL structure and rejects credentials and literal private/local hosts. **It does not fetch or execute the URL.**
+- URL submission: validates URL structure and rejects credentials and private/local hosts. It temporarily fetches public HTML and up to four linked scripts for static scanning with DNS pinning, redirect revalidation, and strict size/time limits. Submitted code is never executed or stored as published page content.
 - Static pattern scanner: records findings and a risk-priority signal. It is not a malware detector, legal opinion, or proof that a submission follows GitHub policy.
 - Persistent submissions, metadata, status changes, review notes, and audit events stored in Supabase.
 - Rate limit: up to 6 submission attempts per IP fingerprint per hour. The address itself is not stored; a keyed HMAC is used for the fingerprint.
@@ -28,7 +28,7 @@ Configure these environment variables in **Vercel → Project → Settings → E
 | \`SUPABASE_SECRET_KEY\` | Server-only DB and private Storage access | **No** |
 | \`GAMEVAULT_ADMIN_EMAILS\` | Comma-separated allowlist of administrator emails | No |
 | \`GITHUB_TOKEN\` | Fine-grained GitHub token with Contents read/write on the target repository | **No** |
-| \`GITHUB_PUBLISH_REPO\` | Publication destination; defaults to \`slgamervn/aaa\` | No |
+| \`GITHUB_PUBLISH_REPO\` | Publication destination; defaults to \`snowgemm/aaa\` | No |
 | \`GITHUB_PUBLISH_BRANCH\` | Publication branch; defaults to \`main\` | No |
 
 \`SUPABASE_SECRET_KEY\` should be a Supabase \`sb_secret_...\` key and must never use a \`NEXT_PUBLIC_\` prefix. The administrator email must also be created as a user in Supabase Auth. The app has no public self-registration.
@@ -55,14 +55,33 @@ All application tables have RLS enabled, explicit access revocation for \`anon\`
 Requirements: Node.js 22+ and npm.
 
 \`\`\`bash
-npm install
+npm ci
 cp .env.example .env.local
 npm run dev
 \`\`\`
 
 Open http://localhost:3000.
 
+`npm ci` installs the exact dependency tree recorded in `package-lock.json`. Use `npm install` only when intentionally changing dependencies, then review and commit both manifest and lockfile changes.
+
 \`npm run build\` performs a production build and TypeScript checks. \`npm run lint\` runs ESLint.
+
+### Browser end-to-end checks
+
+Install the Chromium browser once, then run the desktop and mobile-emulation scenarios:
+
+```bash
+npx playwright install chromium
+npm run test:e2e
+```
+
+Set `PLAYWRIGHT_BASE_URL` to a deployed Preview URL when testing a different deployment. The suite covers library search/filtering, saved appearance preferences, explicit preview loading, fullscreen behavior, and a mocked rejected admin login. It never calls the real admin login endpoint or performs a publish/unpublish action.
+
+GitHub Actions runs the browser suite against the feature-branch Vercel Preview after the deployment reports success. Failed runs upload Playwright traces and screenshots as short-lived artifacts.
+
+## Continuous integration
+
+GitHub Actions runs `.github/workflows/quality.yml` on changes to the feature branch and on pull requests targeting `main`. It uses Node.js 24, installs from the committed lockfile with `npm ci`, runs ESLint, and performs a production build. The job has read-only repository permissions and does not receive production secrets.
 
 ## Publication flow
 
@@ -73,7 +92,7 @@ Open http://localhost:3000.
 5. An approved submission is **not public yet**. The administrator must separately select **Publish to GitHub** and confirm.
 6. The server verifies the current database status again, writes the item to \`gamevault-submissions/<uuid>/\` in the configured GitHub repository, and records the commit SHA and publication event.
 
-External URL submissions remain references: GameVault does not crawl them or copy their content. The browser opens a published external URL directly in a new tab with \`noopener noreferrer\`.
+External URL submissions remain references. The scanner temporarily reads public HTML and up to four linked scripts for static analysis, but does not execute or publish a copy of the source. The game page embeds the original URL when the source permits it and provides a link to open the original website.
 
 ## Security boundaries and limitations
 
@@ -81,7 +100,7 @@ External URL submissions remain references: GameVault does not crawl them or cop
 - Human review must check licence, copyright, privacy, content, and the current GitHub policies. Approval is a human judgement, not a guarantee.
 - HTML playback uses an opaque sandbox origin and a restrictive CSP. This reduces risk but is not a substitute for reviewing submitted content; self-contained games that require remote assets or network APIs may not work.
 - Publication writes public repository contents. The publish confirmation is intentional and must not be bypassed or invoked automatically.
-- External URLs are never fetched server-side, avoiding SSRF, redirects, and DNS-rebinding exposure in this workflow.
+- External URLs are fetched server-side only for bounded static scanning; the scanner does not execute the fetched page or publish a copied response. Visitors may explicitly load the original URL in the sandboxed preview. Outbound-fetch limits and redirect/DNS revalidation remain security-critical.
 - Submissions and audit records remain in the server database until an administrator or a future retention policy removes them. Rate-limit fingerprints older than seven days are cleaned opportunistically when a rate-limit check runs.
 - The catalogue starts empty. Do not seed the public list with fictitious games.
 

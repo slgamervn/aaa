@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocalStorageState } from "@/lib/local-storage-state";
 import {
   ArrowDownRight, ArrowRight, BadgeCheck, BookOpen, Check,
   Clock3, FileCode2, FileUp, Github, Globe2, Languages, Layers3,
@@ -14,12 +15,18 @@ type Genre = "all" | "arcade" | "strategy" | "puzzle" | "action" | "simulation" 
 type Finding = { label: string; severity: "high" | "medium" | "low"; detail: string };
 type ScanResult = { mode: string; verdict: string; score: number; findings: Finding[]; message: string; bytes?: number; contentScanned?: boolean; scannedResources?: number; submitted?: boolean; submissionId?: string };
 type Submission = { id: string; title: string; source: string; kind: "HTML" | "URL"; status: "pending"; createdAt: string; result: ScanResult };
+type SavedPreferences = { language?: Language; theme?: Theme; largeText?: boolean; motionReduced?: boolean };
 type PublishedProject = { id: string; title: string; description: string; genre: string; kind: "html" | "url"; sourceUrl: string | null; originalFilename: string | null; publishedAt: string | null };
+
+const PREFERENCES_KEY = "gamevault-preferences-v1";
+const SUBMISSIONS_KEY = "gamevault-submissions-v1";
+const DEFAULT_PREFERENCES: SavedPreferences = { language: "vi", theme: "paper", largeText: false, motionReduced: false };
+const EMPTY_SUBMISSIONS: Submission[] = [];
 
 const copy = {
   vi: {
-    navLibrary: "Dự án", navProcess: "Quy trình", navSafety: "An toàn & chính sách",
-    submit: "Đóng góp", settings: "Cài đặt", switchLanguage: "Switch to English", darkMode: "Giao diện tối",
+    navLibrary: "Thư viện", navProcess: "Cách hoạt động", navSafety: "An toàn & chính sách",
+    submit: "Gửi dự án", settings: "Cài đặt", switchLanguage: "Switch to English", darkMode: "Giao diện tối",
     lightMode: "Giao diện sáng", largerText: "Tăng cỡ chữ", smallerText: "Cỡ chữ mặc định",
     reduceMotion: "Giảm chuyển động", restoreMotion: "Bật chuyển động",
     openMenu: "Mở điều hướng", closeMenu: "Đóng điều hướng",
@@ -34,47 +41,47 @@ const copy = {
     statTwo: "QUÉT TĨNH", statTwoDesc: "Không thực thi file tải lên",
     statThree: "DUYỆT TAY", statThreeDesc: "Không tự động xuất bản",
     statFour: "CHỈ DỰ ÁN ĐÃ DUYỆT", statFourDesc: "Dự án chỉ hiện sau khi được công khai",
-    libraryKicker: "KHO DỰ ÁN · 01", libraryTitle: "Dự án", librarySubtitle: "Các dự án đã được kiểm duyệt.",
-    searchPlaceholder: "Tìm tên hoặc thể loại…", searchLabel: "Tìm dự án",
+    libraryKicker: "Dự án đã công khai", libraryTitle: "Thư viện dự án", librarySubtitle: "Mở từng trang dự án để xem thông tin, nguồn và bản xem trước.",
+    searchPlaceholder: "Tìm tên dự án hoặc thể loại…", searchLabel: "Tìm dự án",
     all: "Tất cả", arcade: "Arcade", strategy: "Chiến thuật", puzzle: "Giải đố", action: "Hành động", simulation: "Mô phỏng", educational: "Giáo dục", other: "Khác",
-    genreLabel: "Thể loại", descriptionLabel: "Mô tả dự án", descriptionPlaceholder: "Giới thiệu ngắn về dự án (tối đa 240 ký tự)", publishedOnly: "Đã được duyệt và xuất bản", loadingProjects: "Đang tải danh sách dự án…", catalogLoadFailed: "Chưa thể tải danh sách dự án. Hãy thử tải lại trang.", emptyLibraryTitle: "Chưa có dự án nào được công khai.", emptyLibraryText: "Các dự án sẽ xuất hiện tại đây sau khi được kiểm tra và phê duyệt. Bạn cũng có thể gửi một dự án để đề nghị xem xét.", downloadProject: "Tải tệp HTML", openProject: "Mở trong GameVault", sourceUnavailable: "Nguồn hiện không khả dụng", riskScore: "TÍN HIỆU KIỂM TRA", htmlProjectFallback: "Tệp HTML đã được kiểm tra và công khai.", urlProjectFallback: "Dự án này được chia sẻ qua trang web gốc.",
+    genreLabel: "Thể loại", descriptionLabel: "Mô tả dự án", descriptionPlaceholder: "Dự án của bạn có gì đặc biệt? (tối đa 240 ký tự)", publishedOnly: "Đã được duyệt và xuất bản", loadingProjects: "Đang tải danh sách dự án…", catalogLoadFailed: "Chưa thể tải danh sách dự án. Hãy thử tải lại trang.", emptyLibraryTitle: "Chưa có dự án được công khai", emptyLibraryText: "Dự án đã qua duyệt sẽ xuất hiện tại đây. Bạn cũng có thể gửi dự án để đề nghị xét duyệt.", downloadProject: "Tải file HTML", openProject: "Mở dự án", sourceUnavailable: "Nguồn hiện không khả dụng", riskScore: "Tín hiệu kiểm tra", htmlProjectFallback: "Dự án này được chia sẻ dưới dạng tệp HTML.", urlProjectFallback: "Dự án này được lưu dưới dạng liên kết website.",
     sample: "MẪU", unlisted: "Chưa xuất bản", sampleArtwork: "ARTWORK MẪU",
     neonCategory: "Arcade · Nhịp độ", neonDescription: "Một đường đua nhỏ, vài khúc cua và cảm giác vừa đủ nhanh.",
     kingdomCategory: "Chiến thuật · Xây dựng", kingdomDescription: "Xếp từng mảnh đất và chăm chút cho một vương quốc tí hon.",
     orbitCategory: "Giải đố · Vật lý", orbitDescription: "Những quỹ đạo đơn giản dẫn đến các câu đố khó đoán.",
     submitSimilar: "Gửi dự án tương tự", noResults: "Không tìm thấy kết quả. Hãy thử từ khóa hoặc thể loại khác.",
     demoNotice: "Ảnh bìa và tên hiển thị là hình minh họa. Dự án chỉ xuất hiện trong danh sách sau khi được duyệt công khai.",
-    submitKicker: "ĐÓNG GÓP DỰ ÁN · 02", submitTitle: "Bạn có dự án muốn chia sẻ?",
-    submitLede: "Gửi tệp HTML hoặc đường dẫn đến dự án. Hệ thống sẽ quét tĩnh sơ bộ, sau đó người quản lý kiểm tra trước khi quyết định công khai.",
+    submitKicker: "ĐÓNG GÓP DỰ ÁN · 02", submitTitle: "Có dự án muốn chia sẻ?",
+    submitLede: "Gửi tệp HTML hoặc liên kết đến dự án. PJVault sẽ kiểm tra sơ bộ, sau đó quản trị viên xem lại trước khi công khai.",
     stepOne: "Gửi dự án", stepOneDesc: "Tệp .html / .htm hoặc đường dẫn",
     stepTwo: "Kiểm tra sơ bộ", stepTwoDesc: "Tìm một số mẫu code cần xem lại",
     stepThree: "Chờ phê duyệt", stepThreeDesc: "Chỉ công khai sau khi được duyệt",
-    formKicker: "BIỂU MẪU GỬI DỰ ÁN", formTitle: "Gửi dự án mới", safeFlow: "QUY TRÌNH RÕ RÀNG",
+    formKicker: "Gửi dự án", formTitle: "Thông tin dự án", safeFlow: "Có người kiểm duyệt",
     htmlTab: "Tệp HTML", urlTab: "Liên kết", titleLabel: "Tên dự án",
     optional: "(không bắt buộc)", titlePlaceholder: "Ví dụ: Pixel Adventure",
     fileLabel: "Tệp dự án", fileHint: ".html / .htm · tối đa 1 MB",
     dropTitle: "Thả file HTML vào đây", dropOr: "hoặc nhấn để chọn từ thiết bị",
     browse: "Chọn file", changeFile: "Nhấn để đổi tệp",
-    urlLabel: "Đường dẫn dự án", urlPlaceholder: "https://example.com/project",
-    urlNote: "Máy quét tải trang công khai trong giới hạn an toàn, sau đó kiểm tra tĩnh HTML và tối đa 4 script bên ngoài. Mã dự án không được thực thi. Một số website có thể chặn máy quét.",
+    urlLabel: "Liên kết dự án", urlPlaceholder: "https://example.com/project",
+    urlNote: "PJVault tải trang công khai và quét tĩnh HTML cùng tối đa 4 script ngoài. Mã không được thực thi. Một số website có thể chặn việc quét.",
     consent: "Tôi có quyền chia sẻ dự án này hoặc đã kiểm tra giấy phép phù hợp.",
     consentError: "Vui lòng xác nhận bạn có quyền chia sẻ dự án này.",
     fileError: "Vui lòng chọn tệp .html hoặc .htm.",
     invalidFile: "Chỉ chấp nhận tệp .html hoặc .htm.",
     tooLarge: "Tệp quá lớn. Giới hạn hiện tại là 1 MB.",
     urlError: "Nhập đường dẫn dự án cần kiểm tra.", scanFailed: "Không thể quét nội dung.",
-    scanButton: "Kiểm tra và gửi duyệt", submittedButton: "Đã gửi chờ duyệt", submittedNotice: "Đã nhận dự án và đưa vào hàng chờ kiểm duyệt. Dự án chưa được công khai.", submittedNeedsReview: "Đã nhận đường dẫn và đưa vào hàng chờ kiểm duyệt, nhưng hệ thống chưa tải được nội dung để quét. Người quản lý cần kiểm tra thủ công trước khi công khai.", scanIncompleteStatus: "Chưa thể kiểm tra nội dung", scanning: "Đang quét…",
+    scanButton: "Gửi để duyệt", submittedButton: "Đã gửi chờ duyệt", submittedNotice: "Đã nhận dự án và đưa vào hàng chờ kiểm duyệt. Dự án chưa được công khai.", submittedNeedsReview: "Đã nhận đường dẫn và đưa vào hàng chờ kiểm duyệt, nhưng hệ thống chưa tải được nội dung để quét. Người quản lý cần kiểm tra thủ công trước khi công khai.", scanIncompleteStatus: "Chưa thể kiểm tra nội dung", scanning: "Đang quét…",
     scanResult: "Kết quả quét sơ bộ", manualReview: "Cần xem xét thủ công",
     noFindings: "Không phát hiện mẫu trùng khớp trong nội dung đã quét. Điều này không chứng minh dự án an toàn.",
     scanDisclaimer: "Quét tĩnh không chứng minh file vô hại hoặc tuân thủ chính sách.",
     reset: "Kiểm tra dự án khác", footnote: "Nội dung chưa được tự động đưa lên GitHub.",
-    workflowKicker: "RÕ RÀNG TỪ ĐẦU · 03", workflowTitle: "Kiểm tra trước. Xuất bản sau.",
+    workflowKicker: "Quy trình xét duyệt", workflowTitle: "Kiểm tra trước. Xuất bản sau.",
     workflowLede: "Không một công cụ quét tự động nào có thể thay thế việc xem xét quyền sử dụng, bản quyền và nội dung thực tế.",
     receive: "Tiếp nhận dự án", receiveDesc: "Nhận tệp HTML hoặc lưu đường dẫn làm nguồn tham khảo. Tệp không được chạy trong lúc quét.",
     staticScan: "Quét tĩnh", staticScanDesc: "Tìm dấu hiệu cần xem xét. Kết quả có thể bỏ sót hoặc cảnh báo nhầm.",
     policyCheck: "Kiểm tra chính sách", policyCheckDesc: "Xem giấy phép, bản quyền, quyền riêng tư và quy tắc sử dụng GitHub.",
     manualApproval: "Duyệt thủ công", manualApprovalDesc: "Chủ dự án quyết định. Kết quả quét không tự phê duyệt nội dung.",
-    safetyKicker: "GIỚI HẠN ĐƯỢC NÓI RÕ · 04", safetyTitle: "Quét không đồng nghĩa với an toàn.",
+    safetyKicker: "Giới hạn kiểm tra", safetyTitle: "Quét không đồng nghĩa với an toàn.",
     safetyText: "Bài gửi được lưu phía máy chủ trong cơ sở dữ liệu và kho riêng tư. Quyền quản trị và xuất bản GitHub phải được cấu hình; không nội dung nào được tự động công khai.",
     readPolicy: "Đọc chính sách sử dụng GitHub", recentTitle: "Dự án đã gửi trên thiết bị này",
     clearHistory: "Xoá lịch sử cục bộ", pendingReview: "Chờ kiểm duyệt",
@@ -100,8 +107,8 @@ const copy = {
     scanMessageHtml: "Đây là quét tĩnh theo mẫu, không phải chứng nhận không có mã độc hoặc xác nhận tuân thủ điều khoản GitHub."
   },
   en: {
-    navLibrary: "Projects", navProcess: "How it works", navSafety: "Safety & policy",
-    submit: "Contribute", settings: "Settings", switchLanguage: "Chuyển sang tiếng Việt", darkMode: "Dark appearance",
+    navLibrary: "Library", navProcess: "How it works", navSafety: "Safety & policy",
+    submit: "Submit a project", settings: "Settings", switchLanguage: "Chuyển sang tiếng Việt", darkMode: "Dark appearance",
     lightMode: "Light appearance", largerText: "Increase text size", smallerText: "Default text size",
     reduceMotion: "Reduce motion", restoreMotion: "Enable motion",
     openMenu: "Open navigation", closeMenu: "Close navigation",
@@ -116,10 +123,10 @@ const copy = {
     statTwo: "STATIC CHECK", statTwoDesc: "Uploaded files are not executed",
     statThree: "HUMAN REVIEW", statThreeDesc: "Nothing is published automatically",
     statFour: "REVIEWED PROJECTS", statFourDesc: "Projects appear after approval",
-    libraryKicker: "PROJECT COLLECTION · 01", libraryTitle: "Projects", librarySubtitle: "Reviewed projects, ready to explore.",
-    searchPlaceholder: "Search titles or genres…", searchLabel: "Search projects",
+    libraryKicker: "Published projects", libraryTitle: "Project library", librarySubtitle: "Open a project page to read its details, source and preview.",
+    searchPlaceholder: "Search project titles or genres…", searchLabel: "Search projects",
     all: "All", arcade: "Arcade", strategy: "Strategy", puzzle: "Puzzle", action: "Action", simulation: "Simulation", educational: "Educational", other: "Other",
-    genreLabel: "Genre", descriptionLabel: "Project description", descriptionPlaceholder: "Briefly describe the project (up to 240 characters)", publishedOnly: "Reviewed and published", loadingProjects: "Loading the library…", catalogLoadFailed: "The library could not be loaded. Try refreshing the page.", emptyLibraryTitle: "No projects published yet.", emptyLibraryText: "Projects will appear here after review and approval. You can also submit a project for consideration.", downloadProject: "Download HTML file", openProject: "Open in GameVault", sourceUnavailable: "Source unavailable", riskScore: "REVIEW SIGNAL", htmlProjectFallback: "This HTML project has been reviewed and published.", urlProjectFallback: "This project is provided through its original website.",
+    genreLabel: "Genre", descriptionLabel: "Project description", descriptionPlaceholder: "What makes this project worth a look? (up to 240 characters)", publishedOnly: "Reviewed and published", loadingProjects: "Loading the library…", catalogLoadFailed: "The library could not be loaded. Try refreshing the page.", emptyLibraryTitle: "No projects have been published yet", emptyLibraryText: "Reviewed projects will appear here. You can submit one for consideration too.", downloadProject: "Download HTML file", openProject: "Open project", sourceUnavailable: "Source unavailable", riskScore: "Review signal", htmlProjectFallback: "Shared as an HTML project file.", urlProjectFallback: "Linked to its original website.",
     sample: "SAMPLE", unlisted: "Not published", sampleArtwork: "SAMPLE ARTWORK",
     neonCategory: "Arcade · Action", neonDescription: "A small track, a few turns, and just enough speed.",
     kingdomCategory: "Strategy · Building", kingdomDescription: "Place each patch of land and tend to a tiny kingdom.",
@@ -127,36 +134,36 @@ const copy = {
     submitSimilar: "Submit a similar project", noResults: "No results found. Try another search term or genre.",
     demoNotice: "Cover artwork and names are illustrative. A project only appears in the collection after approval and publication.",
     submitKicker: "PROJECT CONTRIBUTIONS · 02", submitTitle: "Have a project to share?",
-    submitLede: "Submit an HTML file or a link to the project. The system performs a preliminary static scan, then a person reviews it before publication.",
+    submitLede: "Send an HTML file or a project link. We run a preliminary check, then a person reviews it before publication.",
     stepOne: "Submit a project", stepOneDesc: ".html / .htm file or URL",
     stepTwo: "Preliminary scan", stepTwoDesc: "Look for patterns worth reviewing",
     stepThree: "Await approval", stepThreeDesc: "Projects are published only after review",
-    formKicker: "PROJECT SUBMISSION", formTitle: "Submit a project", safeFlow: "CLEAR PROCESS",
-    htmlTab: "HTML file", urlTab: "Project link", titleLabel: "Project name",
+    formKicker: "Project submission", formTitle: "Project details", safeFlow: "Human review",
+    htmlTab: "HTML file", urlTab: "Project link", titleLabel: "Project title",
     optional: "(optional)", titlePlaceholder: "For example: Pixel Adventure",
     fileLabel: "Project file", fileHint: ".html / .htm · up to 1 MB",
     dropTitle: "Drop an HTML file here", dropOr: "or choose one from your device",
     browse: "Choose file", changeFile: "Select a different file",
     urlLabel: "Project URL", urlPlaceholder: "https://example.com/project",
-    urlNote: "The scanner fetches a public page within safety limits, then statically checks its HTML and up to 4 external scripts. Project code is never executed. Some websites may block scanners.",
+    urlNote: "PJVault fetches a public page and statically scans its HTML and up to four external scripts. Nothing is executed. Some websites may block scanning.",
     consent: "I have permission to share this project or have checked its licence.",
     consentError: "Please confirm that you have permission to share this content.",
     fileError: "Choose an .html or .htm file first.",
     invalidFile: "Only .html and .htm files are accepted.",
     tooLarge: "The file is too large. The prototype limit is 1 MB.",
     urlError: "Enter the project URL to check.", scanFailed: "The content could not be scanned.",
-    scanButton: "Scan and submit for review", submittedButton: "Submitted for review", submittedNotice: "Your submission has been received and queued for human review. It has not been published automatically.", submittedNeedsReview: "The URL was received and queued for review, but its content could not be fetched for scanning. A person must review it before publication.", scanIncompleteStatus: "Content scan incomplete", scanning: "Scanning…",
+    scanButton: "Send for review", submittedButton: "Submitted for review", submittedNotice: "Your submission has been received and queued for human review. It has not been published automatically.", submittedNeedsReview: "The URL was received and queued for review, but its content could not be fetched for scanning. A person must review it before publication.", scanIncompleteStatus: "Content scan incomplete", scanning: "Scanning…",
     scanResult: "Preliminary scan result", manualReview: "Manual review needed",
     noFindings: "No defined patterns matched in the scanned content. This does not prove the project is safe.",
     scanDisclaimer: "A static scan cannot prove a file is harmless or policy-compliant.",
     reset: "Scan another item", footnote: "Nothing is published to GitHub automatically.",
-    workflowKicker: "THE PROCESS, UP FRONT · 03", workflowTitle: "Check first. Publish later.",
+    workflowKicker: "Review process", workflowTitle: "Check first. Publish later.",
     workflowLede: "No automated scanner can replace a review of usage rights, copyright, and the actual content.",
     receive: "Receive", receiveDesc: "Accept an HTML file or keep a URL as a reference. The file is not run during scanning.",
     staticScan: "Static scan", staticScanDesc: "Look for signals worth reviewing. Results can miss issues or flag harmless code.",
     policyCheck: "Policy review", policyCheckDesc: "Review the licence, copyright, privacy, and GitHub rules.",
     manualApproval: "Manual approval", manualApprovalDesc: "The project owner decides. A scan never approves content by itself.",
-    safetyKicker: "LIMITATIONS, MADE CLEAR · 04", safetyTitle: "A scan is not a safety certificate.",
+    safetyKicker: "What the checks cover", safetyTitle: "A scan is not a safety certificate.",
     safetyText: "Submissions are stored server-side in a database and private quarantine. Administrator access and GitHub publishing must be configured; nothing is published automatically.",
     readPolicy: "Read GitHub's Acceptable Use Policies", recentTitle: "Recent submissions on this device",
     clearHistory: "Clear local history", pendingReview: "Waiting for owner review",
@@ -230,11 +237,15 @@ function localizeErrorMessage(message: string, language: Language): string {
 }
 
 export default function Home() {
-  const [language, setLanguage] = useState<Language>("vi");
-  const [theme, setTheme] = useState<Theme>("paper");
-  const [largeText, setLargeText] = useState(false);
-  const [motionReduced, setMotionReduced] = useState(false);
-  const [preferencesLoaded, setPreferencesLoaded] = useState(false);
+  const [preferences, setPreferences] = useLocalStorageState(PREFERENCES_KEY, DEFAULT_PREFERENCES);
+  const language: Language = preferences.language === "en" ? "en" : "vi";
+  const theme: Theme = preferences.theme === "night" ? "night" : "paper";
+  const largeText = preferences.largeText === true;
+  const motionReduced = preferences.motionReduced === true;
+  const setLanguage = (value: Language) => setPreferences((current) => ({ ...current, language: value }));
+  const setTheme = (value: Theme) => setPreferences((current) => ({ ...current, theme: value }));
+  const setLargeText = (value: boolean) => setPreferences((current) => ({ ...current, largeText: value }));
+  const setMotionReduced = (value: boolean) => setPreferences((current) => ({ ...current, motionReduced: value }));
   const [activePageTab, setActivePageTab] = useState<"library" | "submit" | "info">("library");
   const [activeTab, setActiveTab] = useState<"html" | "url">("html");
   const [activeGenre, setActiveGenre] = useState<Genre>("all");
@@ -249,7 +260,7 @@ export default function Home() {
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState("");
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [submissions, setSubmissions] = useLocalStorageState(SUBMISSIONS_KEY, EMPTY_SUBMISSIONS);
   const [query, setQuery] = useState("");
   const [consent, setConsent] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -257,37 +268,16 @@ export default function Home() {
   const t = copy[language];
 
   useEffect(() => {
-    try {
-      const savedQueue = localStorage.getItem("gamevault-submissions-v1");
-      if (savedQueue) setSubmissions(JSON.parse(savedQueue) as Submission[]);
-      const saved = localStorage.getItem("gamevault-preferences-v1");
-      if (saved) {
-        const preferences = JSON.parse(saved) as { language?: Language; theme?: Theme; largeText?: boolean; motionReduced?: boolean };
-        if (preferences.language === "vi" || preferences.language === "en") setLanguage(preferences.language);
-        if (preferences.theme === "paper" || preferences.theme === "night") setTheme(preferences.theme);
-        if (typeof preferences.largeText === "boolean") setLargeText(preferences.largeText);
-        if (typeof preferences.motionReduced === "boolean") setMotionReduced(preferences.motionReduced);
-      }
-    } catch { /* Ignore damaged local preferences or demo data. */ }
-    setPreferencesLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    if (!preferencesLoaded) return;
-    try {
-      localStorage.setItem("gamevault-preferences-v1", JSON.stringify({ language, theme, largeText, motionReduced }));
-    } catch { /* Preferences can remain in component state if storage is unavailable. */ }
     document.documentElement.lang = language;
     document.documentElement.dataset.theme = theme;
     document.documentElement.dataset.scale = largeText ? "large" : "normal";
     document.documentElement.dataset.motion = motionReduced ? "reduced" : "normal";
-    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "paper" ? "#f3f0e7" : "#171c18");
-  }, [language, theme, largeText, motionReduced, preferencesLoaded]);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "paper" ? "#edf2f1" : "#17242a");
+  }, [language, theme, largeText, motionReduced]);
 
   useEffect(() => {
     let active = true;
     async function loadPublishedProjects() {
-      setCatalogLoading(true);
       try {
         const response = await fetch("/api/games", { cache: "no-store" });
         const body = await response.json();
@@ -373,11 +363,7 @@ export default function Home() {
         createdAt: typeof data.submission?.submittedAt === "string" ? data.submission.submittedAt : new Date().toISOString(),
         result: acceptedResult
       };
-      setSubmissions((previous) => {
-        const updated = [newItem, ...previous].slice(0, 20);
-        try { localStorage.setItem("gamevault-submissions-v1", JSON.stringify(updated)); } catch { /* The local queue is best-effort only. */ }
-        return updated;
-      });
+      setSubmissions((previous) => [newItem, ...previous].slice(0, 20));
     } catch (caught) {
       setError(caught instanceof Error ? localizeErrorMessage(caught.message, language) : t.scanFailed);
     } finally {
@@ -404,7 +390,6 @@ export default function Home() {
 
   function clearQueue() {
     setSubmissions([]);
-    try { localStorage.removeItem("gamevault-submissions-v1"); } catch { /* Ignore unavailable browser storage. */ }
   }
 
   const displayResult = result ? localizeScan(result, language) : null;
@@ -413,9 +398,9 @@ export default function Home() {
     <div className="app-shell" data-theme={theme} data-scale={largeText ? "large" : "normal"} data-motion={motionReduced ? "reduced" : "normal"}>
       <a className="skip-link" href="#main-content">{language === "vi" ? "Bỏ qua điều hướng" : "Skip to content"}</a>
       <header className="topbar">
-        <a className="brand" href="#" onClick={(event) => { event.preventDefault(); setActivePageTab("library"); }} aria-label="GameVault home">
+        <a className="brand" href="#" onClick={(event) => { event.preventDefault(); setActivePageTab("library"); }} aria-label="PJVault home">
           <span className="brand-mark"><Layers3 size={19} strokeWidth={2.2} /></span>
-          <span>gamevault<span className="brand-dot">.</span></span>
+          <span>pjvault<span className="brand-dot">.</span></span>
         </a>
         <div className="header-controls" aria-label={language === "vi" ? "Tuỳ chỉnh" : "Preferences"}>
           <button className="utility-button language-button" onClick={() => setLanguage(language === "vi" ? "en" : "vi")} aria-label={t.switchLanguage} title={t.switchLanguage}>
@@ -442,7 +427,7 @@ export default function Home() {
         </div>
       </header>
 
-      <nav className="browser-tabbar" role="tablist" aria-orientation="horizontal" aria-label={language === "vi" ? "Các mục GameVault" : "GameVault sections"} onKeyDown={(event) => { if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return; const tabs = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>(".browser-tab")); const currentIndex = tabs.indexOf(event.target as HTMLButtonElement); if (currentIndex < 0) return; event.preventDefault(); const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : (currentIndex + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length; tabs[nextIndex].focus(); tabs[nextIndex].click(); }}>
+      <nav className="browser-tabbar" role="tablist" aria-orientation="horizontal" aria-label={language === "vi" ? "Các mục PJVault" : "PJVault sections"} onKeyDown={(event) => { if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return; const tabs = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>(".browser-tab")); const currentIndex = tabs.indexOf(event.target as HTMLButtonElement); if (currentIndex < 0) return; event.preventDefault(); const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : (currentIndex + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length; tabs[nextIndex].focus(); tabs[nextIndex].click(); }}>
         <button id="gv-tab-library" className={"browser-tab " + (activePageTab === "library" ? "browser-tab-active" : "")} type="button" role="tab" aria-selected={activePageTab === "library"} aria-controls="gv-panel-library" tabIndex={activePageTab === "library" ? 0 : -1} onClick={() => setActivePageTab("library")}><BookOpen size={15} /><span>{t.navLibrary}</span></button>
         <button id="gv-tab-submit" className={"browser-tab " + (activePageTab === "submit" ? "browser-tab-active" : "")} type="button" role="tab" aria-selected={activePageTab === "submit"} aria-controls="gv-panel-submit" tabIndex={activePageTab === "submit" ? 0 : -1} onClick={() => setActivePageTab("submit")}><FileCode2 size={15} /><span>{t.submit}</span></button>
         <button id="gv-tab-info" className={"browser-tab " + (activePageTab === "info" ? "browser-tab-active" : "")} type="button" role="tab" aria-selected={activePageTab === "info"} aria-controls="gv-panel-info" tabIndex={activePageTab === "info" ? 0 : -1} onClick={() => setActivePageTab("info")}><ShieldCheck size={15} /><span>{t.navProcess}</span></button>
@@ -451,37 +436,34 @@ export default function Home() {
       <main id="main-content">
         <section className="section library-section" id="gv-panel-library" role="tabpanel" aria-labelledby="gv-tab-library" tabIndex={0} style={{ display: activePageTab === "library" ? undefined : "none" }}>
           <div className="section-heading library-heading">
-            <h1 className="library-title">{t.libraryTitle}</h1>
+            <div className="library-copy">
+              <h1 className="library-title">{t.libraryTitle}</h1>
+              <p className="library-description">{t.librarySubtitle}</p>
+            </div>
             <label className="library-search"><Search size={17} aria-hidden="true" /><input ref={searchRef} aria-label={t.searchLabel} placeholder={t.searchPlaceholder} value={query} onChange={(event) => setQuery(event.target.value)} /><kbd>/</kbd></label>
           </div>
-          <div className="filter-row" role="group" aria-label={language === "vi" ? "Lọc thể loại" : "Filter by genre"}>
-            {(["all", "arcade", "strategy", "puzzle", "action", "simulation", "educational", "other"] as Genre[]).map((value) => (
-              <button key={value} className={activeGenre === value ? "filter-active" : ""} aria-pressed={activeGenre === value} onClick={() => setActiveGenre(value)}>
-                {value === "all" ? t.all : value === "arcade" ? t.arcade : value === "strategy" ? t.strategy : value === "puzzle" ? t.puzzle : value === "action" ? t.action : value === "simulation" ? t.simulation : value === "educational" ? t.educational : t.other}
-              </button>
-            ))}
-          </div>
+          {publishedProjects.length > 0 && !catalogLoadError && (
+            <div className="filter-row" role="group" aria-label={language === "vi" ? "Lọc thể loại" : "Filter by genre"}>
+              {(["all", "arcade", "strategy", "puzzle", "action", "simulation", "educational", "other"] as Genre[]).map((value) => (
+                <button key={value} className={activeGenre === value ? "filter-active" : ""} aria-pressed={activeGenre === value} onClick={() => setActiveGenre(value)}>
+                  {value === "all" ? t.all : value === "arcade" ? t.arcade : value === "strategy" ? t.strategy : value === "puzzle" ? t.puzzle : value === "action" ? t.action : value === "simulation" ? t.simulation : value === "educational" ? t.educational : t.other}
+                </button>
+              ))}
+            </div>
+          )}
           {catalogLoading && <p className="catalog-loading" role="status">{t.loadingProjects}</p>}
           {catalogLoadError && <p className="catalog-load-error" role="alert">{t.catalogLoadFailed}</p>}
           <div className="game-grid">
             {filteredProjects.map((project) => {
-              const color = project.genre === "strategy" ? "rust" : project.genre === "puzzle" || project.genre === "educational" ? "blue" : "mint";
-              const coverSymbol = project.genre === "strategy" ? "♜" : project.genre === "puzzle" ? "◎" : project.kind === "url" ? "↗" : "✦";
               const genreLabel = project.genre === "arcade" ? t.arcade : project.genre === "strategy" ? t.strategy : project.genre === "puzzle" ? t.puzzle : project.genre === "action" ? t.action : project.genre === "simulation" ? t.simulation : project.genre === "educational" ? t.educational : t.other;
-              const projectHref = "/games/" + encodeURIComponent(project.id);
+              const projectHref = "/projects/" + encodeURIComponent(project.id);
               return (
                 <article className="game-card" key={project.id}>
-                  <div className={"game-cover cover-" + color} aria-hidden="true">
-                    <div className="cover-symbol">{coverSymbol}</div>
-                    <span className="demo-pill">{project.kind === "html" ? "HTML" : "URL"}</span>
-                  </div>
                   <div className="game-info">
-                    <div className="game-meta"><span>{genreLabel}</span><span className="game-type">{project.kind === "html" ? "HTML" : "URL"}</span></div>
+                    <div className="game-meta"><span>{genreLabel}</span><span className="game-type">{project.kind === "html" ? (language === "vi" ? "File HTML" : "HTML file") : "Website"}</span></div>
                     <h3>{project.title}</h3>
                     <p>{project.description || (project.kind === "html" ? t.htmlProjectFallback : t.urlProjectFallback)}</p>
-                    <a className="card-link" href={projectHref}>
-                      {t.openProject}<ArrowRight size={15} />
-                    </a>
+                    <a className="card-link" href={projectHref}>{t.openProject}</a>
                   </div>
                 </article>
               );
@@ -586,10 +568,10 @@ export default function Home() {
         </main>
 
         <footer className="footer">
-          <a className="brand footer-brand" href="#" onClick={(event) => { event.preventDefault(); setActivePageTab("library"); }}><span className="brand-mark"><Layers3 size={17} /></span><span>gamevault<span className="brand-dot">.</span></span></a>
+          <a className="brand footer-brand" href="#" onClick={(event) => { event.preventDefault(); setActivePageTab("library"); }}><span className="brand-mark"><Layers3 size={17} /></span><span>pjvault<span className="brand-dot">.</span></span></a>
           <span>{t.footerLine}</span>
-          <div><a href="#safety" onClick={(event) => { event.preventDefault(); setActivePageTab("info"); }}>{t.footerPolicy}</a><a href="#how-it-works" onClick={(event) => { event.preventDefault(); setActivePageTab("info"); }}>{t.footerProcess}</a><a href="https://github.com/slgamervn/aaa" target="_blank" rel="noreferrer"><Github size={15} />{t.source}</a></div>
-          <small>© 2026 GameVault · {t.footerStatus}</small>
+          <div><a href="#safety" onClick={(event) => { event.preventDefault(); setActivePageTab("info"); }}>{t.footerPolicy}</a><a href="#how-it-works" onClick={(event) => { event.preventDefault(); setActivePageTab("info"); }}>{t.footerProcess}</a><a href="https://github.com/snowgemm/aaa" target="_blank" rel="noreferrer"><Github size={15} />{t.source}</a></div>
+          <small>© 2026 PJVault · {t.footerStatus}</small>
         </footer>
 
     </div>

@@ -8,7 +8,15 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3
 
 export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const access = await requireAdminAccess();
-  if (!access.ok) return NextResponse.json({ error: access.error }, { status: access.status });
+  if (!access.ok) {
+    return NextResponse.json({ error: access.error }, {
+      status: access.status,
+      headers: {
+        "Cache-Control": "private, no-store, max-age=0",
+        "X-Content-Type-Options": "nosniff"
+      }
+    });
+  }
 
   const { id } = await context.params;
   if (!UUID_PATTERN.test(id)) return NextResponse.json({ error: "Not found." }, { status: 404 });

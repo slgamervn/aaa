@@ -1,45 +1,18 @@
-/* GameVault — editorial field-notes design. Flat colour, tactile grain, purposeful motion. */
+/* PJVault — editorial field-notes design. Flat colour, tactile grain, purposeful motion. */
 :root {
   color-scheme: light;
-  --paper: #f3f0e7;
-  --paper-alt: #e8e3d6;
-  --surface: #fbf9f2;
-  --surface-strong: #e2ddcf;
-  --ink: #1c2b25;
-  --muted: #687267;
-  --faint: #8b8d7e;
-  --line: #c9c4b5;
-  --line-strong: #989989;
-  --green: #43674d;
-  --green-soft: #dce5d5;
-  --green-ink: #fbf9f2;
-  --rust: #b95737;
-  --rust-soft: #f0ddd1;
-  --yellow: #d3ad57;
-  --violet: #81778e;
-  --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-  --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --display: Georgia, "Times New Roman", serif;
-  --container: 1480px;
+  --paper: #eaf0f1; --paper-alt: #dce6e8; --surface: #f7f9f9; --surface-strong: #e0e9e9;
+  --ink: #1e3037; --muted: #5c7077; --faint: #829297; --line: #ccd8da; --line-strong: #9bafb4;
+  --green: #356c79; --green-soft: #dcebed; --green-ink: #f7fbfb; --rust: #b98243; --rust-soft: #f1e7d8;
+  --yellow: #d2a85e; --violet: #7b7f9a; --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; --display: var(--sans); --container: 1480px;
 }
 html[data-theme="night"] {
   color-scheme: dark;
-  --paper: #171c18;
-  --paper-alt: #202820;
-  --surface: #222922;
-  --surface-strong: #30392f;
-  --ink: #eae8db;
-  --muted: #b3b7a8;
-  --faint: #8f988a;
-  --line: #3a4439;
-  --line-strong: #66715e;
-  --green: #a4c29c;
-  --green-soft: #2d4030;
-  --green-ink: #172019;
-  --rust: #db9470;
-  --rust-soft: #453027;
-  --yellow: #dfc47e;
-  --violet: #bab0cd;
+  --paper: #17242a; --paper-alt: #1e3037; --surface: #22343a; --surface-strong: #2a4147;
+  --ink: #e8eff0; --muted: #b0c0c3; --faint: #84979c; --line: #354a51; --line-strong: #536970;
+  --green: #8abac0; --green-soft: #2a4449; --green-ink: #17252b; --rust: #d9ab6a; --rust-soft: #473a2b;
+  --yellow: #e0bd80; --violet: #b5b4cf;
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: 5.5rem; font-size: 16px; }
@@ -643,7 +616,7 @@ html[data-theme="night"] .admin-status-pending_review { color: var(--yellow); }
 }
 
 
-/* Keep the project playable within GameVault rather than navigating away. */
+/* Keep the project playable within PJVault rather than navigating away. */
 .project-preview-shell { width: min(1180px, calc(100% - 2rem)); margin: 1.5rem auto 3rem; overflow: hidden; border: 1px solid var(--line); background: var(--surface); }
 .project-preview-toolbar { display: flex; align-items: center; gap: .65rem; min-height: 42px; padding: .55rem .85rem; border-bottom: 1px solid var(--line); color: var(--muted); font: .72rem var(--mono); }
 .project-preview-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex: 0 0 auto; }
@@ -759,12 +732,17 @@ html[data-theme="night"] .admin-status-pending_review { color: var(--yellow); }
   max-width: none;
   max-height: none;
   min-height: 0;
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  max-width: none;
   margin: 0;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  padding: 0;
   border: 0;
   border-radius: 0;
   background: var(--paper);
   box-shadow: none;
+  transform: none;
 }
 .project-preview-shell:fullscreen .project-preview-frame,
 .project-preview-shell:-webkit-full-screen .project-preview-frame,
@@ -792,7 +770,7 @@ html[data-theme="night"] .admin-status-pending_review { color: var(--yellow); }
   max-height: none;
   min-height: 0;
   margin: 0;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  padding: 0;
   border: 0;
   border-radius: 0;
   background: var(--paper);
@@ -1160,4 +1138,527 @@ html[data-motion="reduced"] .fullscreen-toolbar-dot { transition: none; }
   .browser-tabbar { top: 60px; }
   .library-heading .library-search { width: 100%; }
   .settings-panel { width: min(250px, calc(100vw - 1rem)); }
+}
+
+/* PJVault public experience refresh: quiet surfaces, clear type, real content first. */
+body::before { display: none; }
+body:has(.app-shell) { background: #f3f6f3; }
+html[data-theme="night"] body:has(.app-shell) { background: #19221c; }
+
+.app-shell {
+  --paper: #f3f6f3;
+  --paper-alt: #edf1ee;
+  --surface: #ffffff;
+  --surface-strong: #eaf0eb;
+  --ink: #202b24;
+  --muted: #68756d;
+  --faint: #87928a;
+  --line: #e0e7e1;
+  --line-strong: #cbd5cc;
+  --green: #477457;
+  --green-soft: #e8f1e9;
+  --green-ink: #ffffff;
+  --rust: #967b4d;
+  --rust-soft: #f2eddf;
+  --yellow: #c09a51;
+  --violet: #788293;
+  --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --display: var(--sans);
+  --mono: var(--sans);
+  --container: 1200px;
+  width: min(100%, 1200px);
+  max-width: 1200px;
+  overflow: visible;
+  border: 0;
+  border-inline: 0;
+}
+
+.app-shell[data-theme="night"] {
+  --paper: #19221c;
+  --paper-alt: #202b23;
+  --surface: #253129;
+  --surface-strong: #303d33;
+  --ink: #eef3ee;
+  --muted: #b5c0b7;
+  --faint: #89968c;
+  --line: #39483d;
+  --line-strong: #536356;
+  --green: #a4c7ac;
+  --green-soft: #304738;
+  --green-ink: #18251c;
+  --rust: #d4b579;
+  --rust-soft: #493e2c;
+  --yellow: #dfc47e;
+  --violet: #b9bfd0;
+}
+
+.app-shell .topbar {
+  min-height: 64px;
+  padding-inline: clamp(1rem, 3vw, 2rem);
+  background: var(--surface);
+}
+
+.app-shell .brand {
+  font-family: var(--sans);
+  font-size: 1.15rem;
+  letter-spacing: -0.045em;
+}
+
+.app-shell .brand-mark {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 9px;
+}
+
+.app-shell .browser-tabbar {
+  top: 64px;
+  min-height: 48px;
+  padding-inline: clamp(1rem, 3vw, 2rem);
+  background: var(--surface);
+}
+
+.app-shell .browser-tab {
+  min-height: 39px;
+  border-radius: 9px 9px 0 0;
+  font-family: var(--sans);
+  font-size: .84rem;
+}
+
+.app-shell .browser-tab-active {
+  background: var(--paper);
+}
+
+.app-shell .browser-tab-active::before {
+  top: auto;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+}
+
+.app-shell .section {
+  padding: 1.8rem clamp(1rem, 3vw, 2rem) 2.5rem;
+}
+
+.app-shell .library-heading {
+  align-items: flex-end;
+  gap: 1.5rem;
+}
+
+.app-shell .library-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.app-shell .library-title {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: clamp(1.7rem, 3vw, 2.2rem);
+  font-weight: 720;
+  line-height: 1.15;
+  letter-spacing: -0.045em;
+}
+
+.app-shell .library-description {
+  margin: .45rem 0 0;
+  color: var(--muted);
+  font-size: .9rem;
+  line-height: 1.55;
+}
+
+.app-shell .library-search {
+  width: min(100%, 350px);
+  min-height: 44px;
+  border-color: var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.app-shell .filter-row {
+  gap: .45rem;
+  margin-top: 1.25rem;
+  padding-bottom: 0;
+  border: 0;
+}
+
+.app-shell .filter-row button {
+  min-height: 36px;
+  padding: .42rem .85rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: .8rem;
+}
+
+.app-shell .filter-row button:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-strong);
+  color: var(--ink);
+}
+
+.app-shell .filter-row button.filter-active {
+  border-color: var(--green);
+  background: var(--green-soft);
+  color: var(--ink);
+}
+
+.app-shell .game-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .85rem;
+  margin-top: 1.15rem;
+}
+
+.app-shell .game-card {
+  display: flex;
+  min-height: 190px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  transition: border-color 140ms ease-out;
+}
+
+.app-shell .game-card:hover {
+  transform: none;
+  border-color: var(--green);
+}
+
+.app-shell .game-info {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  padding: 1rem 1.05rem;
+}
+
+.app-shell .game-meta {
+  align-items: center;
+  gap: .55rem;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: .76rem;
+}
+
+.app-shell .game-meta > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+}
+
+.app-shell .game-meta > span:first-child::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  content: "";
+}
+
+.app-shell .game-type {
+  padding: .2rem .45rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: .7rem;
+}
+
+.app-shell .game-info h3 {
+  margin: .7rem 0 .4rem;
+  font-family: var(--sans);
+  font-size: 1.08rem;
+  font-weight: 680;
+  line-height: 1.35;
+  letter-spacing: -.02em;
+}
+
+.app-shell .game-info p {
+  min-height: 2.7rem;
+  color: var(--muted);
+  font-size: .84rem;
+  line-height: 1.6;
+}
+
+.app-shell .card-link {
+  min-height: 40px;
+  justify-content: flex-start;
+  margin-top: auto;
+  padding-top: .7rem;
+  border-top-color: var(--line);
+  color: var(--green);
+  font-size: .82rem;
+  font-weight: 650;
+}
+
+.app-shell .empty-search {
+  padding: 2rem;
+  border: 1px dashed var(--line-strong);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--muted);
+  text-align: left;
+}
+
+.app-shell .empty-search h3 {
+  margin: 0 0 .5rem;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+
+.app-shell .empty-search p {
+  max-width: 52ch;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.app-shell .reset-button {
+  min-height: 40px;
+  border-radius: 8px;
+  background: var(--green-soft);
+  color: var(--ink);
+}
+
+.app-shell .section-kicker,
+.app-shell .card-kicker {
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: .76rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.app-shell .card-kicker {
+  display: none;
+}
+
+.app-shell .submit-card {
+  border-color: var(--line);
+  border-radius: 12px;
+}
+
+.app-shell .submit-card-header h3,
+.app-shell .section-heading h2,
+.app-shell .submission-intro h2,
+.app-shell .workflow-card h3,
+.app-shell .safety-section h2 {
+  font-family: var(--sans);
+  letter-spacing: -.035em;
+}
+
+.app-shell .secure-badge {
+  border-radius: 7px;
+  font-family: var(--sans);
+  font-size: .7rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.app-shell .text-field,
+.app-shell .url-field,
+.app-shell .dropzone,
+.app-shell .submit-card input:not([type="checkbox"]) {
+  border-radius: 9px;
+}
+
+.app-shell .scan-button,
+.app-shell .browse-button,
+.app-shell .reset-button,
+.app-shell .clear-queue,
+.app-shell .tab-switch,
+.app-shell .tab-switch button {
+  border-radius: 8px;
+}
+
+.app-shell .workflow-card,
+.app-shell .safety-section,
+.app-shell .queue-list {
+  border-color: var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.app-shell .workflow-tag {
+  display: none;
+}
+
+.app-shell .settings-panel {
+  border-color: var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.app-shell .settings-option {
+  border-radius: 7px;
+}
+
+.app-shell button:active,
+.app-shell .card-link:active,
+.app-shell .game-card:active {
+  transform: scale(.985);
+}
+
+.app-shell .game-card:active {
+  border-color: var(--green);
+}
+
+.play-page {
+  --paper: #f3f6f3;
+  --paper-alt: #edf1ee;
+  --surface: #ffffff;
+  --surface-strong: #eaf0eb;
+  --ink: #202b24;
+  --muted: #68756d;
+  --faint: #87928a;
+  --line: #e0e7e1;
+  --line-strong: #cbd5cc;
+  --green: #477457;
+  --green-soft: #e8f1e9;
+  --green-ink: #ffffff;
+  --rust: #967b4d;
+  --rust-soft: #f2eddf;
+  --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --display: var(--sans);
+  --mono: var(--sans);
+  background: var(--paper);
+  font-family: var(--sans);
+}
+
+html[data-theme="night"] .play-page {
+  --paper: #19221c;
+  --paper-alt: #202b23;
+  --surface: #253129;
+  --surface-strong: #303d33;
+  --ink: #eef3ee;
+  --muted: #b5c0b7;
+  --faint: #89968c;
+  --line: #39483d;
+  --line-strong: #536356;
+  --green: #a4c7ac;
+  --green-soft: #304738;
+  --green-ink: #18251c;
+  --rust: #d4b579;
+  --rust-soft: #493e2c;
+}
+
+.play-page .play-header {
+  background: var(--surface);
+}
+
+.play-page .play-intro h1 {
+  font-family: var(--sans);
+  letter-spacing: -.04em;
+}
+
+.play-page .section-kicker {
+  font-family: var(--sans);
+  font-size: .76rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.play-page .project-preview-shell {
+  border-color: var(--line);
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.play-page .project-preview-toolbar {
+  background: var(--surface);
+  font-family: var(--sans);
+}
+
+.play-page .play-fullscreen-button,
+.play-page .play-language-button,
+.play-page .project-download-button,
+.play-page .project-preview-fallback {
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-weight: 650;
+}
+
+@media (max-width: 900px) {
+  .app-shell .game-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 700px) {
+  .app-shell .topbar { min-height: 60px; }
+  .app-shell .browser-tabbar { top: 60px; }
+  .app-shell .section { padding: 1.25rem 1rem 2rem; }
+  .app-shell .library-heading { align-items: stretch; gap: .8rem; }
+  .app-shell .library-search { width: 100%; max-width: none; }
+  .app-shell .game-grid { grid-template-columns: 1fr; gap: .7rem; }
+  .app-shell .game-card { min-height: 0; }
+  .app-shell .game-info { padding: .95rem; }
+  .app-shell .submission-section { padding: 1.4rem 1rem 1.8rem; }
+  .app-shell .workflow-section { padding: 2.2rem 1rem; }
+  .app-shell .safety-section { margin: 0 1rem 2.5rem; padding: 1rem; }
+  .app-shell .queue-section { padding: 0 1rem 2.5rem; }
+  .app-shell .footer { padding: 1.1rem 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell .game-card,
+  .app-shell .card-link,
+  .app-shell .filter-row button {
+    transition: none;
+  }
+}
+
+/* PJVault studio catalogue */
+body::before { display: none; }
+.app-shell { border-inline: 0; }
+.brand { font-family: var(--sans); font-size: 1.18rem; font-weight: 760; letter-spacing: -.055em; }
+.brand-mark { border-radius: 7px; border-color: transparent; }
+.section-kicker, .card-kicker { color: var(--muted); font-family: var(--sans); font-size: .74rem; font-weight: 650; letter-spacing: .01em; text-transform: none; }
+.app-shell .library-title { color: var(--ink); font-family: var(--sans); font-size: clamp(1.65rem, 3vw, 2.15rem); font-weight: 740; letter-spacing: -.045em; }
+.app-shell .library-description { max-width: 58ch; color: var(--muted); line-height: 1.65; }
+.app-shell .library-search { border-radius: 8px; background: var(--surface); }
+.app-shell .browser-tabbar { border-color: var(--line); background: var(--paper-alt); }
+.app-shell .browser-tab { border-radius: 7px 7px 0 0; font-weight: 620; }
+.app-shell .browser-tab-active { background: var(--surface); color: var(--ink); }
+.app-shell .game-grid { gap: .95rem; }
+.app-shell .game-card { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); box-shadow: none; transition: border-color .16s ease; }
+.app-shell .game-card:hover { transform: none; border-color: var(--green); background: var(--surface); }
+.app-shell .game-info { display: flex; flex-direction: column; align-items: flex-start; min-height: 100%; padding: 1.1rem; }
+.app-shell .game-meta { gap: .55rem; font-family: var(--sans); font-size: .73rem; letter-spacing: 0; text-transform: none; }
+.app-shell .game-type { border-radius: 4px; font-family: var(--sans); }
+.app-shell .game-info h3 { margin: .7rem 0 .35rem; font-family: var(--sans); font-size: 1.1rem; font-weight: 720; letter-spacing: -.025em; }
+.app-shell .game-info p { min-height: 2.6rem; font-size: .85rem; line-height: 1.65; }
+.app-shell .card-link { width: auto; margin-top: auto; padding: .7rem .9rem 0 0; border: 0; color: var(--green); font-family: var(--sans); font-size: .85rem; font-weight: 720; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.app-shell .card-link:hover { color: var(--rust); }
+.app-shell .submit-card, .app-shell .submit-card-header, .app-shell .workflow-step, .app-shell .safety-panel, .app-shell .settings-panel { border-radius: 10px; }
+.app-shell .text-field, .app-shell .textarea-field, .app-shell .select-field, .app-shell .url-field, .app-shell .dropzone { border-radius: 8px; }
+.app-shell .scan-button, .app-shell .reset-button, .app-shell .browse-button { border-radius: 7px; }
+.app-shell .submit-card-header h3, .app-shell .submission-intro h2, .app-shell .workflow-section h2, .app-shell .safety-section h2 { font-family: var(--sans); font-weight: 740; letter-spacing: -.04em; }
+.play-page .play-header { background: var(--paper); }
+.play-page .play-intro h1 { font-family: var(--sans); font-weight: 760; letter-spacing: -.05em; }
+.play-page .section-kicker { color: var(--muted); font-family: var(--sans); letter-spacing: 0; }
+.project-detail-intro { width: min(1080px, 100%); padding-top: clamp(2rem, 5vw, 3.6rem); }
+.project-detail-topline { display: flex; align-items: center; flex-wrap: wrap; gap: .55rem; margin-bottom: 1.1rem; }
+.project-detail-type { display: inline-flex; padding: .32rem .6rem; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); color: var(--muted); font: 600 .78rem/1.3 var(--sans); }
+.project-detail-reviewed { display: inline-flex; align-items: center; gap: .35rem; color: var(--green); font-size: .8rem; font-weight: 650; }
+.project-detail-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .65rem; margin-top: 1.25rem; }
+.project-detail-actions .project-download-button, .project-detail-actions .project-source-link { min-height: 42px; display: inline-flex; align-items: center; gap: .5rem; padding: .62rem .9rem; border: 1px solid var(--line-strong); border-radius: 7px; background: var(--surface); color: var(--ink); font-size: .83rem; font-weight: 650; }
+.project-detail-actions .project-download-button { border-color: var(--green); background: var(--green); color: var(--green-ink); }
+.project-detail-actions .project-source-link:hover { border-color: var(--green); color: var(--green); }
+.project-preview-gate { width: min(1080px, calc(100% - 2rem)); display: flex; align-items: center; gap: 1rem; margin: 1.25rem auto 2.5rem; padding: clamp(1rem, 2.5vw, 1.5rem); border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.project-preview-gate-icon { width: 48px; height: 48px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 9px; background: var(--green-soft); color: var(--green); }
+.project-preview-gate-copy { min-width: 0; flex: 1 1 auto; }
+.project-preview-gate h2 { margin: 0 0 .2rem; font-size: 1.02rem; font-weight: 730; letter-spacing: -.02em; }
+.project-preview-gate p { margin: 0; color: var(--muted); font-size: .83rem; line-height: 1.55; }
+.project-preview-start { min-height: 43px; display: inline-flex; align-items: center; justify-content: center; gap: .5rem; flex: 0 0 auto; padding: .65rem 1rem; border: 1px solid var(--green); border-radius: 7px; background: var(--green); color: var(--green-ink); font-size: .84rem; font-weight: 700; transition: background-color .16s ease, transform .16s ease; }
+.project-preview-start:hover { filter: brightness(.96); }
+.project-preview-start:active { transform: scale(.98); }
+.project-preview-gate-unavailable { max-width: 260px; }
+.project-preview-shell { border-radius: 10px; }
+.project-preview-toolbar { font-family: var(--sans); }
+@media (max-width: 620px) {
+  .project-preview-gate { align-items: stretch; flex-direction: column; }
+  .project-preview-gate-icon { width: 42px; height: 42px; }
+  .project-preview-start { width: 100%; }
+  .project-detail-actions { align-items: stretch; flex-direction: column; }
+  .project-detail-actions > a { justify-content: center; }
 }

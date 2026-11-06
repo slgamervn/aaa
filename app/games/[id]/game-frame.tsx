@@ -38,7 +38,7 @@ export default function GameFrame({
         enterShort: "Fullscreen",
         exitShort: "Exit",
         unavailable: "This URL cannot be embedded",
-        fallback: "GameVault only embeds HTTPS URLs. You can still open the original site using the link above.",
+        fallback: "PJVault only embeds HTTPS URLs. You can still open the original site using the link above.",
         dismissOrientationNotice: "Dismiss orientation notice"
       }
     : {
@@ -48,7 +48,7 @@ export default function GameFrame({
         enterShort: "Toàn màn hình",
         exitShort: "Thoát",
         unavailable: "Không thể nhúng đường dẫn này",
-        fallback: "GameVault chỉ nhúng đường dẫn HTTPS. Bạn vẫn có thể mở trang gốc bằng nút phía trên.",
+        fallback: "PJVault chỉ nhúng đường dẫn HTTPS. Bạn vẫn có thể mở trang gốc bằng nút phía trên.",
         dismissOrientationNotice: "Đóng hướng dẫn xoay màn hình"
       };
 

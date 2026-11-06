@@ -141,11 +141,13 @@ function isPublicIPv6(host: string): boolean {
     return isPublicIPv4(mapped);
   }
 
-  // Accept only global-unicast 2000::/3; block documentation, 6to4 and Teredo.
+  // Accept only global-unicast 2000::/3. Block special-purpose ranges
+  // that are not globally reachable, including IANA's 2001::/23 reservation.
+  // Fail closed on the whole /23 rather than relying on its narrower exceptions.
   if ((bytes[0] & 0xe0) !== 0x20) return false;
-  if (bytes[0] === 0x20 && bytes[1] === 0x01 && bytes[2] === 0x0d && bytes[3] === 0xb8) return false;
+  if (bytes[0] === 0x20 && bytes[1] === 0x01 && (bytes[2] & 0xfe) === 0x00) return false;
+  if (bytes[0] === 0x20 && bytes[1] === 0x0d && bytes[2] === 0xb8) return false;
   if (bytes[0] === 0x20 && bytes[1] === 0x02) return false;
-  if (bytes[0] === 0x20 && bytes[1] === 0x01 && bytes[2] === 0x00 && bytes[3] === 0x00) return false;
   return true;
 }
 
@@ -249,7 +251,6 @@ function requestPinnedAddress(url: URL, address: ResolvedAddress, maxBytes: numb
     const useHttps = url.protocol === "https:";
     const originalHostname = url.hostname.replace(/^\[|\]$/g, "");
     let settled = false;
-    let timer: ReturnType<typeof setTimeout> | undefined;
     const finish = (error?: Error, value?: RemoteResponse) => {
       if (settled) return;
       settled = true;
@@ -271,7 +272,7 @@ function requestPinnedAddress(url: URL, address: ResolvedAddress, maxBytes: numb
       agent: false as const,
       headers: {
         "Host": url.host,
-        "User-Agent": "GameVault-Static-Scanner/1.0 (+https://github.com/slgamervn/aaa)",
+        "User-Agent": "PJVault-Static-Scanner/1.0 (+https://github.com/snowgemm/aaa)",
         "Accept": "text/html,application/xhtml+xml,application/javascript,text/javascript,*/*;q=0.1",
         "Accept-Encoding": "identity",
         "Connection": "close"
@@ -286,7 +287,7 @@ function requestPinnedAddress(url: URL, address: ResolvedAddress, maxBytes: numb
         })
       : httpRequest(options);
 
-    timer = setTimeout(() => request.destroy(new Error("The remote server timed out.")), timeoutMs);
+    const timer = setTimeout(() => request.destroy(new Error("The remote server timed out.")), timeoutMs);
     request.on("error", (error) => finish(error instanceof Error ? error : new Error("The remote request failed.")));
     request.on("response", (response) => {
       const status = response.statusCode ?? 0;
@@ -490,7 +491,7 @@ export async function scanRemoteUrl(value: string): Promise<ScanResult> {
     } else if (failure.includes("scan-size limit")) {
       reason = "Trang đích vượt giới hạn dung lượng quét. Nội dung chưa được quét.";
     }
-    console.warn("[GameVault URL scan] fetch failed", { host: validated.host, code: code || "UNCLASSIFIED", category: reason.split(".")[0] });
+    console.warn("[PJVault URL scan] fetch failed", { host: validated.host, code: code || "UNCLASSIFIED", category: reason.split(".")[0] });
     return failedRemoteScan(reason);
   }
 }

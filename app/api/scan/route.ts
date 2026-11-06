@@ -2,6 +2,7 @@ import { createHash, createHmac, randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { MAX_HTML_BYTES, SCAN_VERSION, scanHtml, scanRemoteUrl, scanUrl } from "@/lib/scanner";
+import { getTrustedVercelClientIp } from "@/lib/trusted-client-ip";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,14 +26,6 @@ function cleanText(value: FormDataEntryValue | null, maxLength: number): string 
   return value.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, maxLength);
 }
 
-function getFingerprint(request: NextRequest, secret: string): string {
-  const forwarded = request.headers.get("x-real-ip") ??
-    request.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim() ??
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    "unavailable";
-  return createHmac("sha256", secret).update(forwarded).digest("hex");
-}
-
 async function logEvent(
   admin: ReturnType<typeof createAdminClient>,
   submissionId: string,
@@ -46,7 +39,7 @@ async function logEvent(
     details,
     note: note?.slice(0, 1000) ?? null
   });
-  if (error) console.error("GameVault audit event write failed:", error.code);
+  if (error) console.error("PJVault audit event write failed:", error.code);
 }
 
 export async function POST(request: NextRequest) {
@@ -82,6 +75,13 @@ export async function POST(request: NextRequest) {
   const secret = process.env.SUPABASE_SECRET_KEY;
   if (!secret) return json({ error: "Server storage is not configured. Please try again later." }, 503);
 
+  const clientIp = getTrustedVercelClientIp(request.headers);
+  if (!clientIp) {
+    return json({ error: "Submission rate limiting is temporarily unavailable. Please try again later." }, 503);
+  }
+
+  const requestFingerprint = createHmac("sha256", secret).update(clientIp).digest("hex");
+
   let admin: ReturnType<typeof createAdminClient>;
   try {
     admin = createAdminClient();
@@ -89,14 +89,13 @@ export async function POST(request: NextRequest) {
     return json({ error: "Server storage is not configured. Please try again later." }, 503);
   }
 
-  const requestFingerprint = getFingerprint(request, secret);
   const { data: allowed, error: limitError } = await admin.rpc("gamevault_consume_rate_limit", {
     p_key_hash: requestFingerprint,
     p_max_hits: 6,
     p_window_seconds: 3600
   });
   if (limitError) {
-    console.error("GameVault rate-limit check failed:", limitError.code);
+    console.error("PJVault rate-limit check failed:", limitError.code);
     return json({ error: "Submissions are temporarily unavailable. Please try again later." }, 503);
   }
   if (allowed !== true) {
@@ -161,7 +160,7 @@ export async function POST(request: NextRequest) {
 
   const { error: insertError } = await admin.from("gamevault_submissions").insert(row);
   if (insertError) {
-    console.error("GameVault submission insert failed:", insertError.code);
+    console.error("PJVault submission insert failed:", insertError.code);
     return json({ error: "The submission could not be saved. Please try again later." }, 503);
   }
 
@@ -175,7 +174,7 @@ export async function POST(request: NextRequest) {
     if (uploadError) {
       await admin.from("gamevault_submissions").update({ status: "scan_failed", updated_at: new Date().toISOString() }).eq("id", id);
       await logEvent(admin, id, "scan_failed", { reason: "quarantine_upload_failed" });
-      console.error("GameVault quarantine upload failed:", uploadError.message);
+      console.error("PJVault quarantine upload failed:", uploadError.message);
       return json({ error: "The file could not be placed in private quarantine. No publication occurred." }, 503);
     }
   }

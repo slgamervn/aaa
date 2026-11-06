@@ -1,19 +1,51 @@
-import { timingSafeEqual } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { sameOriginRequest } from "@/lib/admin-auth";
+import { getTrustedVercelClientIp } from "@/lib/trusted-client-ip";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function json(body: unknown, status = 200) {
+function json(body: unknown, status = 200, extraHeaders: Record<string, string> = {}) {
   return NextResponse.json(body, {
     status,
     headers: {
       "Cache-Control": "no-store, max-age=0",
-      "X-Content-Type-Options": "nosniff"
+      "X-Content-Type-Options": "nosniff",
+      ...extraHeaders
     }
   });
+}
+
+async function consumeLoginRateLimit(request: NextRequest): Promise<boolean | null> {
+  const secret = process.env.SUPABASE_SECRET_KEY;
+  const ip = getTrustedVercelClientIp(request.headers);
+  if (!secret || !ip) return null;
+
+  const keyHash = createHmac("sha256", secret)
+    .update("pjvault:admin-login:v1:")
+    .update(ip)
+    .digest("hex");
+
+  try {
+    const admin = createAdminClient();
+    const { data, error } = await admin.rpc("gamevault_consume_rate_limit", {
+      p_key_hash: keyHash,
+      p_max_hits: 8,
+      p_window_seconds: 900
+    });
+
+    if (error) {
+      console.error("PJVault login rate-limit check failed:", error.code);
+      return null;
+    }
+    return data === true;
+  } catch {
+    console.error("PJVault login rate-limit service is unavailable.");
+    return null;
+  }
 }
 
 function usernameMatches(input: string, expected: string): boolean {
@@ -58,6 +90,20 @@ export async function POST(request: NextRequest) {
   const password = typeof body.password === "string" ? body.password : "";
   if (!/^[a-zA-Z0-9._-]{3,32}$/.test(username) || password.length < 8 || password.length > 256) {
     return json({ error: "Tên đăng nhập hoặc mật khẩu không đúng." }, 401);
+  }
+
+  // Store only an HMAC of the trusted client IP, never the raw address.
+  // Fail closed if the database-backed limiter is unavailable.
+  const withinRateLimit = await consumeLoginRateLimit(request);
+  if (withinRateLimit === null) {
+    return json({ error: "Không thể xác minh giới hạn đăng nhập lúc này. Hãy thử lại sau." }, 503);
+  }
+  if (!withinRateLimit) {
+    return json(
+      { error: "Bạn đã thử đăng nhập quá nhiều lần. Vui lòng đợi 15 phút rồi thử lại." },
+      429,
+      { "Retry-After": "900" }
+    );
   }
 
   const configuredUsername = process.env.GAMEVAULT_ADMIN_USERNAME ?? "";

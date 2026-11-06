@@ -44,7 +44,7 @@ async function pushApprovedContent(
   }
 
   const payload: Record<string, unknown> = {
-    message: "Publish reviewed GameVault submission: " + title.slice(0, 80),
+    message: "Publish reviewed PJVault submission: " + title.slice(0, 80),
     content: content.toString("base64"),
     branch
   };
@@ -58,7 +58,7 @@ async function pushApprovedContent(
   });
   if (!response.ok) {
     const detail = await response.text();
-    console.error("GameVault GitHub publish failed:", response.status, detail.slice(0, 400));
+    console.error("PJVault GitHub publish failed:", response.status, detail.slice(0, 400));
     throw new Error("GitHub rejected the publication request. Check the token's repository permissions and branch.");
   }
 
@@ -120,7 +120,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       .maybeSingle();
 
     if (updateError) {
-      console.error("GameVault orientation update failed:", updateError.code);
+      console.error("PJVault orientation update failed:", updateError.code);
       return json({ error: "The game orientation could not be saved." }, 503);
     }
     if (!updated) {
@@ -133,7 +133,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       actor_email: access.email,
       details: { orientation }
     });
-    if (eventError) console.error("GameVault orientation audit event failed:", eventError.code);
+    if (eventError) console.error("PJVault orientation audit event failed:", eventError.code);
 
     return json({ orientation: updated.orientation });
   }
@@ -171,7 +171,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       if (error.message.includes("SUBMISSION_NOT_PENDING")) {
         return json({ error: "The submission changed before this review completed. Refresh the queue and try again." }, 409);
       }
-      console.error("GameVault review transition failed:", error.code);
+      console.error("PJVault review transition failed:", error.code);
       return json({ error: "The review action could not be saved." }, 503);
     }
     return json({ submission: data });
@@ -179,7 +179,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
   if (action === "unpublish") {
     const token = process.env.GITHUB_TOKEN;
-    const repo = process.env.GITHUB_PUBLISH_REPO || "slgamervn/aaa";
+    const repo = process.env.GITHUB_PUBLISH_REPO || "snowgemm/aaa";
     const branch = process.env.GITHUB_PUBLISH_BRANCH || "main";
     if (!token) return json({ error: "GitHub removal is not configured. Add GITHUB_TOKEN in Vercel before removing a published game." }, 503);
     if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo)) {
@@ -248,7 +248,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
           method: "DELETE",
           headers,
           body: JSON.stringify({
-            message: "Unpublish GameVault submission: " + item.title.slice(0, 80),
+            message: "Unpublish PJVault submission: " + item.title.slice(0, 80),
             sha: existing.sha,
             branch
           }),
@@ -256,7 +256,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
         });
         if (!deleteResponse.ok && deleteResponse.status !== 404) {
           const detail = await deleteResponse.text();
-          console.error("GameVault GitHub removal failed:", deleteResponse.status, detail.slice(0, 400));
+          console.error("PJVault GitHub removal failed:", deleteResponse.status, detail.slice(0, 400));
           throw new Error("GitHub rejected the removal request. Check the token's repository permissions and branch.");
         }
         removalConfirmed = true;
@@ -276,7 +276,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
         .eq("status", "unpublishing");
 
       if (updateError) {
-        console.error("GameVault unpublish status update failed:", updateError.code);
+        console.error("PJVault unpublish status update failed:", updateError.code);
         return json({ error: "The GitHub file was removed, but the database status could not be updated. Retry removal to reconcile it." }, 503);
       }
 
@@ -287,7 +287,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
         note: note || null,
         details: { repository: repo, branch, path: expectedPath }
       });
-      if (eventError) console.error("GameVault unpublish audit event failed:", eventError.code);
+      if (eventError) console.error("PJVault unpublish audit event failed:", eventError.code);
 
       return json({ unpublished: true, status: "approved" });
     } catch (error) {
@@ -305,7 +305,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
   if (action !== "publish") return json({ error: "Unknown submission action." }, 400);
 
   const token = process.env.GITHUB_TOKEN;
-  const repo = process.env.GITHUB_PUBLISH_REPO || "slgamervn/aaa";
+  const repo = process.env.GITHUB_PUBLISH_REPO || "snowgemm/aaa";
   const branch = process.env.GITHUB_PUBLISH_BRANCH || "main";
   if (!token) return json({ error: "GitHub publishing is not configured. Add GITHUB_TOKEN in Vercel before publishing." }, 503);
   if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo)) {
@@ -370,7 +370,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
         genre: item.genre,
         kind: "url",
         sourceUrl: item.source_url,
-        note: "Submitted as an external link. GameVault did not fetch, execute, or copy the external page."
+        note: "The external URL is kept as a reference. Server-side fetches are limited to bounded static scanning and do not execute or republish a copied response; visitors may explicitly load the original URL in the sandboxed preview."
       };
       content = Buffer.from(JSON.stringify(metadata, null, 2) + "\n", "utf8");
       outputPath = "gamevault-submissions/" + id + "/submission.json";
@@ -387,7 +387,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     }).eq("id", id).eq("status", "publishing");
 
     if (updateError) {
-      console.error("GameVault publish status update failed:", updateError.code);
+      console.error("PJVault publish status update failed:", updateError.code);
       return json({ error: "The GitHub commit succeeded, but the status update did not. Retry publication to reconcile it." }, 503);
     }
 

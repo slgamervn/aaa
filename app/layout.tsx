@@ -2,21 +2,21 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "GameVault — Web game project downloads",
-  description: "Discover reviewed web-game projects, download published HTML files, or visit their original websites.",
-  applicationName: "GameVault",
-  metadataBase: new URL("https://gamevault-slg-7f71.vercel.app"),
+  title: "PJVault — Thư viện dự án web",
+  description: "Khám phá các dự án web đã được kiểm duyệt. Mở trang dự án để xem thông tin, nguồn và bản xem trước.",
+  applicationName: "PJVault",
+  metadataBase: new URL(`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL ?? "pjvault-slg-7f71.vercel.app"}`),
   openGraph: {
-    title: "GameVault — Project collection",
-    description: "Browse approved web-game projects and download available HTML files.",
-    siteName: "GameVault",
+    title: "PJVault — Web project library",
+    description: "Explore reviewed web projects, read project details, view previews, and visit original sources.",
+    siteName: "PJVault",
     type: "website"
   },
-  robots: { index: false, follow: true }
+  robots: { index: process.env.VERCEL_ENV === "production", follow: true }
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f3f0e7",
+  themeColor: "#edf2f1",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover"

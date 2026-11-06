@@ -20,7 +20,7 @@ export async function GET() {
     .limit(100);
 
   if (error) {
-    console.error("GameVault admin queue read failed:", error.code);
+    console.error("PJVault admin queue read failed:", error.code);
     return NextResponse.json({ error: "The review queue is temporarily unavailable." }, {
       status: 503,
       headers: { "Cache-Control": "private, no-store" }

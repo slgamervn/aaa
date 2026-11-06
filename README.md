@@ -28,7 +28,7 @@ Configure these environment variables in **Vercel → Project → Settings → E
 | \`SUPABASE_SECRET_KEY\` | Server-only DB and private Storage access | **No** |
 | \`GAMEVAULT_ADMIN_EMAILS\` | Comma-separated allowlist of administrator emails | No |
 | \`GITHUB_TOKEN\` | Fine-grained GitHub token with Contents read/write on the target repository | **No** |
-| \`GITHUB_PUBLISH_REPO\` | Publication destination; defaults to \`slgamervn/aaa\` | No |
+| \`GITHUB_PUBLISH_REPO\` | Publication destination; defaults to \`snowgemm/aaa\` | No |
 | \`GITHUB_PUBLISH_BRANCH\` | Publication branch; defaults to \`main\` | No |
 
 \`SUPABASE_SECRET_KEY\` should be a Supabase \`sb_secret_...\` key and must never use a \`NEXT_PUBLIC_\` prefix. The administrator email must also be created as a user in Supabase Auth. The app has no public self-registration.

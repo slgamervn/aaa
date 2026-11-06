@@ -318,7 +318,7 @@ export default function AdminPage() {
                 {item.status === "publishing" && <p className="admin-publish-warning">Đang xử lý commit GitHub. Nếu trạng thái này kéo dài hơn 10 phút, tải lại rồi thử xuất bản lại.</p>}
                 {item.status === "published" && item.published_path && (
                   <>
-                    <div className="admin-published"><BadgeCheck size={16} /><span>Đã xuất bản · <code>{item.published_path}</code></span>{item.published_commit_sha && <a href={"https://github.com/slgamervn/aaa/commit/" + item.published_commit_sha} target="_blank" rel="noopener noreferrer">Xem commit <ExternalLink size={13} /></a>}</div>
+                    <div className="admin-published"><BadgeCheck size={16} /><span>Đã xuất bản · <code>{item.published_path}</code></span>{item.published_commit_sha && <a href={"https://github.com/snowgemm/aaa/commit/" + item.published_commit_sha} target="_blank" rel="noopener noreferrer">Xem commit <ExternalLink size={13} /></a>}</div>
                     <div className="admin-action-buttons">
                       <button className="admin-button admin-button-danger" disabled={busy === item.id + ":unpublish"} onClick={() => void act(item, "unpublish")}><EyeOff size={15} /> {busy === item.id + ":unpublish" ? "Đang gỡ xuống…" : "Gỡ khỏi thư viện"}</button>
                     </div>

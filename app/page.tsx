@@ -418,6 +418,7 @@ export default function Home() {
           <span>gamevault<span className="brand-dot">.</span></span>
         </a>
         <div className="header-controls" aria-label={language === "vi" ? "Tuỳ chỉnh" : "Preferences"}>
+          <a className="pjvault-switch" href="https://pjvault-slg-7f71.vercel.app" aria-label={language === "vi" ? "Chuyển sang nền tảng mới PJVault" : "Switch to the new PJVault platform"} title={language === "vi" ? "Chuyển sang nền tảng mới PJVault" : "Switch to the new PJVault platform"}><span>PJVault</span><ArrowRight size={14} aria-hidden="true" /></a>
           <button className="utility-button language-button" onClick={() => setLanguage(language === "vi" ? "en" : "vi")} aria-label={t.switchLanguage} title={t.switchLanguage}>
             <Languages size={16} /><span>{language === "vi" ? "EN" : "VI"}</span>
           </button>

@@ -272,7 +272,7 @@ function requestPinnedAddress(url: URL, address: ResolvedAddress, maxBytes: numb
       agent: false as const,
       headers: {
         "Host": url.host,
-        "User-Agent": "PJVault-Static-Scanner/1.0 (+https://github.com/slgamervn/aaa)",
+        "User-Agent": "PJVault-Static-Scanner/1.0 (+https://github.com/snowgemm/aaa)",
         "Accept": "text/html,application/xhtml+xml,application/javascript,text/javascript,*/*;q=0.1",
         "Accept-Encoding": "identity",
         "Connection": "close"

@@ -2,6 +2,7 @@ import { createHash, createHmac, randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { MAX_HTML_BYTES, SCAN_VERSION, scanHtml, scanRemoteUrl, scanUrl } from "@/lib/scanner";
+import { getTrustedVercelClientIp } from "@/lib/trusted-client-ip";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,14 +24,6 @@ function json(body: unknown, status = 200) {
 function cleanText(value: FormDataEntryValue | null, maxLength: number): string {
   if (typeof value !== "string") return "";
   return value.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, maxLength);
-}
-
-function getFingerprint(request: NextRequest, secret: string): string {
-  const forwarded = request.headers.get("x-real-ip") ??
-    request.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim() ??
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    "unavailable";
-  return createHmac("sha256", secret).update(forwarded).digest("hex");
 }
 
 async function logEvent(
@@ -82,6 +75,13 @@ export async function POST(request: NextRequest) {
   const secret = process.env.SUPABASE_SECRET_KEY;
   if (!secret) return json({ error: "Server storage is not configured. Please try again later." }, 503);
 
+  const clientIp = getTrustedVercelClientIp(request.headers);
+  if (!clientIp) {
+    return json({ error: "Submission rate limiting is temporarily unavailable. Please try again later." }, 503);
+  }
+
+  const requestFingerprint = createHmac("sha256", secret).update(clientIp).digest("hex");
+
   let admin: ReturnType<typeof createAdminClient>;
   try {
     admin = createAdminClient();
@@ -89,7 +89,6 @@ export async function POST(request: NextRequest) {
     return json({ error: "Server storage is not configured. Please try again later." }, 503);
   }
 
-  const requestFingerprint = getFingerprint(request, secret);
   const { data: allowed, error: limitError } = await admin.rpc("gamevault_consume_rate_limit", {
     p_key_hash: requestFingerprint,
     p_max_hits: 6,

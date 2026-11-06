@@ -570,7 +570,7 @@ export default function Home() {
         <footer className="footer">
           <a className="brand footer-brand" href="#" onClick={(event) => { event.preventDefault(); setActivePageTab("library"); }}><span className="brand-mark"><Layers3 size={17} /></span><span>pjvault<span className="brand-dot">.</span></span></a>
           <span>{t.footerLine}</span>
-          <div><a href="#safety" onClick={(event) => { event.preventDefault(); setActivePageTab("info"); }}>{t.footerPolicy}</a><a href="#how-it-works" onClick={(event) => { event.preventDefault(); setActivePageTab("info"); }}>{t.footerProcess}</a><a href="https://github.com/slgamervn/aaa" target="_blank" rel="noreferrer"><Github size={15} />{t.source}</a></div>
+          <div><a href="#safety" onClick={(event) => { event.preventDefault(); setActivePageTab("info"); }}>{t.footerPolicy}</a><a href="#how-it-works" onClick={(event) => { event.preventDefault(); setActivePageTab("info"); }}>{t.footerProcess}</a><a href="https://github.com/snowgemm/aaa" target="_blank" rel="noreferrer"><Github size={15} />{t.source}</a></div>
           <small>© 2026 PJVault · {t.footerStatus}</small>
         </footer>
 

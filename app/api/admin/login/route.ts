@@ -1,9 +1,9 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { isIP } from "node:net";
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sameOriginRequest } from "@/lib/admin-auth";
+import { getTrustedVercelClientIp } from "@/lib/trusted-client-ip";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,20 +19,9 @@ function json(body: unknown, status = 200, extraHeaders: Record<string, string> 
   });
 }
 
-function getClientIp(request: NextRequest): string | null {
-  // Vercel overwrites X-Forwarded-For at the edge; prefer its namespaced
-  // variant when available and do not trust a caller-supplied X-Real-IP header.
-  const candidates = [
-    request.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim(),
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-  ];
-
-  return candidates.find((value): value is string => Boolean(value && isIP(value) !== 0)) ?? null;
-}
-
 async function consumeLoginRateLimit(request: NextRequest): Promise<boolean | null> {
   const secret = process.env.SUPABASE_SECRET_KEY;
-  const ip = getClientIp(request);
+  const ip = getTrustedVercelClientIp(request.headers);
   if (!secret || !ip) return null;
 
   const keyHash = createHmac("sha256", secret)
